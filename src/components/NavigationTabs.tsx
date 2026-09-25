@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar, Table2, Plane, BarChart3, Shield } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
-export type TabKey = 'matchcenter' | 'schedule' | 'absences' | 'stats' | 'admin';
+export type TabKey = 'matchcenter' | 'schedule' | 'calendar' | 'absences' | 'stats' | 'admin';
 
 interface NavigationTabsProps {
   activeTab: TabKey;
@@ -22,6 +22,11 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
       id: 'schedule',
       label: 'Gesamtplan',
       icon: <Table2 className="w-4 h-4" />,
+    },
+    {
+      id: 'calendar',
+      label: 'Kalender',
+      icon: <Calendar className="w-4 h-4" />,
     },
     {
       id: 'absences',

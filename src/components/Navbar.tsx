@@ -18,15 +18,13 @@ interface NavbarProps {
   onOpenSettings: () => void;
   onOpenUserSwitch: () => void;
   onOpenWhatsApp: () => void;
-  onOpenCalendar: () => void;
-}
+  }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   onOpenSettings, 
   onOpenUserSwitch, 
   onOpenWhatsApp,
-  onOpenCalendar
-}) => {
+  }) => {
   const { theme, setTheme, currentUser, isDarkMode, setIsDarkMode } = useApp();
   const [showThemePicker, setShowThemePicker] = useState(false);
   const { url } = getSupabaseConfig();

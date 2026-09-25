@@ -1,4 +1,6 @@
-import React from 'react';
+const fs = require('fs');
+
+const newContent = `import React from 'react';
 import { Player, SlotAssignment, SlotTime } from '../types/tennis';
 import { useApp } from '../context/AppContext';
 import { Check, X, ArrowLeftRight, UserCheck, AlertCircle, RotateCcw, Calendar } from 'lucide-react';
@@ -92,16 +94,16 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className={`relative overflow-hidden rounded-xl border transition-all duration-200 shadow-sm border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800
-      ${isMe ? 'ring-1 ring-[var(--club-primary)] dark:ring-[var(--club-primary)]/80' : ''}
-      ${isAdmin && !isGuest ? 'cursor-grab active:cursor-grabbing hover:border-blue-400' : ''}
-      ${isDeclined ? 'opacity-70 grayscale-[0.3]' : ''}
-      ${isSubstitute ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
+      className={\`relative overflow-hidden rounded-xl border transition-all duration-200 shadow-sm border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800
+      \${isMe ? 'ring-1 ring-[var(--club-primary)] dark:ring-[var(--club-primary)]/80' : ''}
+      \${isAdmin && !isGuest ? 'cursor-grab active:cursor-grabbing hover:border-blue-400' : ''}
+      \${isDeclined ? 'opacity-70 grayscale-[0.3]' : ''}
+      \${isSubstitute ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}\`}
     >
       {/* Admin Quick Remove Button */}
       {isAdmin && !isDeclined && (
         <button
-          onClick={(e) => { e.stopPropagation(); adminDragDropAssign(weekId, slotTime, player ? player.id : `guest_${assignment.guestName}`, 'remove'); }}
+          onClick={(e) => { e.stopPropagation(); adminDragDropAssign(weekId, slotTime, player ? player.id : \`guest_\${assignment.guestName}\`, 'remove'); }}
           className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-rose-100 dark:bg-rose-900/50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-full flex items-center justify-center border border-white dark:border-neutral-800 shadow-sm transition-colors z-10"
           title="Spieler aus Slot entfernen"
         >
@@ -114,7 +116,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Left Side: Avatar + Info */}
         <div className="flex items-center gap-2 overflow-hidden flex-1">
           <div 
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs`}
+            className={\`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs\`}
             style={{ backgroundColor: isGuest ? '#6b7280' : player?.avatarColor || theme.primary }}
           >
             {isGuest ? 'G' : player?.shortName}
@@ -122,7 +124,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className={`text-sm font-bold truncate ${isDeclined ? 'text-neutral-500 line-through' : 'text-neutral-900 dark:text-neutral-100'}`}>
+              <span className={\`text-sm font-bold truncate \${isDeclined ? 'text-neutral-500 line-through' : 'text-neutral-900 dark:text-neutral-100'}\`}>
                 {isGuest ? assignment.guestName || 'Gastspieler' : player?.name}
               </span>
               {isMe && <span className="hidden sm:inline-block px-1 py-0.5 rounded text-[9px] font-black uppercase bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">Du</span>}
@@ -146,7 +148,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           {/* Action Bar for Regular Scheduled Player */}
           {(isMe || currentUser.isAdmin) && !isGuest && player && !isDeclined && !isSubstitute && (
             <>
-              
+              {isMe && onOpenCalendar && (
+                <button onClick={onOpenCalendar} title="In Kalender eintragen" className="p-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 transition-colors">
+                  <Calendar className="w-4 h-4" />
+                </button>
+              )}
               {!isConfirmed && (
                 <button onClick={() => confirmAttendance(weekId, player.id)} title="Zusagen" className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 transition-colors">
                   <Check className="w-4 h-4 stroke-[3]" />
@@ -194,7 +200,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             <>
               <div className="flex flex-col px-1 leading-tight">
                 <span className="text-[11px] font-bold text-rose-600">1 Platz frei!</span>
-                {(cascade?.openForAnyoneCount ?? 0) > 0 ? (
+                {cascade?.openForAnyoneCount > 0 ? (
                   <span className="text-[9px] text-emerald-600 font-semibold">Für alle offen</span>
                 ) : prioName ? (
                   <span className="text-[9px] text-neutral-500">Vorrang: {prioName}</span>
@@ -202,7 +208,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               </div>
               <button
                 onClick={() => claimOpenSlot(weekId, slotTime, currentUser.id)}
-                className={`px-2 py-1.5 rounded-md text-[11px] font-bold text-white shadow-sm flex items-center gap-1 ${isMeOfferedStandby ? 'bg-amber-500' : ''}`}
+                className={\`px-2 py-1.5 rounded-md text-[11px] font-bold text-white shadow-sm flex items-center gap-1 \${isMeOfferedStandby ? 'bg-amber-500' : ''}\`}
                 style={!isMeOfferedStandby ? { backgroundColor: theme.primary } : undefined}
               >
                 {isMeOfferedStandby ? 'Annehmen 🎾' : 'Einspringen 🎾'}
@@ -215,3 +221,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     </div>
   );
 };
+`;
+
+fs.writeFileSync('src/components/PlayerCard.tsx', newContent);
+console.log('Completely rewrote PlayerCard.tsx for extreme compactness');

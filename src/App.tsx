@@ -13,7 +13,7 @@ import { WhatsAppModal } from './components/WhatsAppModal';
 import { UserSwitcherModal } from './components/UserSwitcherModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AddGuestModal } from './components/AddGuestModal';
-import { CalendarExportModal } from './components/CalendarExportModal';
+import { MyCalendarView } from './components/MyCalendarView';
 import { SlotTime } from './types/tennis';
 import { Calendar, Share2, Sparkles } from 'lucide-react';
 import { generateMaterialDynamicPalette } from './utils/materialTheme';
@@ -29,8 +29,7 @@ const AppContent: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showUserSwitch, setShowUserSwitch] = useState(false);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
-  const [showCalendarExport, setShowCalendarExport] = useState(false);
-
+  
   // Apply Google Material Dynamic Color palette & dark mode
   useEffect(() => {
     const root = document.documentElement;
@@ -87,8 +86,7 @@ const AppContent: React.FC = () => {
         onOpenSettings={() => setShowSettings(true)}
         onOpenUserSwitch={() => setShowUserSwitch(true)}
         onOpenWhatsApp={() => setShowWhatsApp(true)}
-        onOpenCalendar={() => setShowCalendarExport(true)}
-      />
+              />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-24 sm:pb-5 space-y-5">
@@ -105,7 +103,7 @@ const AppContent: React.FC = () => {
             onOpenDecline={(playerId) => setDeclinePlayerId(playerId)}
             onOpenSwap={(playerId, fromSlot) => setSwapData({ playerId, fromSlot })}
             onOpenAddGuest={(slotTime) => setGuestSlot(slotTime)}
-            onOpenCalendar={() => setShowCalendarExport(true)}
+            
             onOpenWhatsApp={() => setShowWhatsApp(true)}
           />
         )}
@@ -116,7 +114,13 @@ const AppContent: React.FC = () => {
           />
         )}
 
+        
+        {activeTab === 'calendar' && (
+          <MyCalendarView />
+        )}
+        
         {activeTab === 'absences' && (
+
           <AbsenceManager />
         )}
 
@@ -182,9 +186,6 @@ const AppContent: React.FC = () => {
         <WhatsAppModal onClose={() => setShowWhatsApp(false)} />
       )}
 
-      {showCalendarExport && (
-        <CalendarExportModal onClose={() => setShowCalendarExport(false)} />
-      )}
 
     </div>
   );
