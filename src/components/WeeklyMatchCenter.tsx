@@ -4,7 +4,6 @@ import { SlotTime } from '../types/tennis';
 import { PlayerCard } from './PlayerCard';
 import { SpringerHub } from './SpringerHub';
 import { DoppelGeneratorModal } from './DoppelGeneratorModal';
-import { TrainingSessionConfigBar } from './TrainingSessionConfigBar';
 import { AdminAssignModal } from './AdminAssignModal';
 import { getWeekSlotKeys } from '../utils/slotTimeUtils';
 import { calculateStandbyCascade } from '../utils/standbyCascade';
@@ -521,9 +520,6 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
         )}
 
       </div>
-
-      {/* Haptic & Intuitive Training Session / Slot Configuration Bar (ADMIN ONLY) */}
-      {currentUser.isAdmin && <TrainingSessionConfigBar week={selectedWeek} />}
 
       {/* Courts / Timeslots Layout (Dynamic hours count) */}
       <div className={`grid grid-cols-1 ${
