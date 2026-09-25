@@ -86,7 +86,8 @@ export const AbsenceManager: React.FC = () => {
               <select
                 value={selectedPlayerId}
                 onChange={(e) => setSelectedPlayerId(e.target.value)}
-                className="w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!currentUser.isAdmin}
+                className={(!currentUser.isAdmin ? "opacity-50 cursor-not-allowed " : "") + "w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {players.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -199,13 +200,15 @@ export const AbsenceManager: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => deleteAbsence(abs.id)}
-                      title="Abwesenheit löschen"
-                      className="p-2 rounded-xl text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors m3-ripple"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {(currentUser.isAdmin || abs.playerId === currentUser.id) && (
+                      <button
+                        onClick={() => deleteAbsence(abs.id)}
+                        title="Abwesenheit löschen"
+                        className="p-2 rounded-xl text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors m3-ripple"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 );
               })}

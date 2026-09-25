@@ -85,7 +85,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
           )}
 
           {/* Quick Action: Release to all or Reset */}
-          {hasOpenSpots && openForAnyoneCount < totalOpenSpots && (
+          {hasOpenSpots && currentUser.isAdmin && openForAnyoneCount < totalOpenSpots && (
             <button
               onClick={() => releaseOpenSlotsToAll(week.id)}
               className="py-1.5 px-3 rounded-xl text-xs font-bold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors flex items-center space-x-1"
@@ -97,7 +97,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
           )}
 
           {/* Reset button if any Springer/Frei declined */}
-          {(week.springer1.status === 'declined' || week.springer2.status === 'declined' || week.frei?.status === 'declined') && (
+          {currentUser.isAdmin && (week.springer1.status === "declined" || week.springer2.status === "declined" || week.frei?.status === "declined") && (
             <button
               onClick={() => resetStandbyCascade(week.id)}
               className="py-1.5 px-2.5 rounded-xl text-xs font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center space-x-1"
@@ -275,26 +275,28 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                     <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-300 block">
                       Freien Slot übernehmen:
                     </span>
-                    <div className="space-y-1">
-                      {openSlots.map(slot => (
+                    {(currentUser.id === p.id || currentUser.isAdmin) ? (
+                      <div className="space-y-1">
+                        {openSlots.map(slot => (
+                          <button
+                            key={slot}
+                            onClick={() => acceptSubstitute(week.id, slot, p.id)}
+                            className="w-full py-1.5 px-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-between shadow-xs m3-ripple"
+                          >
+                            <span>{slot} Uhr übernehmen</span>
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                        ))}
                         <button
-                          key={slot}
-                          onClick={() => acceptSubstitute(week.id, slot, p.id)}
-                          className="w-full py-1.5 px-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-between shadow-xs m3-ripple"
+                          onClick={() => declineSubstituteOffer(week.id, p.id)}
+                          className="w-full py-1 mt-1 text-[11px] font-semibold text-neutral-500 hover:text-rose-600 text-center transition-colors"
                         >
-                          <span>{slot} Uhr übernehmen</span>
-                          <Check className="w-3.5 h-3.5" />
+                          {item.prio === 3 ? 'Lieber Pause behalten (an Alle freigeben ➔)' : 'Kann nicht (an nächsten Nachrücker ➔)'}
                         </button>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => declineSubstituteOffer(week.id, p.id)}
-                      className="w-full py-1 text-[11px] font-semibold text-neutral-500 hover:text-rose-600 text-center transition-colors"
-                    >
-                      {item.prio === 3 ? 'Lieber Pause behalten (an Alle freigeben ➔)' : 'Kann nicht (an nächsten Nachrücker ➔)'}
-                    </button>
-                  </div>
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-neutral-500 italic block mt-1">Wartet auf Antwort von {p.shortName}...</span>
+                    )}
                 )}
 
                 {/* Case B: Item 4 (Open for anyone) is current turn */}

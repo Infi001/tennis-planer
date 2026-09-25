@@ -98,6 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Settings Button */}
+          {currentUser.isAdmin && (
           <button
             onClick={onOpenSettings}
             title="Einstellungen & Vereins-Konfiguration"
@@ -108,6 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-neutral-900 rounded-full" title="Mit Supabase verbunden" />
             )}
           </button>
+          )}
 
         </div>
       </div>

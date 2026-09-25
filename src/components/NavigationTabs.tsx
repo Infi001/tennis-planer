@@ -38,13 +38,16 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
       id: 'stats',
       label: 'Statistiken',
       icon: <BarChart3 className="w-4 h-4" />,
-    },
-    {
+    }
+  ];
+
+  if (currentUser.isAdmin) {
+    tabs.push({
       id: 'admin',
       label: 'Verwaltung',
       icon: <Shield className="w-4 h-4" />,
-    },
-  ];
+    });
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 pb-[env(safe-area-inset-bottom)] sm:relative sm:border-0 sm:bg-transparent sm:dark:bg-transparent sm:backdrop-blur-none sm:pb-0 w-full flex items-center justify-center sm:py-2 sm:px-4">
