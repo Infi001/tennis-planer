@@ -12,6 +12,7 @@ import { SwapModal } from './components/SwapModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
 import { UserSwitcherModal } from './components/UserSwitcherModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ImpressumModal } from './components/ImpressumModal';
 import { AddGuestModal } from './components/AddGuestModal';
 import { MyCalendarView } from './components/MyCalendarView';
 import { SlotTime } from './types/tennis';
@@ -28,6 +29,16 @@ const AppContent: React.FC = () => {
   const [guestSlot, setGuestSlot] = useState<SlotTime | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showUserSwitch, setShowUserSwitch] = useState(false);
+
+  const [showCalendarExport, setShowCalendarExport] = useState(false); // remove later if unused
+  const [showImpressum, setShowImpressum] = useState(false);
+
+  useEffect(() => {
+    const handleOpenImpressum = () => setShowImpressum(true);
+    window.addEventListener('open-impressum', handleOpenImpressum);
+    return () => window.removeEventListener('open-impressum', handleOpenImpressum);
+  }, []);
+
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   
   // Apply Google Material Dynamic Color palette & dark mode

@@ -522,8 +522,8 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
       </div>
 
-      {/* Haptic & Intuitive Training Session / Slot Configuration Bar */}
-      <TrainingSessionConfigBar week={selectedWeek} />
+      {/* Haptic & Intuitive Training Session / Slot Configuration Bar (ADMIN ONLY) */}
+      {currentUser.isAdmin && <TrainingSessionConfigBar week={selectedWeek} />}
 
       {/* Courts / Timeslots Layout (Dynamic hours count) */}
       <div className={`grid grid-cols-1 ${
