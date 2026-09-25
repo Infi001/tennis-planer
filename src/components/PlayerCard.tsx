@@ -133,7 +133,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               {!isDeclined && !isSubstitute && <span>P{index + 1}</span>}
               {isConfirmed && <span className="text-emerald-600 dark:text-emerald-400 flex items-center"><Check className="w-3 h-3 mr-0.5"/>Dabei</span>}
               {isDeclined && <span className="text-rose-600 dark:text-rose-400 flex items-center"><AlertCircle className="w-3 h-3 mr-0.5"/>{assignment.declineReason || 'Abgesagt'}</span>}
-              {isSubstitute && originalPlayer && <span className="text-blue-600 dark:text-blue-400 truncate">Springer für {originalPlayer.shortName}</span>}
+              {isSubstitute && originalPlayer && <span className="text-blue-600 dark:text-blue-400 truncate">Springer für {originalPlayer.name}</span>}
               {isSwapped && <span className="text-purple-600 dark:text-purple-400 flex items-center"><ArrowLeftRight className="w-3 h-3 mr-0.5"/>Tausch</span>}
               {assignment.status === 'pending' && <span className="text-amber-600 dark:text-amber-400">Offen</span>}
             </div>

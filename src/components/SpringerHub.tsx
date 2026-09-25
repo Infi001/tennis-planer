@@ -295,7 +295,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                         </button>
                       </div>
                     ) : (
-                      <span className="text-[11px] text-neutral-500 italic block mt-1">Wartet auf Antwort von {p.shortName}...</span>
+                      <span className="text-[11px] text-neutral-500 italic block mt-1">Wartet auf Antwort von {p.name}...</span>
                     )}
                   </div>
                 )}
