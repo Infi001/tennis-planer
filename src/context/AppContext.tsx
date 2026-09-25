@@ -94,9 +94,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   // Default selected week: Find the first upcoming Monday or week 0
   const [selectedWeekId, setSelectedWeekId] = useState<string>(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const initialWeeks = StorageService.getWeeks();
-    const upcoming = initialWeeks.find(w => w.date >= today && !w.isCancelled);
+    const todayObj = new Date();
+    const year = todayObj.getFullYear();
+    const month = String(todayObj.getMonth() + 1).padStart(2, '0');
+    const day = String(todayObj.getDate()).padStart(2, '0');
+    const localToday = `${year}-${month}-${day}`;
+    
+    const initialWeeks = StorageService.getWeeks().sort((a, b) => a.date.localeCompare(b.date));
+    const upcoming = initialWeeks.find(w => w.date >= localToday);
     return upcoming ? upcoming.id : (initialWeeks[0]?.id || '2026-10-05');
   });
 
