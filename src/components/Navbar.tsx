@@ -37,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Club Logo & Brand */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
           <div 
             className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[var(--club-primary)] shadow-sm transition-transform duration-200 hover:scale-105 bg-white"
           >
@@ -45,11 +45,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white dark:text-neutral-50">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white dark:text-neutral-50 truncate">
                 {theme.clubName}
               </span>
               <span 
-                className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-[var(--club-primary)] bg-white/90"
+                className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-[var(--club-primary)] bg-white/90"
               >
                 Trainingsplaner
               </span>
@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Action Controls & User Switcher */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
 
           {/* Dark Mode Toggle */}
           <button
@@ -74,8 +74,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Current User Pill / Switcher */}
           <button
-            onClick={onOpenUserSwitch}
-            className="flex items-center space-x-2 pl-1.5 pr-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-white/10 dark:border-neutral-700 transition-all m3-ripple"
+            onClick={currentUser.isAdmin ? onOpenUserSwitch : undefined}
+            className={`flex items-center space-x-2 pl-1.5 pr-3 py-1.5 rounded-full bg-white/20 dark:bg-neutral-800 border border-white/10 dark:border-neutral-700 transition-all ${currentUser.isAdmin ? 'hover:bg-white/30 dark:hover:bg-neutral-700 cursor-pointer m3-ripple' : 'cursor-default'}`}
+            title={currentUser.isAdmin ? 'Benutzer wechseln' : 'Als dieser Benutzer eingeloggt'}
           >
             <div 
               className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-xs border border-white/20"
@@ -84,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {currentUser.shortName}
             </div>
             <div className="text-left hidden sm:block">
-              <div className="text-xs font-bold text-white dark:text-neutral-200 leading-tight flex items-center gap-1">
+              <div className="text-xs font-bold text-white dark:text-neutral-200 leading-tight flex items-center gap-1 max-w-[80px] sm:max-w-[120px] truncate">
                 {currentUser.name}
                 {currentUser.isAdmin && (
                   <span className="text-[9px] bg-white/20 text-white dark:bg-amber-500/20 dark:text-amber-300 px-1 py-0.2 rounded font-semibold">
@@ -93,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
               <div className="text-[10px] text-white/70 dark:text-neutral-400 leading-none">
-                Wechseln
+                {currentUser.isAdmin ? 'Wechseln' : 'Eingeloggt'}
               </div>
             </div>
           </button>

@@ -22,6 +22,11 @@ async function safeSupabaseSync(action: () => PromiseLike<any>) {
   }
 }
 
+
+function generateToken() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 export class StorageService {
   // --- Server Echo Prevention ---
   static serverPlayersJSON = '';
@@ -41,10 +46,11 @@ export class StorageService {
     const raw = localStorage.getItem(STORAGE_KEYS.PLAYERS);
     if (!raw) {
       this.savePlayers(INITIAL_PLAYERS);
-      return INITIAL_PLAYERS;
+      return INITIAL_PLAYERS.map(p => ({ ...p, accessToken: generateToken() }));
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return parsed.map((p: Player) => p.accessToken ? p : { ...p, accessToken: generateToken() });
     } catch {
       return INITIAL_PLAYERS;
     }
@@ -67,6 +73,7 @@ export class StorageService {
           short_name: p.shortName,
           avatar_color: p.avatarColor,
           is_admin: p.isAdmin,
+          access_token: p.accessToken,
         })));
         sb.channel('tennis_db_sync').send({ type: 'broadcast', event: 'data_changed', payload: { table: 'players' } });
         return res;

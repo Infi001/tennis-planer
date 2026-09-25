@@ -40,7 +40,7 @@ export function useSupabaseSync({
 
         if (playersRes.data && playersRes.data.length > 0) {
           const pData = playersRes.data.map(p => ({
-            id: p.id, name: p.name, shortName: p.short_name, avatarColor: p.avatar_color, isAdmin: p.is_admin,
+            id: p.id, name: p.name, shortName: p.short_name, avatarColor: p.avatar_color, isAdmin: p.is_admin, accessToken: p.access_token,
           }));
           StorageService.setServerData('players', JSON.stringify(pData));
           setPlayers(pData);

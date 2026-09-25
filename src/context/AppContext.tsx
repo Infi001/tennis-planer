@@ -103,6 +103,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const currentUser = players.find(p => p.id === currentUserId) || players[0];
 
   // Fetch from Supabase and listen for realtime changes
+  
+  // Magic Link Token Check
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token && players.length > 0) {
+      const matchedPlayer = players.find(p => p.accessToken === token);
+      if (matchedPlayer) {
+        setCurrentUserId(matchedPlayer.id);
+        localStorage.setItem('tennis_current_user_id_v1', matchedPlayer.id);
+        // Clean up URL without refreshing
+        const url = new URL(window.location.href);
+        url.searchParams.delete('token');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [players]); // Re-run if players load late from Supabase
+
   useSupabaseSync({ setPlayers, setWeeks, setAbsences, setSwaps, setTheme: setThemeState });
   const selectedWeek = weeks.find(w => w.id === selectedWeekId);
 

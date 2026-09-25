@@ -24,6 +24,7 @@ export interface Player {
   phone?: string;
   pin?: string;
   isAdmin?: boolean;
+  accessToken?: string;
 }
 
 export interface SlotAssignment {

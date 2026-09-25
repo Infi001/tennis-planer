@@ -108,33 +108,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   };
 
   // Swipe-to-delete logic for Admins
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const swipeStartX = useRef<number | null>(null);
+    const swipeStartX = useRef<number | null>(null);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isAdmin) return;
-    swipeStartX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!swipeStartX.current || !isAdmin) return;
-    const diff = e.targetTouches[0].clientX - swipeStartX.current;
-    if (diff < 0) {
-      setSwipeOffset(Math.max(-80, diff));
-    } else {
-      setSwipeOffset(0);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (swipeOffset < -40) {
-      setSwipeOffset(-80); // lock open
-    } else {
-      setSwipeOffset(0); // snap back
-    }
-    swipeStartX.current = null;
-  };
-
+  
   const handleQuickRemove = () => {
     adminDragDropAssign(weekId, slotTime, 'remove', assignment.playerId);
   };
@@ -142,17 +118,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   return (
     <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border transition-all duration-200 shadow-sm border-neutral-200 dark:border-neutral-700">
       {/* Background Delete Button (revealed on swipe) */}
-      {isAdmin && swipeOffset < 0 && (
-        <div className="absolute inset-y-0 right-0 w-20 bg-rose-500 flex items-center justify-center rounded-xl sm:rounded-2xl">
-          <button 
-            onClick={handleQuickRemove}
-            className="w-full h-full flex flex-col items-center justify-center text-white space-y-1"
-          >
-            <X className="w-5 h-5" />
-            <span className="text-[11px] font-bold">Löschen</span>
-          </button>
-        </div>
-      )}
+      
 
       {/* Swipeable Foreground */}
       <div 
@@ -160,10 +126,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ transform: `translateX(${swipeOffset}px)` }}
+        
+        
       className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl border transition-all duration-200 ${
         isDeclined 
           ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200/50 dark:border-rose-900/50' 
