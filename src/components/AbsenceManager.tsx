@@ -51,10 +51,10 @@ export const AbsenceManager: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              Urlaubs- & Abwesenheitsplaner
+              Abwesenheiten & Urlaub
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Trage Abwesenheiten im Voraus ein – der Trainingsplan zieht Springer automatisch nach!
+              Verhinderungen eintragen
             </p>
           </div>
         </div>

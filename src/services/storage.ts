@@ -237,12 +237,16 @@ export class StorageService {
   }
 
   // --- Current User ---
-  static getCurrentUserId(): string {
-    return localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID) || 'p4'; // Default to Florian
+  static getCurrentUserId(): string | null {
+    return localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
   }
 
   static saveCurrentUserId(id: string) {
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, id);
+  }
+
+  static clearCurrentUserId() {
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER_ID);
   }
 
   // --- Theme ---
@@ -253,6 +257,14 @@ export class StorageService {
       return JSON.parse(raw);
     } catch {
       return THEME_PRESETS[0];
+    }
+  }
+
+  static async deleteRecord(table: string, id: string) {
+    const sb = getSupabase();
+    if (sb) {
+      await sb.from(table).delete().eq('id', id);
+      sb.channel('tennis_db_sync').send({ type: 'broadcast', event: 'data_changed', payload: { table } });
     }
   }
 

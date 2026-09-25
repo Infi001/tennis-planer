@@ -14,7 +14,10 @@ import {
   Check, 
   X, 
   Sparkles,
-  Lock
+  Lock,
+  Share2,
+  Copy,
+  MessageSquare
 } from 'lucide-react';
 
 const AVATAR_COLORS = [
@@ -30,6 +33,35 @@ export const PlayerManagement: React.FC = () => {
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
+
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showAllLinksModal, setShowAllLinksModal] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  const getPlayerMagicLink = (player: Player) => {
+    return `${window.location.origin}/?token=${player.accessToken || ''}`;
+  };
+
+  const handleCopyPlayerLink = (player: Player) => {
+    navigator.clipboard.writeText(getPlayerMagicLink(player));
+    setCopiedId(player.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleWhatsAppInvite = (player: Player) => {
+    const link = getPlayerMagicLink(player);
+    const text = `🎾 Hallo ${player.name}!\nHier ist dein persönlicher Zugangslink für unseren ${theme.clubName} Trainingsplaner:\n\n👉 ${link}\n\nEinfach anklicken, dann bist du sofort eingeloggt!`;
+    const phone = player.phone ? player.phone.replace(/[^0-9]/g, '') : '';
+    const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleCopyAllLinks = () => {
+    const list = players.map(p => `${p.name}: ${getPlayerMagicLink(p)}`).join('\n\n');
+    navigator.clipboard.writeText(list);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2500);
+  };
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -151,6 +183,15 @@ export const PlayerManagement: React.FC = () => {
           </div>
 
           <button
+            onClick={() => setShowAllLinksModal(true)}
+            className="py-2 px-3 rounded-xl text-xs font-bold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 shadow-xs m3-ripple flex items-center space-x-1.5 shrink-0"
+            title="Alle persönlichen Einladungs-Links anzeigen"
+          >
+            <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden sm:inline">Alle Zugangs-Links</span>
+          </button>
+
+          <button
             onClick={openAddModal}
             className="py-2 px-3.5 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1.5 shrink-0"
             style={{ backgroundColor: theme.primary }}
@@ -216,6 +257,22 @@ export const PlayerManagement: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-1 shrink-0 ml-2">
+                <button
+                  onClick={() => handleWhatsAppInvite(player)}
+                  title="WhatsApp Einladungs-Link senden"
+                  className="p-1.5 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 transition-colors m3-ripple"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => handleCopyPlayerLink(player)}
+                  title="Persönlichen Zugangslink kopieren"
+                  className="p-1.5 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 transition-colors m3-ripple relative"
+                >
+                  {copiedId === player.id ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                </button>
+
                 <button
                   onClick={() => openEditModal(player)}
                   title="Spieler bearbeiten"
@@ -440,6 +497,103 @@ export const PlayerManagement: React.FC = () => {
                 Endgültig löschen
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Links Overview Modal */}
+      {showAllLinksModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 w-full max-w-xl shadow-2xl border border-neutral-200 dark:border-neutral-800 space-y-4">
+            
+            <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                  <Share2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                    Alle persönlichen Zugangs-Links
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    Übersicht aller 1-Klick-Links für die Vereinsmitglieder
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAllLinksModal(false)}
+                className="p-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* List */}
+            <div className="max-h-[50vh] overflow-y-auto space-y-2 p-1">
+              {players.map((p) => {
+                const link = getPlayerMagicLink(p);
+                return (
+                  <div 
+                    key={p.id}
+                    className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700/60 flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                      <div 
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+                        style={{ backgroundColor: p.avatarColor || theme.primary }}
+                      >
+                        {p.shortName}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-neutral-900 dark:text-neutral-100 truncate">
+                          {p.name} {p.isAdmin && <span className="text-[10px] text-amber-500 font-semibold">(Admin)</span>}
+                        </div>
+                        <div className="text-[10px] font-mono text-neutral-400 truncate">
+                          {link}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1.5 shrink-0">
+                      <button
+                        onClick={() => handleCopyPlayerLink(p)}
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-100 flex items-center gap-1"
+                      >
+                        {copiedId === p.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span className="hidden sm:inline">{copiedId === p.id ? 'Kopiert' : 'Link'}</span>
+                      </button>
+                      <button
+                        onClick={() => handleWhatsAppInvite(p)}
+                        className="p-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 hover:bg-emerald-200 transition-colors"
+                        title="Per WhatsApp senden"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+              <button
+                onClick={handleCopyAllLinks}
+                className="py-2.5 px-4 rounded-xl text-xs font-bold bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 flex items-center space-x-1.5 transition-colors"
+              >
+                {copiedAll ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedAll ? 'Alle Links in Zwischenablage kopiert!' : 'Alle Links als Text kopieren'}</span>
+              </button>
+
+              <button
+                onClick={() => setShowAllLinksModal(false)}
+                className="py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple"
+                style={{ backgroundColor: theme.primary }}
+              >
+                Fertig
+              </button>
+            </div>
+
           </div>
         </div>
       )}

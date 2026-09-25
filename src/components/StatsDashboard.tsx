@@ -73,10 +73,10 @@ export const StatsDashboard: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              Fairness & Trainings-Statistiken
+              Statistiken
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Übersicht über gespielte Stunden, Springer-Einsätze und Absagen aller 15 Mitglieder
+              Einsätze und Anwesenheiten
             </p>
           </div>
         </div>

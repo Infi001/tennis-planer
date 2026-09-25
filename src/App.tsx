@@ -10,7 +10,8 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { DeclineModal } from './components/DeclineModal';
 import { SwapModal } from './components/SwapModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
-import { UserSwitcherModal } from './components/UserSwitcherModal';
+import { AccountModal } from './components/AccountModal';
+import { LoginScreen } from './components/LoginScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { ImpressumModal } from './components/ImpressumModal';
 import { AddGuestModal } from './components/AddGuestModal';
@@ -20,7 +21,7 @@ import { Calendar, Share2, Sparkles } from 'lucide-react';
 import { generateMaterialDynamicPalette } from './utils/materialTheme';
 
 const AppContent: React.FC = () => {
-  const { theme, isDarkMode, setSelectedWeekId } = useApp();
+  const { theme, isDarkMode, setSelectedWeekId, isLoggedIn } = useApp();
   const [activeTab, setActiveTab] = useState<TabKey>('matchcenter');
 
   // Modals state
@@ -82,6 +83,10 @@ const AppContent: React.FC = () => {
     setSelectedWeekId(weekId);
     setActiveTab('matchcenter');
   };
+
+  if (!isLoggedIn) {
+    return <LoginScreen />;
+  }
 
   return (
     <div 
@@ -194,7 +199,7 @@ const AppContent: React.FC = () => {
       )}
 
       {showUserSwitch && (
-        <UserSwitcherModal onClose={() => setShowUserSwitch(false)} />
+        <AccountModal onClose={() => setShowUserSwitch(false)} />
       )}
 
       {showWhatsApp && (

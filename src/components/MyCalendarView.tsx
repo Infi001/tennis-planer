@@ -79,33 +79,6 @@ export const MyCalendarView: React.FC = () => {
         </div>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-5 border border-neutral-100 dark:border-neutral-700/60 shadow-sm flex items-start gap-3">
-          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl shrink-0">
-            <Bell className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100 mb-1">Immer pünktlich</h4>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-              Die Kalenderdatei enthält automatische Erinnerungen für jeden deiner Termine.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-5 border border-neutral-100 dark:border-neutral-700/60 shadow-sm flex items-start gap-3">
-          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl shrink-0">
-            <Smartphone className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-neutral-900 dark:text-neutral-100 mb-1">Apple & Google</h4>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-              Die .ics Datei funktioniert perfekt auf iOS, Android, Outlook und Mac.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Upcoming Dates Preview */}
       <div className="bg-white dark:bg-neutral-800 rounded-2xl p-5 sm:p-6 shadow-sm border border-neutral-200 dark:border-neutral-700">
         <h3 className="font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">

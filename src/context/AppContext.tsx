@@ -14,6 +14,8 @@ interface AppContextType {
   selectedWeekId: string;
   setSelectedWeekId: (id: string) => void;
   currentUser: Player;
+  isLoggedIn: boolean;
+  logout: () => void;
   setCurrentUser: (player: Player) => void;
   theme: ClubTheme;
   setTheme: (theme: ClubTheme) => void;
@@ -90,7 +92,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('tennis_dark_mode', String(val));
   };
 
-  const [currentUserId, setCurrentUserId] = useState<string>(() => StorageService.getCurrentUserId());
+  const [currentUserId, setCurrentUserId] = useState<string | null>(() => StorageService.getCurrentUserId());
   
   // Default selected week: Find the first upcoming Monday or week 0
   const [selectedWeekId, setSelectedWeekId] = useState<string>(() => {
@@ -105,7 +107,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return upcoming ? upcoming.id : (initialWeeks[0]?.id || '2026-10-05');
   });
 
-  const currentUser = players.find(p => p.id === currentUserId) || players[0];
+  const activePlayer = players.find(p => p.id === currentUserId) || null;
+  const isLoggedIn = activePlayer !== null;
+  const currentUser: Player = activePlayer || players[0] || { id: 'p1', name: 'Gast', shortName: 'GA', isAdmin: false };
 
   // Fetch from Supabase and listen for realtime changes
   
@@ -167,6 +171,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setCurrentUser = (player: Player) => {
     setCurrentUserId(player.id);
     StorageService.saveCurrentUserId(player.id);
+  };
+
+  const logout = () => {
+    setCurrentUserId(null);
+    StorageService.clearCurrentUserId();
   };
 
   // --- Strict Validation Helpers ---
@@ -966,6 +975,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPlayers(prev => {
       const updated = prev.filter(p => p.id !== playerId);
       StorageService.savePlayers(updated);
+      StorageService.deleteRecord('players', playerId);
       return updated;
     });
     if (currentUser.id === playerId) {
@@ -1013,6 +1023,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWeeks(prev => {
       const updated = prev.filter(w => w.id !== weekId);
       StorageService.saveWeeks(updated);
+      StorageService.deleteRecord('training_weeks', weekId);
       return updated;
     });
     if (selectedWeekId === weekId) {
@@ -1215,6 +1226,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedWeekId,
         currentUser,
         setCurrentUser,
+        isLoggedIn,
+        logout,
         theme,
         setTheme,
         isDarkMode,

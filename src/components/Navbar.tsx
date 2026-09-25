@@ -70,11 +70,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {/* Current User Pill / Switcher */}
+          {/* Current User Pill / Account */}
           <button
-            onClick={currentUser.isAdmin ? onOpenUserSwitch : undefined}
-            className={`flex items-center space-x-2 pl-1.5 pr-3 py-1.5 rounded-full bg-white/20 dark:bg-neutral-800 border border-white/10 dark:border-neutral-700 transition-all ${currentUser.isAdmin ? 'hover:bg-white/30 dark:hover:bg-neutral-700 cursor-pointer m3-ripple' : 'cursor-default'}`}
-            title={currentUser.isAdmin ? 'Benutzer wechseln' : 'Als dieser Benutzer eingeloggt'}
+            onClick={onOpenUserSwitch}
+            className="flex items-center space-x-1.5 sm:space-x-2 pl-1.5 pr-2.5 sm:pr-3 py-1 rounded-full bg-white/20 dark:bg-neutral-800 border border-white/10 dark:border-neutral-700 hover:bg-white/30 dark:hover:bg-neutral-700 cursor-pointer transition-all m3-ripple"
+            title="Mein Profil & Zugangslink"
           >
             <div 
               className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-xs border border-white/20"
@@ -82,17 +82,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {currentUser.shortName}
             </div>
-            <div className="text-left hidden sm:block">
-              <div className="text-xs font-bold text-white dark:text-neutral-200 leading-tight flex items-center gap-1 max-w-[80px] sm:max-w-[120px] truncate">
-                {currentUser.name}
+            <div className="text-left">
+              <div className="text-xs font-bold text-white dark:text-neutral-200 leading-tight flex items-center gap-1 max-w-[75px] sm:max-w-[120px] truncate">
+                <span>{currentUser.name.split(' ')[0]}</span>
                 {currentUser.isAdmin && (
-                  <span className="text-[9px] bg-white/20 text-white dark:bg-amber-500/20 dark:text-amber-300 px-1 py-0.2 rounded font-semibold">
+                  <span className="text-[9px] bg-white/20 text-white dark:bg-amber-500/20 dark:text-amber-300 px-1 py-0.2 rounded font-semibold hidden sm:inline">
                     Admin
                   </span>
                 )}
-              </div>
-              <div className="text-[10px] text-white/70 dark:text-neutral-400 leading-none">
-                {currentUser.isAdmin ? 'Wechseln' : 'Eingeloggt'}
               </div>
             </div>
           </button>

@@ -60,14 +60,14 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
           <div>
             <div className="flex items-center space-x-2">
               <h3 className="text-base font-extrabold text-neutral-900 dark:text-neutral-100 leading-tight">
-                Nachrücker- & Standby-Kaskade
+                Springer & Nachrücker
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-                Feste Reihenfolge
+                Reihenfolge
               </span>
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              1. Springer ➔ 2. Springer ➔ Frei (Pause) ➔ Alle Vereinsmitglieder
+              1. Springer ➔ 2. Springer ➔ Spielfrei ➔ Offener Pool
             </p>
           </div>
         </div>

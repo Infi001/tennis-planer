@@ -53,8 +53,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 
                   Admin-Modus
                 </span>
               </div>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 max-w-2xl">
-                Zentrale Konfiguration für deinen Tennis-Trainingsplan: Spielerbasisdaten pflegen, Termine und Trainingseinheiten flexibel einstellen sowie automatisierte Paarungs- und Zeitrotationen mit dem Optimierer generieren.
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                Kader, Spieltermine und Rotationsplan verwalten
               </p>
             </div>
           </div>

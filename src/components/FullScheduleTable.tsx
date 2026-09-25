@@ -80,10 +80,10 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
           </div>
           <div>
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              Saisonübersicht (Winter 2026/2027)
+              Saisonplan
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Rotationsmatrix aller 15 Spieler über alle 30 Wochen
+              Gesamtübersicht aller Termine
             </p>
           </div>
         </div>

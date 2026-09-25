@@ -30,13 +30,13 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
     },
     {
       id: 'absences',
-      label: 'Urlaub / Abwesend',
+      label: 'Urlaub',
       icon: <Plane className="w-4 h-4" />,
       badge: absences.length > 0 ? absences.length : undefined,
     },
     {
       id: 'stats',
-      label: 'Statistiken',
+      label: 'Statistik',
       icon: <BarChart3 className="w-4 h-4" />,
     }
   ];
@@ -44,7 +44,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
   if (currentUser.isAdmin) {
     tabs.push({
       id: 'admin',
-      label: 'Verwaltung',
+      label: 'Admin',
       icon: <Shield className="w-4 h-4" />,
     });
   }
