@@ -4,7 +4,7 @@ export const INITIAL_PLAYERS: Player[] = [
   { id: 'p1', name: 'André O.', shortName: 'AO', avatarColor: '#3B82F6', isAdmin: false },
   { id: 'p2', name: 'Andre R.', shortName: 'AR', avatarColor: '#10B981', isAdmin: false },
   { id: 'p3', name: 'Bernd', shortName: 'BE', avatarColor: '#F59E0B', isAdmin: false },
-  { id: 'p4', name: 'Florian', shortName: 'FL', avatarColor: '#6366F1', isAdmin: true }, // Current user as admin organizer
+  { id: 'p4', name: 'Florian', shortName: 'FL', avatarColor: '#6366F1', isAdmin: true }, // 2. Admin
   { id: 'p5', name: 'Heiko', shortName: 'HE', avatarColor: '#EC4899', isAdmin: false },
   { id: 'p6', name: 'Ingo', shortName: 'IN', avatarColor: '#8B5CF6', isAdmin: false },
   { id: 'p7', name: 'Jörg B.', shortName: 'JB', avatarColor: '#14B8A6', isAdmin: false },
@@ -15,7 +15,7 @@ export const INITIAL_PLAYERS: Player[] = [
   { id: 'p12', name: 'Sascha', shortName: 'SA', avatarColor: '#E11D48', isAdmin: false },
   { id: 'p13', name: 'Stephan', shortName: 'ST', avatarColor: '#0284C7', isAdmin: false },
   { id: 'p14', name: 'Thorsten', shortName: 'TH', avatarColor: '#059669', isAdmin: false },
-  { id: 'p15', name: 'Timo', shortName: 'TI', avatarColor: '#D97706', isAdmin: false },
+  { id: 'p15', name: 'Timo', shortName: 'TI', avatarColor: '#D97706', isAdmin: true }, // 1. Admin
 ];
 
 export const THEME_PRESETS: ClubTheme[] = [

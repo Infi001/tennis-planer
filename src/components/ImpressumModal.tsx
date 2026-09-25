@@ -31,9 +31,9 @@ export const ImpressumModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </div>
 
           <div>
-            <h3 className="font-bold text-neutral-900 dark:text-neutral-100 text-base mb-2">Verantwortlich für den Betrieb:</h3>
-            <p>Florian Herold<br />
-            (Interne Projektleitung)</p>
+            <h3 className="font-bold text-neutral-900 dark:text-neutral-100 text-base mb-2">Verantwortlich für die Organisation:</h3>
+            <p>Timo (1. Admin)<br />
+            Florian Herold (2. Admin & Organisation)</p>
             <p className="mt-2 text-xs opacity-75">
               *Eine vollständige Postanschrift entfällt aufgrund der Ausnahme für familiäre und rein private Zwecke nach dem Digitale-Dienste-Gesetz (DDG).*
             </p>

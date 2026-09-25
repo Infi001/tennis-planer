@@ -120,7 +120,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const token = params.get('token');
     const admin = params.get('admin');
 
-    if (admin === 'florian') {
+    if (admin === 'timo' || admin === 'p15') {
+      setCurrentUserId('p15');
+      localStorage.setItem('tennis_current_user_id_v1', 'p15');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('admin');
+      window.history.replaceState({}, '', url.toString());
+      return;
+    }
+
+    if (admin === 'florian' || admin === 'p4') {
       setCurrentUserId('p4');
       localStorage.setItem('tennis_current_user_id_v1', 'p4');
       const url = new URL(window.location.href);

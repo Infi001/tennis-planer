@@ -16,6 +16,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ImpressumModal } from './components/ImpressumModal';
 import { AddGuestModal } from './components/AddGuestModal';
 import { MyCalendarView } from './components/MyCalendarView';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { SlotTime } from './types/tennis';
 import { Calendar, Share2, Sparkles } from 'lucide-react';
 import { generateMaterialDynamicPalette } from './utils/materialTheme';
@@ -107,6 +108,9 @@ const AppContent: React.FC = () => {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-24 sm:pb-5 space-y-5">
         
+        {/* PWA Homescreen Prompt */}
+        <PWAInstallBanner />
+
         {/* Navigation Tabs */}
         <NavigationTabs 
           activeTab={activeTab} 

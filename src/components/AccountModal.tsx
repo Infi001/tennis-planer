@@ -14,7 +14,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
 
   const personalLink = currentUser?.accessToken 
     ? `${window.location.origin}/?token=${currentUser.accessToken}`
-    : `${window.location.origin}/?admin=florian`;
+    : `${window.location.origin}/?admin=${currentUser?.name.toLowerCase() || 'admin'}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(personalLink);
