@@ -143,6 +143,17 @@ const AppContent: React.FC = () => {
           <AdminDashboard />
         )}
 
+      
+        {/* Impressum Link */}
+        <div className="pt-8 pb-4 flex justify-center">
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('open-impressum'))} 
+            className="text-[10px] text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors px-4 py-2"
+          >
+            Impressum & Datenschutz
+          </button>
+        </div>
+
       </main>
 
       

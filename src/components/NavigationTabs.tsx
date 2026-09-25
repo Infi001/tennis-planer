@@ -77,7 +77,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
           );
         })}
       </div>
-      <button onClick={() => window.dispatchEvent(new CustomEvent('open-impressum'))} className="absolute -top-6 left-1/2 -translate-x-1/2 sm:static sm:mt-2 text-[9px] text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Impressum & Datenschutz</button>
+      
     </nav>
   );
 };
