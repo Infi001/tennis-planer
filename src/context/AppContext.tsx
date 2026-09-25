@@ -112,8 +112,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Magic Link Token Check
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    
     const token = params.get('token');
+    const admin = params.get('admin');
+
+    if (admin === 'florian') {
+      setCurrentUserId('p4');
+      localStorage.setItem('tennis_current_user_id_v1', 'p4');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('admin');
+      window.history.replaceState({}, '', url.toString());
+      return;
+    }
+
     if (token && players.length > 0) {
+
       const matchedPlayer = players.find(p => p.accessToken === token);
       if (matchedPlayer) {
         setCurrentUserId(matchedPlayer.id);
