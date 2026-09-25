@@ -189,6 +189,10 @@ const AppContent: React.FC = () => {
         <SettingsModal onClose={() => setShowSettings(false)} />
       )}
 
+      {showImpressum && (
+        <ImpressumModal onClose={() => setShowImpressum(false)} />
+      )}
+
       {showUserSwitch && (
         <UserSwitcherModal onClose={() => setShowUserSwitch(false)} />
       )}
