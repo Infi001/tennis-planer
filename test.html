@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Test Realtime</h1>
+  <script>
+    const supabaseUrl = 'https://xxmbhcdjpgzngqifppka.supabase.co';
+    const supabaseKey = 'sb_publishable_LPc69sqwgz_0_uV-L6fJqg_0XiFXPLW';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const channel = supabase.channel('test_channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'training_weeks' }, (payload) => {
+        console.log('PURE HTML REALTIME RECEIVED:', payload);
+      })
+      .subscribe((status, err) => {
+        console.log('PURE HTML STATUS:', status);
+        if (err) console.error(err);
+      });
+  </script>
+</body>
+</html>

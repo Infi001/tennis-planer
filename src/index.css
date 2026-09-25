@@ -1,0 +1,119 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+  --color-neutral-950: #020617;
+}
+
+@layer base {
+  :root {
+    --club-primary: #1D4ED8;
+    --club-primary-container: #DBEAFE;
+    --club-on-primary: #FFFFFF;
+    --club-on-primary-container: #1E3A8A;
+    --club-secondary: #0284C7;
+    --club-on-secondary: #FFFFFF;
+    --club-secondary-container: #E0F2FE;
+    --club-on-secondary-container: #075985;
+    --club-accent: #38BDF8;
+
+    /* Google Material 3 Surface & Elevation System */
+    --md-sys-color-background: #F8FAFD;
+    --md-sys-color-on-background: #191C1E;
+    --md-sys-color-surface: #FFFFFF;
+    --md-sys-color-on-surface: #191C1E;
+    --md-sys-color-surface-variant: #F1F5F9;
+    --md-sys-color-on-surface-variant: #44474E;
+    --md-sys-color-surface-container-low: #F8FAFC;
+    --md-sys-color-surface-container: #F1F5F9;
+    --md-sys-color-surface-container-high: #E2E8F0;
+    --md-sys-color-outline: #CBD5E1;
+    --md-sys-color-outline-variant: #E2E8F0;
+
+    --md-surface: #FFFFFF;
+    --md-surface-dim: #F3F4F6;
+    --md-surface-container: #F8FAFC;
+    --md-surface-variant: #E2E8F0;
+    --md-outline: #CBD5E1;
+  }
+
+  .dark {
+    --md-sys-color-background: #0f172a;
+    --md-sys-color-on-background: #f8fafc;
+    --md-sys-color-surface: #1e293b;
+    --md-sys-color-on-surface: #f8fafc;
+    --md-sys-color-surface-variant: #334155;
+    --md-sys-color-on-surface-variant: #cbd5e1;
+    --md-sys-color-surface-container-low: #020617;
+    --md-sys-color-surface-container: #0f172a;
+    --md-sys-color-surface-container-high: #1e293b;
+    --md-sys-color-outline: #64748b;
+    --md-sys-color-outline-variant: #475569;
+
+    --md-surface: #1e293b;
+    --md-surface-dim: #0f172a;
+    --md-surface-container: #1e293b;
+    --md-surface-variant: #334155;
+    --md-outline: #475569;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+  }
+}
+
+/* Material 3 Elevation & Utilities */
+.m3-elevation-1 {
+  box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+}
+
+.m3-elevation-2 {
+  box-shadow: 0px 2px 6px 2px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.04);
+}
+
+.m3-elevation-3 {
+  box-shadow: 0px 4px 8px 3px rgba(0, 0, 0, 0.08), 0px 1px 3px 0px rgba(0, 0, 0, 0.05);
+}
+
+.m3-elevation-4 {
+  box-shadow: 0px 6px 10px 4px rgba(0, 0, 0, 0.08), 0px 2px 3px 0px rgba(0, 0, 0, 0.05);
+}
+
+/* Smooth Ripple / Active effect */
+.m3-ripple {
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.m3-ripple:active {
+  transform: scale(0.98);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
