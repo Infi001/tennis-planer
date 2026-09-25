@@ -134,18 +134,7 @@ const AppContent: React.FC = () => {
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-200/60 dark:border-neutral-800 py-6 text-center text-xs text-neutral-700 dark:text-neutral-300 bg-white dark:bg-[var(--md-sys-color-surface)]/60">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>
-            🎾 <strong>{theme.clubName}</strong> • Trainingsplaner für 15 Mitglieder (1 Platz mit Trainer)
-          </p>
-          <p className="text-[11px] flex items-center gap-1 justify-center">
-            <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: theme.primary }} />
-            Google Material Design 3 • Standardmodus: Bestätigt • Export nach Apple & Google
-          </p>
-        </div>
-      </footer>
+      
 
       {/* Interactive Modals */}
       {declinePlayerId && (
