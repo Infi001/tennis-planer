@@ -87,7 +87,7 @@ export const AbsenceManager: React.FC = () => {
                 value={selectedPlayerId}
                 onChange={(e) => setSelectedPlayerId(e.target.value)}
                 disabled={!currentUser.isAdmin}
-                className={(!currentUser.isAdmin ? "opacity-50 cursor-not-allowed " : "") + "w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${!currentUser.isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {players.map((p) => (
                   <option key={p.id} value={p.id}>

@@ -97,7 +97,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
           )}
 
           {/* Reset button if any Springer/Frei declined */}
-          {currentUser.isAdmin && (week.springer1.status === "declined" || week.springer2.status === "declined" || week.frei?.status === "declined") && (
+          {currentUser.isAdmin && (week.springer1.status === 'declined' || week.springer2.status === 'declined' || week.frei?.status === 'declined') && (
             <button
               onClick={() => resetStandbyCascade(week.id)}
               className="py-1.5 px-2.5 rounded-xl text-xs font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center space-x-1"
@@ -297,6 +297,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                     ) : (
                       <span className="text-[11px] text-neutral-500 italic block mt-1">Wartet auf Antwort von {p.shortName}...</span>
                     )}
+                  </div>
                 )}
 
                 {/* Case B: Item 4 (Open for anyone) is current turn */}
