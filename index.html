@@ -11,8 +11,29 @@
     <meta name="apple-mobile-web-app-title" content="TennisPlaner" />
     <meta name="application-name" content="Tennis Trainingsplaner" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="theme-color" content="#1D4ED8" />
+    <meta name="theme-color" content="#DC2626" />
     <title>Tennis Trainingsplaner | Montagsrunde</title>
+    <!-- Immediate Theme Initialization to eliminate color flash on refresh -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('tennis_app_theme');
+          var primary = '#DC2626';
+          var container = '#FEE2E2';
+          if (saved) {
+            var parsed = JSON.parse(saved);
+            if (parsed && parsed.primary) {
+              primary = parsed.primary;
+              container = parsed.primaryContainer || (parsed.primary + '20');
+            }
+          }
+          document.documentElement.style.setProperty('--club-primary', primary);
+          document.documentElement.style.setProperty('--club-primary-container', container);
+          var metaTheme = document.querySelector('meta[name="theme-color"]');
+          if (metaTheme) metaTheme.setAttribute('content', primary);
+        } catch (e) {}
+      })();
+    </script>
     <!-- Google Fonts & Material Look -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

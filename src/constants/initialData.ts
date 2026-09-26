@@ -20,6 +20,17 @@ export const INITIAL_PLAYERS: Player[] = [
 
 export const THEME_PRESETS: ClubTheme[] = [
   {
+    id: 'rot-weiss',
+    name: 'Rot-Weiß Senne (Verein)',
+    clubName: 'TC Rot-Weiß Senne',
+    logoText: 'RW',
+    primary: '#DC2626', // Crimson red
+    primaryContainer: '#FEE2E2',
+    onPrimary: '#FFFFFF',
+    secondary: '#B91C1C',
+    accent: '#F87171',
+  },
+  {
     id: 'blau-weiss',
     name: 'Blau-Weiß (Classic)',
     clubName: 'TC Blau-Weiß',
@@ -29,17 +40,6 @@ export const THEME_PRESETS: ClubTheme[] = [
     onPrimary: '#FFFFFF',
     secondary: '#0284C7',
     accent: '#38BDF8',
-  },
-  {
-    id: 'rot-weiss',
-    name: 'Rot-Weiß (Tradition)',
-    clubName: 'TC Rot-Weiß',
-    logoText: 'RW',
-    primary: '#DC2626', // Crimson red
-    primaryContainer: '#FEE2E2',
-    onPrimary: '#FFFFFF',
-    secondary: '#B91C1C',
-    accent: '#F87171',
   },
   {
     id: 'gruen-weiss',

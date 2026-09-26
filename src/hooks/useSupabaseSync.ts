@@ -73,11 +73,18 @@ export function useSupabaseSync({
         if (settingsRes.data) {
           const s = settingsRes.data;
           const preset = THEME_PRESETS.find(t => t.id === s.theme_id);
-          if (preset) {
-            const mappedTheme = { ...preset, primary: s.primary_color, secondary: s.secondary_color };
-            StorageService.serverThemeJSON = JSON.stringify(mappedTheme);
-            setTheme(mappedTheme);
-          }
+          const base = preset || THEME_PRESETS[0];
+          const mappedTheme: ClubTheme = {
+            ...base,
+            id: s.theme_id || base.id,
+            clubName: s.name || base.clubName,
+            name: s.name || base.name,
+            primary: s.primary_color || base.primary,
+            secondary: s.secondary_color || base.secondary,
+          };
+          StorageService.serverThemeJSON = JSON.stringify(mappedTheme);
+          StorageService.saveTheme(mappedTheme);
+          setTheme(mappedTheme);
         }
         
         console.log('INITIAL FETCH COMPLETED');
@@ -151,11 +158,18 @@ export function useSupabaseSync({
         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
           const s = payload.new;
           const preset = THEME_PRESETS.find(t => t.id === s.theme_id);
-          if (preset) {
-            const mappedTheme = { ...preset, primary: s.primary_color, secondary: s.secondary_color };
-            StorageService.serverThemeJSON = JSON.stringify(mappedTheme);
-            setTheme(mappedTheme);
-          }
+          const base = preset || THEME_PRESETS[0];
+          const mappedTheme: ClubTheme = {
+            ...base,
+            id: s.theme_id || base.id,
+            clubName: s.name || base.clubName,
+            name: s.name || base.name,
+            primary: s.primary_color || base.primary,
+            secondary: s.secondary_color || base.secondary,
+          };
+          StorageService.serverThemeJSON = JSON.stringify(mappedTheme);
+          StorageService.saveTheme(mappedTheme);
+          setTheme(mappedTheme);
         }
       })
       .subscribe((status, err) => {

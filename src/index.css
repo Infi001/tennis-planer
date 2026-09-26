@@ -17,15 +17,15 @@
 
 @layer base {
   :root {
-    --club-primary: #1D4ED8;
-    --club-primary-container: #DBEAFE;
+    --club-primary: #DC2626;
+    --club-primary-container: #FEE2E2;
     --club-on-primary: #FFFFFF;
-    --club-on-primary-container: #1E3A8A;
-    --club-secondary: #0284C7;
+    --club-on-primary-container: #7F1D1D;
+    --club-secondary: #B91C1C;
     --club-on-secondary: #FFFFFF;
-    --club-secondary-container: #E0F2FE;
-    --club-on-secondary-container: #075985;
-    --club-accent: #38BDF8;
+    --club-secondary-container: #FECACA;
+    --club-on-secondary-container: #991B1B;
+    --club-accent: #F87171;
 
     /* Google Material 3 Surface & Elevation System */
     --md-sys-color-background: #F8FAFD;
