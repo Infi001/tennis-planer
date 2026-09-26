@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { THEME_PRESETS } from '../../constants/initialData';
+import { StorageService } from '../../services/storage';
+import { sendDirectEmail } from '../../services/emailService';
+import { EmailConfig } from '../../types/tennis';
 import { 
   Palette, 
   RotateCcw, 
@@ -9,11 +12,15 @@ import {
   Sparkles,
   Settings,
   ShieldAlert,
-  Users
+  Users,
+  Mail,
+  Send,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 export const ClubSettings: React.FC = () => {
-  const { theme, setTheme, resetAll, weeks, players, springerCount, setSpringerCount } = useApp();
+  const { theme, setTheme, resetAll, weeks, players, springerCount, setSpringerCount, currentUser } = useApp();
   
   // Theme state
   const [clubName, setClubName] = useState(theme.clubName);
@@ -22,6 +29,13 @@ export const ClubSettings: React.FC = () => {
   const [customPrimary, setCustomPrimary] = useState(theme.primary);
   const [customSecondary, setCustomSecondary] = useState(theme.secondary);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Email Direct Send State
+  const [emailConfig, setEmailConfig] = useState<EmailConfig>(() => StorageService.getEmailConfig());
+  const [savedEmailConfigSuccess, setSavedEmailConfigSuccess] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState(currentUser?.email || '');
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [testEmailStatus, setTestEmailStatus] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleSaveTheme = () => {
     setTheme({
@@ -36,6 +50,41 @@ export const ClubSettings: React.FC = () => {
     });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
+  };
+
+  const handleSaveEmailConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    StorageService.saveEmailConfig(emailConfig);
+    setSavedEmailConfigSuccess(true);
+    setTimeout(() => setSavedEmailConfigSuccess(false), 2500);
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmailAddress.trim()) {
+      setTestEmailStatus({
+        success: false,
+        message: 'Bitte Empfänger-E-Mail eingeben.',
+      });
+      return;
+    }
+    setIsSendingTestEmail(true);
+    setTestEmailStatus(null);
+    try {
+      const res = await sendDirectEmail({
+        to: testEmailAddress.trim(),
+        subject: `🎾 Test-Nachricht von ${theme.clubName}`,
+        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer Direktversand aus der App funktioniert einwandfrei!`,
+        config: emailConfig,
+      });
+      setTestEmailStatus(res);
+    } catch (err: any) {
+      setTestEmailStatus({
+        success: false,
+        message: err.message || 'Fehler beim Senden.',
+      });
+    } finally {
+      setIsSendingTestEmail(false);
+    }
   };
 
   const handleExportBackup = () => {
@@ -298,7 +347,129 @@ export const ClubSettings: React.FC = () => {
         </p>
       </div>
 
-      {/* 3. Datensicherung */}
+      {/* 3. E-Mail-Direktversand */}
+      <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
+            <Mail className="w-4 h-4 text-blue-500" />
+            E-Mail-Direktversand (Aus dem Tool senden)
+          </h3>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
+            Aktiv
+          </span>
+        </div>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          Benachrichtigt Springer bei kurzfristig freien Plätzen direkt aus der App im Hintergrund, ohne ein lokales Mailprogramm öffnen zu müssen.
+        </p>
+
+        <form onSubmit={handleSaveEmailConfig} className="space-y-3 max-w-2xl bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl border border-neutral-200/80 dark:border-neutral-700/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                Absender-Name
+              </label>
+              <input
+                type="text"
+                value={emailConfig.fromName || ''}
+                onChange={(e) => setEmailConfig({ ...emailConfig, fromName: e.target.value })}
+                placeholder="z. B. TC Rot-Weiß Senne"
+                className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                Absender-E-Mail (optional)
+              </label>
+              <input
+                type="email"
+                value={emailConfig.fromEmail || ''}
+                onChange={(e) => setEmailConfig({ ...emailConfig, fromEmail: e.target.value })}
+                placeholder="tennis@meinverein.de"
+                className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+              Webhook URL (optional für Zapier, Make, n8n, Cloudflare Worker oder Formspree)
+            </label>
+            <input
+              type="url"
+              value={emailConfig.endpointUrl || ''}
+              onChange={(e) => setEmailConfig({ ...emailConfig, endpointUrl: e.target.value })}
+              placeholder="https://hook.eu1.make.com/... oder https://formspree.io/f/..."
+              className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-[10px] text-neutral-400 mt-1">
+              Leer lassen für integrierten Cloud-Direktversand oder Webhook eintragen.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
+            <button
+              type="submit"
+              className="py-2 px-3.5 rounded-xl text-xs font-bold bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:opacity-90 transition-all flex items-center gap-1.5 shadow-xs"
+            >
+              {savedEmailConfigSuccess ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Gespeichert!</span>
+                </>
+              ) : (
+                <span>E-Mail-Einstellungen speichern</span>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Test Email Box */}
+        <div className="max-w-2xl bg-neutral-50 dark:bg-neutral-800/40 p-4 rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 space-y-2.5">
+          <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300">
+            Direktversand testen
+          </label>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <input
+              type="email"
+              value={testEmailAddress}
+              onChange={(e) => setTestEmailAddress(e.target.value)}
+              placeholder="Deine E-Mail-Adresse für Test..."
+              className="flex-1 text-xs px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleSendTestEmail}
+              disabled={isSendingTestEmail}
+              className="py-2 px-3.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center space-x-1.5 transition-all shadow-xs disabled:opacity-50"
+            >
+              {isSendingTestEmail ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Sendet...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Test-E-Mail direkt senden</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {testEmailStatus && (
+            <div className={`text-xs p-2.5 rounded-xl font-bold flex items-center gap-2 ${
+              testEmailStatus.success 
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
+                : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-800'
+            }`}>
+              {testEmailStatus.success ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
+              <span>{testEmailStatus.message}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 4. Datensicherung */}
       <div className="space-y-3 pt-4 border-t border-neutral-100 dark:border-neutral-800">
         <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
           <Download className="w-4 h-4 text-emerald-500" />

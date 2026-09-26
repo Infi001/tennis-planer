@@ -101,3 +101,12 @@ export interface ClubTheme {
   courtInfo?: string; // z.B. "1 Platz mit Trainer • 3x 60 Min."
   springerCount?: number; // 1 bis X Springer konfigurierbar
 }
+
+export interface EmailConfig {
+  provider: 'webhook' | 'resend' | 'supabase';
+  endpointUrl?: string; // Webhook URL (Zapier, Make, n8n, Cloudflare Worker, Formspree)
+  apiKey?: string;     // e.g. Resend re_...
+  fromName?: string;   // e.g. "TC Rot-Weiß Senne"
+  fromEmail?: string;  // e.g. "tennis@tc-senne.de"
+}
+

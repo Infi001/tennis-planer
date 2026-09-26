@@ -1,4 +1,4 @@
-import { Player, TrainingWeek, Absence, SwapRequest, ClubTheme, SlotAssignment } from '../types/tennis';
+import { Player, TrainingWeek, Absence, SwapRequest, ClubTheme, SlotAssignment, EmailConfig } from '../types/tennis';
 import { INITIAL_PLAYERS, THEME_PRESETS, generateInitialSchedule } from '../constants/initialData';
 import { getSupabase } from './supabase';
 
@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   CURRENT_USER_ID: 'tennis_current_user_id_v1',
   THEME: 'tennis_theme_v1',
   SPRINGER_COUNT: 'tennis_springer_count_v1',
+  EMAIL_CONFIG: 'tennis_email_config_v1',
 };
 
 async function safeSupabaseSync(action: () => PromiseLike<any>) {
@@ -310,5 +311,34 @@ export class StorageService {
     localStorage.removeItem(STORAGE_KEYS.WEEKS);
     localStorage.removeItem(STORAGE_KEYS.ABSENCES);
     localStorage.removeItem(STORAGE_KEYS.SWAPS);
+  }
+
+  // --- Email Config ---
+  static getEmailConfig(): EmailConfig {
+    const raw = localStorage.getItem(STORAGE_KEYS.EMAIL_CONFIG);
+    if (!raw) {
+      return {
+        provider: 'webhook',
+        fromName: 'TC Rot-Weiß Senne',
+        fromEmail: '',
+        endpointUrl: '',
+        apiKey: '',
+      };
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {
+        provider: 'webhook',
+        fromName: 'TC Rot-Weiß Senne',
+        fromEmail: '',
+        endpointUrl: '',
+        apiKey: '',
+      };
+    }
+  }
+
+  static saveEmailConfig(config: EmailConfig) {
+    localStorage.setItem(STORAGE_KEYS.EMAIL_CONFIG, JSON.stringify(config));
   }
 }
