@@ -203,7 +203,7 @@ export const ClubSettings: React.FC = () => {
         </p>
         
         <div className="flex flex-wrap gap-2.5">
-          {[1, 2, 3].map((count) => (
+          {[1, 2].map((count) => (
             <button
               key={count}
               type="button"
@@ -220,9 +220,8 @@ export const ClubSettings: React.FC = () => {
           ))}
         </div>
         <p className="text-[11px] text-neutral-500">
-          {springerCount === 1 && 'Bei Absagen rückt zunächst Springer 1 nach. Kann dieser nicht, ist der Platz sofort für alle Mitglieder frei.'}
-          {springerCount === 2 && 'Bei Absagen rückt erst Springer 1, danach Springer 2 nach. Danach ist der Platz für alle Mitglieder frei.'}
-          {springerCount === 3 && 'Bei Absagen rücken nacheinander Springer 1, 2 und 3 nach. Danach ist der Platz für alle Mitglieder frei.'}
+          {springerCount === 1 && 'Bei Absagen rückt zunächst der 1. Springer nach.'}
+          {springerCount >= 2 && 'Bei Absagen rückt erst der 1. Springer, danach der 2. Springer nach.'}
         </p>
       </div>
 

@@ -70,7 +70,7 @@ async function run() {
     await page.reload({ waitUntil: 'networkidle0' });
 
     console.log('Taking Desktop MatchCenter screenshot with incoming swap banner in Week 1...');
-    await page.screenshot({ path: 'screenshot_desktop_admin_swap.png', fullPage: true });
+    await page.screenshot({ path: 'screenshot_desktop_admin_swap.png', fullPage: false });
 
     // 2. Mobile Test (390x844)
     await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
@@ -79,23 +79,11 @@ async function run() {
     console.log('Taking Mobile MatchCenter screenshot (top)...');
     await page.screenshot({ path: 'screenshot_mobile_admin_top.png', fullPage: false });
 
-    // Scroll slightly to view full swap card
-    await page.evaluate(() => window.scrollBy(0, 200));
-    await new Promise(r => setTimeout(r, 200));
-    console.log('Taking Mobile MatchCenter screenshot (swap card)...');
-    await page.screenshot({ path: 'screenshot_mobile_admin_swap.png', fullPage: false });
-
-    // Scroll to slots
-    await page.evaluate(() => window.scrollBy(0, 600));
-    await new Promise(r => setTimeout(r, 300));
-    console.log('Taking Mobile MatchCenter screenshot (slots)...');
-    await page.screenshot({ path: 'screenshot_mobile_admin_slots.png', fullPage: false });
-
-    // Scroll to mobile admin pool & SpringerHub
-    await page.evaluate(() => window.scrollBy(0, 1000));
-    await new Promise(r => setTimeout(r, 300));
-    console.log('Taking Mobile MatchCenter screenshot (pool & springer)...');
-    await page.screenshot({ path: 'screenshot_mobile_admin_pool.png', fullPage: false });
+    // Scroll to bottom to view SpringerHub
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await new Promise(r => setTimeout(r, 400));
+    console.log('Taking Mobile MatchCenter screenshot (springer at bottom)...');
+    await page.screenshot({ path: 'screenshot_mobile_admin_bottom.png', fullPage: false });
 
     // 3. Click on unassigned player to test modal
     const unassignedBtn = await page.evaluateHandle(() => {

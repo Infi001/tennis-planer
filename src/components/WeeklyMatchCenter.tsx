@@ -183,8 +183,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
   const isCurrentUserSp1Turn = isCurrentUserSp1 && cascade.activeOfferedPrios.includes(1);
   const isCurrentUserSp2Turn = isCurrentUserSp2 && cascade.activeOfferedPrios.includes(2) && springerCount >= 2;
-  const isCurrentUserFreiTurn = isCurrentUserFrei && cascade.activeOfferedPrios.includes(3) && springerCount >= 3;
-  const isCurrentUserStandbyTurn = isCurrentUserSp1Turn || isCurrentUserSp2Turn || isCurrentUserFreiTurn;
+  const isCurrentUserStandbyTurn = isCurrentUserSp1Turn || isCurrentUserSp2Turn;
 
   // Swap lookups
   const incomingSwapForMe = swaps.find(s => 
@@ -359,27 +358,23 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               </p>
             ) : isCurrentUserStandbyTurn ? (
               <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
-                🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer (Prio 1)' : isCurrentUserSp2Turn ? '2. Springer (Prio 2)' : '3. Springer (Prio 3)'} an der Reihe!
+                🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer' : '2. Springer'} an der Reihe!
               </p>
             ) : isCurrentUserSp1 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 1. Springer für diesen Montag {cascade.springer1.status === 'declined' ? '(Abgelehnt ❌)' : '(Prio 1)'}
+                🟡 Du bist 1. Springer für diesen Montag {cascade.springer1.status === 'declined' ? '(Abgelehnt ❌)' : ''}
               </p>
             ) : isCurrentUserSp2 && springerCount >= 2 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 2. Springer für diesen Montag {cascade.springer2.status === 'declined' ? '(Abgelehnt ❌)' : '(Prio 2)'}
-              </p>
-            ) : isCurrentUserFrei && springerCount >= 3 ? (
-              <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 3. Springer für diesen Montag {cascade.frei?.status === 'declined' ? '(Abgelehnt ❌)' : '(Prio 3)'}
+                🟡 Du bist 2. Springer für diesen Montag {cascade.springer2.status === 'declined' ? '(Abgelehnt ❌)' : ''}
               </p>
             ) : isCurrentUserFrei ? (
               <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
                 💤 Du hast diese Woche regulär spielfrei
               </p>
-            ) : cascade.openForAnyoneCount > 0 ? (
+            ) : totalOpenSpots > 0 ? (
               <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                🟢 Freier Platz verfügbar – Offen für alle Vereinsmitglieder!
+                🟢 Freier Platz verfügbar!
               </p>
             ) : (
               <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
@@ -746,26 +741,22 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                 {Array.from({ length: Math.max(0, 4 - assignments.length) }).map((_, emptyIdx) => {
                   const spotNum = assignments.length + emptyIdx + 1;
                   
-                  // Priority indicator
-                  let prioLabel = 'Prio 1: 1. Springer';
+                  // Springer / Nachrücker indicator
+                  let prioLabel = '1. Springer';
                   let prioName = sp1Player?.name || '1. Springer';
                   let isMyPrioTurn = isCurrentUserSp1Turn;
 
                   if (cascade.activeOfferedPrios.includes(1) && sp1Player) {
-                    prioLabel = 'Prio 1: 1. Springer';
+                    prioLabel = '1. Springer';
                     prioName = sp1Player.name;
                     isMyPrioTurn = isCurrentUserSp1;
                   } else if (springerCount >= 2 && cascade.activeOfferedPrios.includes(2) && sp2Player) {
-                    prioLabel = 'Prio 2: 2. Springer';
+                    prioLabel = '2. Springer';
                     prioName = sp2Player.name;
                     isMyPrioTurn = isCurrentUserSp2;
-                  } else if (springerCount >= 3 && cascade.activeOfferedPrios.includes(3) && freiPlayer) {
-                    prioLabel = 'Prio 3: 3. Springer';
-                    prioName = freiPlayer.name;
-                    isMyPrioTurn = isCurrentUserFrei;
-                  } else if (cascade.openForAnyoneCount > 0) {
-                    prioLabel = 'Offen für alle';
-                    prioName = 'Alle Vereinsmitglieder';
+                  } else {
+                    prioLabel = 'Freier Platz';
+                    prioName = 'Offen für Nachrücker';
                     isMyPrioTurn = false;
                   }
 

@@ -133,13 +133,11 @@ export const HelpView: React.FC = () => {
               Wenn jemand absagt, läuft automatisch folgende Reihenfolge ab:
             </p>
             <ol className="space-y-1.5 list-decimal list-inside bg-amber-50/50 dark:bg-amber-950/20 p-3.5 rounded-2xl border border-amber-200/60 dark:border-amber-900/60">
-              <li><strong>1. Springer (Priorität 1):</strong> Hat das allererste Vorrecht, den freien Platz anzunehmen.</li>
-              <li><strong>2. Springer (Priorität 2):</strong> Ist an der Reihe, wenn Springer 1 absagt oder keine Zeit hat.</li>
-              <li><strong>Spielfrei (Priorität 3):</strong> Wer laut Plan Pause hat, kann freiwillig einspringen.</li>
-              <li><strong>Offener Pool (Priorität 4):</strong> Reagieren die Springer nicht, darf jedes beliebige Vereinsmitglied einspringen.</li>
+              <li><strong>1. Springer:</strong> Hat das allererste Vorrecht, den freien Platz anzunehmen.</li>
+              <li><strong>2. Springer:</strong> Ist an der Reihe, wenn Springer 1 absagt oder keine Zeit hat.</li>
             </ol>
             <p>
-              Wenn du an der Reihe bist, siehst du ganz oben im Wochenplan einen großen gelben Kasten mit dem Button <strong>"Platz annehmen 🎾"</strong>.
+              Wenn du als Springer an der Reihe bist, siehst du ganz oben im Wochenplan direkt den Button <strong>"Platz annehmen 🎾"</strong>.
             </p>
           </div>
         </div>

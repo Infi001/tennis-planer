@@ -104,16 +104,10 @@ const AppContent: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-24 sm:pb-5 space-y-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-28 space-y-5">
         
         {/* PWA Homescreen Prompt */}
         <PWAInstallBanner />
-
-        {/* Navigation Tabs */}
-        <NavigationTabs 
-          activeTab={activeTab} 
-          onTabChange={setActiveTab} 
-        />
 
         {/* Tab Content */}
         {activeTab === 'matchcenter' && (
@@ -166,6 +160,12 @@ const AppContent: React.FC = () => {
         </div>
 
       </main>
+ 
+      {/* Docked Bottom Navigation Bar */}
+      <NavigationTabs 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
 
       
 

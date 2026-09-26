@@ -57,17 +57,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   if (cascade && week) {
     const sp1Player = players.find(p => p.id === week.springer1.playerId);
     const sp2Player = players.find(p => p.id === week.springer2.playerId);
-    const freiPlayer = players.find(p => p.id === week.frei?.playerId);
 
     const isCurrentUserSp1Turn = week.springer1.playerId === currentUser.id && cascade.activeOfferedPrios.includes(1);
     const isCurrentUserSp2Turn = week.springer2.playerId === currentUser.id && cascade.activeOfferedPrios.includes(2);
-    const isCurrentUserFreiTurn = week.frei?.playerId === currentUser.id && cascade.activeOfferedPrios.includes(3);
     
-    isMeOfferedStandby = isCurrentUserSp1Turn || isCurrentUserSp2Turn || isCurrentUserFreiTurn;
+    isMeOfferedStandby = isCurrentUserSp1Turn || isCurrentUserSp2Turn;
 
     if (cascade.activeOfferedPrios.includes(1) && sp1Player) prioName = sp1Player.name;
     else if (cascade.activeOfferedPrios.includes(2) && sp2Player) prioName = sp2Player.name;
-    else if (cascade.activeOfferedPrios.includes(3) && freiPlayer) prioName = freiPlayer.name;
   }
 
   const handleDragStart = (e: React.DragEvent) => {

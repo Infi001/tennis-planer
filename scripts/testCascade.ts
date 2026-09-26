@@ -69,23 +69,14 @@ assert(res.frei.status === 'idle', 'Frei stays idle');
 assert(res.openForAnyoneCount === 0, 'Open for anyone is 0');
 assert(res.activeOfferedPrios.length === 1 && res.activeOfferedPrios[0] === 2, 'Active offered prio is [2]');
 
-console.log('\n--- TEST 4: 2. Springer declines offer in 2-Springer mode (Directly cascades to Alle Mitglieder) ---');
+console.log('\n--- TEST 4: 2. Springer declines offer in 2-Springer mode (Spot is open) ---');
 const weekSp2Declined: TrainingWeek = JSON.parse(JSON.stringify(weekSp1Declined));
 weekSp2Declined.springer2.status = 'declined';
 res = calculateStandbyCascade(weekSp2Declined, 2);
 assert(res.totalOpenSpots === 1, 'Total open spots is 1');
 assert(res.springer1.status === 'declined', 'Springer 1 is declined');
 assert(res.springer2.status === 'declined', 'Springer 2 is declined');
-assert(res.frei.status === 'idle', 'Frei stays idle (not a springer in 2-springer mode)');
-assert(res.openForAnyoneCount === 1, 'Spot is now 100% open for anyone in the club');
 assert(res.activeOfferedPrios.length === 0, 'No individual standby offered prio');
-
-console.log('\n--- TEST 5: 3-Springer mode (Springer 1 & 2 decline -> cascades to 3. Springer) ---');
-let res3 = calculateStandbyCascade(weekSp2Declined, 3);
-assert(res3.totalOpenSpots === 1, 'Total open spots is 1');
-assert(res3.frei.status === 'offered', 'Offer cascades to 3. Springer when maxSpringers is 3');
-assert(res3.openForAnyoneCount === 0, 'Not yet open to everyone');
-assert(res3.activeOfferedPrios.length === 1 && res3.activeOfferedPrios[0] === 3, 'Active offered prio is [3]');
 
 console.log('\n--- TEST 6: Multiple open spots (2 spots open -> Springer 1 AND Springer 2 both offered) ---');
 const week2Declines: TrainingWeek = JSON.parse(JSON.stringify(baseWeek));
