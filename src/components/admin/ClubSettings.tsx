@@ -217,7 +217,7 @@ export const ClubSettings: React.FC = () => {
                   <span>Gespeichert!</span>
                 </>
               ) : (
-                <span>Farben anwenden & speichern</span>
+                <span>Anwenden und speichern</span>
               )}
             </button>
           </div>
@@ -231,29 +231,70 @@ export const ClubSettings: React.FC = () => {
           Springer-Einstellungen (Nachrücker)
         </h3>
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-          Legt fest, wie viele feste Nachrücker es pro Spieltag gibt (1. Springer, 2. Springer usw.), bevor ein freier Platz für alle Vereinsmitglieder geöffnet wird.
+          Legt fest, wie viele feste Nachrücker es pro Spieltag gibt (1. Springer, 2. Springer usw.), bevor ein freier Platz für alle Vereinsmitglieder geöffnet wird. (0 bis 10 Springer)
         </p>
         
-        <div className="flex flex-wrap gap-2.5">
-          {[1, 2].map((count) => (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center space-x-2">
             <button
-              key={count}
               type="button"
-              onClick={() => setSpringerCount(count)}
-              className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all m3-ripple border flex items-center gap-2 ${
-                springerCount === count
-                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20'
-                  : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50'
-              }`}
+              onClick={() => setSpringerCount(Math.max(0, springerCount - 1))}
+              disabled={springerCount <= 0}
+              className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 font-bold text-lg flex items-center justify-center transition-colors text-neutral-800 dark:text-neutral-200"
+              title="Weniger Springer"
             >
-              <span>{count} {count === 1 ? 'Springer' : 'Springer'}{count === 2 ? ' (Standard)' : ''}</span>
-              {springerCount === count && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
+              -
             </button>
-          ))}
+            <input
+              type="number"
+              min={0}
+              max={10}
+              value={springerCount}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (!isNaN(val)) {
+                  setSpringerCount(Math.max(0, Math.min(10, val)));
+                } else {
+                  setSpringerCount(0);
+                }
+              }}
+              className="w-20 text-center text-base font-extrabold p-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+            />
+            <button
+              type="button"
+              onClick={() => setSpringerCount(Math.min(10, springerCount + 1))}
+              disabled={springerCount >= 10}
+              className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 font-bold text-lg flex items-center justify-center transition-colors text-neutral-800 dark:text-neutral-200"
+              title="Mehr Springer"
+            >
+              +
+            </button>
+          </div>
+
+          {/* Quick selection chips */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {[0, 1, 2, 3].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => setSpringerCount(num)}
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                  springerCount === num
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                }`}
+              >
+                {num === 0 ? '0 (Keine Springer)' : num === 2 ? '2 Springer (Standard)' : `${num} Springer`}
+              </button>
+            ))}
+          </div>
         </div>
-        <p className="text-[11px] text-neutral-500">
-          {springerCount === 1 && 'Bei Absagen rückt zunächst der 1. Springer nach.'}
-          {springerCount >= 2 && 'Bei Absagen rückt erst der 1. Springer, danach der 2. Springer nach.'}
+
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 italic">
+          {springerCount === 0 && 'Keine Springer: Bei Absagen wird der freie Platz sofort für alle Mitglieder im offenen Pool geöffnet.'}
+          {springerCount === 1 && '1 Springer: Bei Absagen wird zunächst der 1. Springer aktiviert.'}
+          {springerCount === 2 && '2 Springer: Bei Absagen wird erst der 1. Springer, bei dessen Absage der 2. Springer aktiviert.'}
+          {springerCount > 2 && `Bis zu ${springerCount} Springer: Bei Absagen werden nacheinander die eingeteilten Nachrücker aktiviert.`}
         </p>
       </div>
 

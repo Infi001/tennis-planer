@@ -54,6 +54,7 @@ interface AppContextType {
 
   // Calendar & Schedule Administration
   addTrainingWeekDate: (dateStr: string, iso: string) => void;
+  updateWeekDate: (weekId: string, newDateStr: string, newIsoDate: string) => void;
   deleteTrainingWeek: (weekId: string) => void;
   toggleWeekCancellation: (weekId: string, cancelReason?: string) => void;
   updateWeekNotes: (weekId: string, notes: string) => void;
@@ -1138,6 +1139,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const updateWeekDate = (weekId: string, newDateStr: string, newIsoDate: string) => {
+    setWeeks(prev => {
+      const updated = prev.map(w => {
+        if (w.id !== weekId) return w;
+        return {
+          ...w,
+          id: newIsoDate,
+          date: newIsoDate,
+          dateString: newDateStr,
+        };
+      }).sort((a, b) => a.date.localeCompare(b.date));
+      StorageService.saveWeeks(updated);
+      return updated;
+    });
+
+    if (selectedWeekId === weekId) {
+      setSelectedWeekId(newIsoDate);
+    }
+
+    setAbsences(prev => {
+      const targetWeek = weeks.find(w => w.id === weekId);
+      if (!targetWeek) return prev;
+      const updated = prev.map(a => a.date === targetWeek.date ? { ...a, date: newIsoDate } : a);
+      StorageService.saveAbsences(updated);
+      return updated;
+    });
+
+    setSwaps(prev => {
+      const updated = prev.map(s => s.weekId === weekId ? { ...s, weekId: newIsoDate } : s);
+      StorageService.saveSwaps(updated);
+      return updated;
+    });
+  };
+
   const deleteTrainingWeek = (weekId: string) => {
     setWeeks(prev => {
       const updated = prev.filter(w => w.id !== weekId);
@@ -1388,6 +1423,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deletePlayer,
         reorderPlayers,
         addTrainingWeekDate,
+        updateWeekDate,
         deleteTrainingWeek,
         toggleWeekCancellation,
         updateWeekNotes,

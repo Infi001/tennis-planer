@@ -130,6 +130,22 @@ async function run() {
     });
     await new Promise(r => setTimeout(r, 300));
 
+    // Click the reschedule date button on the first week in the table
+    await page.evaluate(() => {
+      const rescheduleBtns = Array.from(document.querySelectorAll('button[title*="verschieben"]'));
+      if (rescheduleBtns.length > 0) rescheduleBtns[0].click();
+    });
+    await new Promise(r => setTimeout(r, 500));
+    console.log('Taking Reschedule Date Modal screenshot...');
+    await page.screenshot({ path: 'screenshot_reschedule_modal.png', fullPage: false });
+
+    // Close reschedule modal
+    await page.evaluate(() => {
+      const cancelBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Abbrechen'));
+      if (cancelBtn) cancelBtn.click();
+    });
+    await new Promise(r => setTimeout(r, 300));
+
     // Also click on "Einstellungen" tab in admin dashboard
     await page.evaluate(() => {
       const adminSubTabs = Array.from(document.querySelectorAll('button'));
@@ -142,6 +158,11 @@ async function run() {
 
     console.log('Taking Admin Club Settings screenshot (top)...');
     await page.screenshot({ path: 'screenshot_admin_settings_top.png', fullPage: false });
+
+    await page.evaluate(() => window.scrollTo(0, 380));
+    await new Promise(r => setTimeout(r, 400));
+    console.log('Taking Admin Club Settings screenshot (middle)...');
+    await page.screenshot({ path: 'screenshot_admin_settings_middle.png', fullPage: false });
 
     console.log('All screenshots captured successfully!');
   } finally {
