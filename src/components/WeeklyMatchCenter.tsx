@@ -66,6 +66,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
   const [doppelSlot, setDoppelSlot] = useState<SlotTime | null>(null);
   const [adminAssignSlot, setAdminAssignSlot] = useState<{slotTime: SlotTime, targetPlayerIdToReplace?: string} | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const currentIndex = weeks.findIndex(w => w.id === selectedWeekId);
   const prevWeek = currentIndex > 0 ? weeks[currentIndex - 1] : null;
   const nextWeek = currentIndex < weeks.length - 1 ? weeks[currentIndex + 1] : null;
@@ -201,8 +202,6 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   );
 
   // Handle Swipe Gestures
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
   };

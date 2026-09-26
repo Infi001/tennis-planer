@@ -12,7 +12,6 @@ import { SwapModal } from './components/SwapModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
 import { AccountModal } from './components/AccountModal';
 import { LoginScreen } from './components/LoginScreen';
-import { SettingsModal } from './components/SettingsModal';
 import { ImpressumModal } from './components/ImpressumModal';
 import { AddGuestModal } from './components/AddGuestModal';
 import { MyCalendarView } from './components/MyCalendarView';
@@ -30,7 +29,6 @@ const AppContent: React.FC = () => {
   const [declinePlayerId, setDeclinePlayerId] = useState<string | null>(null);
   const [swapData, setSwapData] = useState<{ playerId: string; fromSlot: SlotTime } | null>(null);
   const [guestSlot, setGuestSlot] = useState<SlotTime | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
   const [showUserSwitch, setShowUserSwitch] = useState(false);
 
   const [showCalendarExport, setShowCalendarExport] = useState(false); // remove later if unused
@@ -101,10 +99,9 @@ const AppContent: React.FC = () => {
       
       {/* Top Navbar */}
       <Navbar
-        onOpenSettings={() => setShowSettings(true)}
         onOpenUserSwitch={() => setShowUserSwitch(true)}
         onOpenWhatsApp={() => setShowWhatsApp(true)}
-              />
+      />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-24 sm:pb-5 space-y-5">
@@ -197,10 +194,6 @@ const AppContent: React.FC = () => {
           slotTime={guestSlot}
           onClose={() => setGuestSlot(null)}
         />
-      )}
-
-      {showSettings && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
 
       {showImpressum && (

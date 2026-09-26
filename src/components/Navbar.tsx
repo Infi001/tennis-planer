@@ -1,34 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
 import { 
-  Users, 
-  Settings, 
   Sun, 
-  Moon, 
-  Palette, 
-  CheckCircle2, 
-  Database,
-  Share2,
-  Calendar
+  Moon
 } from 'lucide-react';
-import { THEME_PRESETS } from '../constants/initialData';
-import { getSupabaseConfig } from '../services/supabase';
 
 interface NavbarProps {
-  onOpenSettings: () => void;
   onOpenUserSwitch: () => void;
   onOpenWhatsApp: () => void;
-  }
+}
 
 export const Navbar: React.FC<NavbarProps> = ({ 
-  onOpenSettings, 
   onOpenUserSwitch, 
   onOpenWhatsApp,
-  }) => {
-  const { theme, setTheme, currentUser, isDarkMode, setIsDarkMode } = useApp();
-  const [showThemePicker, setShowThemePicker] = useState(false);
-  const { url } = getSupabaseConfig();
-  const hasSupabase = Boolean(url);
+}) => {
+  const { theme, currentUser, isDarkMode, setIsDarkMode } = useApp();
 
   return (
     <header className="sticky top-0 z-40 bg-[var(--club-primary)] dark:bg-neutral-900/95 backdrop-blur-md border-b border-transparent dark:border-neutral-800 transition-colors">
@@ -93,21 +79,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
           </button>
-
-          {/* Settings Button */}
-          {currentUser.isAdmin && (
-          <button
-            onClick={onOpenSettings}
-            title="Einstellungen & Vereins-Konfiguration"
-            className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-300 transition-all m3-ripple relative"
-          >
-            <Settings className="w-4 h-4" />
-            {hasSupabase && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-neutral-900 rounded-full" title="Mit Supabase verbunden" />
-            )}
-          </button>
-          )}
-
         </div>
       </div>
     </header>
