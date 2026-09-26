@@ -17,6 +17,7 @@ import { ImpressumModal } from './components/ImpressumModal';
 import { AddGuestModal } from './components/AddGuestModal';
 import { MyCalendarView } from './components/MyCalendarView';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { HelpView } from './components/HelpView';
 import { SlotTime } from './types/tennis';
 import { Calendar, Share2, Sparkles } from 'lucide-react';
 import { generateMaterialDynamicPalette } from './utils/materialTheme';
@@ -146,6 +147,10 @@ const AppContent: React.FC = () => {
 
         {activeTab === 'stats' && (
           <StatsDashboard />
+        )}
+
+        {activeTab === 'help' && (
+          <HelpView />
         )}
 
         {activeTab === 'admin' && (

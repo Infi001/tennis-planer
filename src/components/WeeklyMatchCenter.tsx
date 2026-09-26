@@ -242,14 +242,15 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           <button
             onClick={() => prevWeek && setSelectedWeekId(prevWeek.id)}
             disabled={!prevWeek}
-            className="p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 disabled:opacity-30 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 m3-ripple"
+            className="py-2 px-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 disabled:opacity-30 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs flex items-center gap-1.5 m3-ripple"
             title="Vorherige Woche"
           >
             <ChevronLeft className="w-5 h-5" />
+            <span className="hidden sm:inline">Vorige Woche</span>
           </button>
 
-          <div>
-            <div className="flex items-center space-x-2">
+          <div className="text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start space-x-2">
               <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Woche {currentIndex + 1} von {weeks.length}
               </span>
@@ -258,7 +259,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                 Winterrunde 26/27
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center justify-center sm:justify-start gap-2">
               <CalendarIcon className="w-5 h-5 text-neutral-400" />
               Montag, {selectedWeek.dateString}
             </h2>
@@ -267,9 +268,10 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           <button
             onClick={() => nextWeek && setSelectedWeekId(nextWeek.id)}
             disabled={!nextWeek}
-            className="p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 disabled:opacity-30 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 m3-ripple"
+            className="py-2 px-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 disabled:opacity-30 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs flex items-center gap-1.5 m3-ripple"
             title="Nächste Woche"
           >
+            <span className="hidden sm:inline">Nächste Woche</span>
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -388,10 +390,10 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           {myCurrentSlot && myAssignment?.status === 'pending' && (
             <button
               onClick={() => confirmAttendance(selectedWeek.id, currentUser.id)}
-              className="py-2 px-3.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 flex items-center space-x-1.5 shadow-xs m3-ripple"
+              className="py-2 px-3.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 flex items-center space-x-1.5 shadow-xs m3-ripple"
             >
-              <Check className="w-4 h-4" />
-              <span>Ich bin dabei 👍</span>
+              <Check className="w-4 h-4 stroke-[3]" />
+              <span>Ich bin dabei 👍 (Zusagen)</span>
             </button>
           )}
 
@@ -400,17 +402,17 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
             <>
               <button
                 onClick={() => onOpenSwap(currentUser.id, myCurrentSlot)}
-                className="py-2 px-3 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 flex items-center space-x-1 m3-ripple"
+                className="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 flex items-center space-x-1.5 m3-ripple"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span>Slot tauschen</span>
+                <span>Uhrzeit tauschen</span>
               </button>
               <button
                 onClick={() => onOpenDecline(currentUser.id)}
-                className="py-2 px-3 rounded-xl text-xs font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1 m3-ripple"
+                className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
               >
-                <X className="w-3.5 h-3.5" />
-                <span>Absagen</span>
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Termin absagen</span>
               </button>
             </>
           )}
@@ -419,9 +421,9 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           {myCurrentSlot && isMySlotSubstitute && (
             <button
               onClick={() => cancelSubstitute(selectedWeek.id, myCurrentSlot, currentUser.id, 'Ersatzspieler kann doch nicht')}
-              className="py-2 px-3 rounded-xl text-xs font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1 m3-ripple"
+              className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Einsatz absagen / Aussteigen</span>
             </button>
           )}

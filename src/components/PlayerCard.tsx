@@ -140,27 +140,49 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           </div>
         </div>
 
-        {/* Right Side: Compact Actions */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Right Side: Clear, Descriptive Action Buttons */}
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
           
           {/* Action Bar for Regular Scheduled Player */}
           {(isMe || currentUser.isAdmin) && !isGuest && player && !isDeclined && !isSubstitute && (
             <>
-              
               {!isConfirmed && (
-                <button onClick={() => confirmAttendance(weekId, player.id)} title="Zusagen" className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 transition-colors">
-                  <Check className="w-4 h-4 stroke-[3]" />
+                <button 
+                  onClick={() => confirmAttendance(weekId, player.id)} 
+                  title="Ich bin dabei (Zusagen)" 
+                  className="py-1 px-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 hover:bg-emerald-200 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1 shadow-xs transition-colors"
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Zusagen</span>
                 </button>
               )}
-              <button onClick={() => onOpenSwap(player.id, slotTime)} title="Tauschen" className="p-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 transition-colors">
-                <ArrowLeftRight className="w-4 h-4" />
+
+              <button 
+                onClick={() => onOpenSwap(player.id, slotTime)} 
+                title="Mit anderem Spieler Uhrzeit tauschen" 
+                className="py-1 px-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-700/60 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center gap-1 transition-colors"
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+                <span>Tauschen</span>
               </button>
-              <button onClick={() => onOpenDecline(player.id)} title="Absagen" className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-200 transition-colors">
-                <X className="w-4 h-4" />
+
+              <button 
+                onClick={() => onOpenDecline(player.id)} 
+                title="Für diesen Montag absagen" 
+                className="py-1 px-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1 transition-colors"
+              >
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Absagen</span>
               </button>
+
               {currentUser.isAdmin && onAdminEdit && (
-                <button onClick={() => onAdminEdit(player.id)} title="Ändern" className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 transition-colors ml-1">
-                  <UserCheck className="w-4 h-4" />
+                <button 
+                  onClick={() => onAdminEdit(player.id)} 
+                  title="Spieler ändern (Admin)" 
+                  className="py-1 px-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center gap-1 transition-colors"
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Ändern</span>
                 </button>
               )}
             </>
@@ -168,8 +190,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
           {/* Action Bar for Substitute who wants to cancel */}
           {isSubstitute && !isGuest && player && (isMe || currentUser.isAdmin) && (
-            <button onClick={() => cancelSubstitute(weekId, slotTime, player.id, 'Springer kann doch nicht')} title="Einsatz absagen" className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-200 transition-colors flex items-center gap-1 text-[11px] font-bold pr-2">
-              <X className="w-4 h-4" /> <span className="hidden sm:inline">Absagen</span>
+            <button 
+              onClick={() => cancelSubstitute(weekId, slotTime, player.id, 'Springer kann doch nicht')} 
+              title="Einsatz absagen" 
+              className="py-1 px-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1 transition-colors"
+            >
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Aussteigen</span>
             </button>
           )}
         </div>
