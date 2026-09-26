@@ -67,6 +67,7 @@ interface AppContextType {
   deleteAbsence: (absenceId: string) => void;
   adminUpdateSlot: (weekId: string, slot: SlotTime, playerIndex: number, newPlayerId: string, status?: PlayerStatus) => void;
   adminDragDropAssign: (weekId: string, slot: SlotTime, droppedPlayerId: string, targetPlayerIdToReplace?: string) => void;
+  adminRemovePlayer: (weekId: string, slot: SlotTime, playerIdOrGuest: string) => void;
   adminAddGuest: (weekId: string, slot: SlotTime, guestName: string) => void;
   adminRemoveGuest: (weekId: string, slot: SlotTime, guestIndex: number) => void;
   resetWeekToOriginal: (weekId: string) => void;
@@ -918,13 +919,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const newSlots = JSON.parse(JSON.stringify(w.slots)) as typeof w.slots;
         
         // --- Special Case: Remove player to pool ---
-        if (droppedPlayerId === 'remove' && targetPlayerIdToReplace) {
+        const isRemoveAction = droppedPlayerId === 'remove' || targetPlayerIdToReplace === 'remove';
+        if (isRemoveAction) {
+           const targetId = droppedPlayerId === 'remove' ? targetPlayerIdToReplace : droppedPlayerId;
+           if (!targetId) return w;
            const targetArr = newSlots[slot] || [];
-           const tIdx = targetArr.findIndex(a => a.playerId === targetPlayerIdToReplace);
+           const tIdx = targetArr.findIndex(a => 
+             a.playerId === targetId || 
+             (a.isGuest && (a.guestName === targetId || `guest_${a.guestName}` === targetId || a.playerId === targetId))
+           );
            if (tIdx !== -1) {
              targetArr.splice(tIdx, 1);
            }
-           return { ...w, slots: newSlots };
+           const cascade = calculateStandbyCascade({
+             ...w,
+             slots: newSlots,
+           });
+           return { 
+             ...w, 
+             slots: newSlots,
+             springer1: cascade.springer1,
+             springer2: cascade.springer2,
+             frei: cascade.frei,
+           };
         }
 
         // 1. Find where the dropped player currently is
@@ -1038,6 +1055,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newSlots[slot] = newSlots[slot].filter((_, idx) => idx !== guestIndex);
       return { ...w, slots: newSlots };
     }));
+  };
+
+  const adminRemovePlayer = (weekId: string, slot: SlotTime, playerIdOrGuest: string) => {
+    adminDragDropAssign(weekId, slot, playerIdOrGuest, 'remove');
   };
 
   // --- Player Administration ---
@@ -1359,6 +1380,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteAbsence,
         adminUpdateSlot,
         adminDragDropAssign,
+        adminRemovePlayer,
         adminAddGuest,
         adminRemoveGuest,
         resetWeekToOriginal,

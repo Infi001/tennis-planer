@@ -26,7 +26,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   const { 
     weeks, players, currentUser, theme,
     confirmAttendance, reclaimSlot, cancelSubstitute,
-    claimOpenSlot, getStandbyCascadeInfo, adminDragDropAssign,
+    claimOpenSlot, getStandbyCascadeInfo, adminDragDropAssign, adminRemovePlayer,
     getPlayerCurrentSlotInWeek
   } = useApp();
 
@@ -168,16 +168,33 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             </div>
           </div>
 
-          {/* Admin Controls on other players' cards (Clean pencil button) */}
-          {isAdmin && !isMe && onAdminEdit && (
-            <div className="shrink-0">
+          {/* Admin Controls on other players' cards */}
+          {isAdmin && !isMe && (
+            <div className="flex items-center gap-1 shrink-0">
+              {onAdminEdit && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAdminEdit(player ? player.id : `guest_${assignment.guestName}`);
+                  }}
+                  title="Spieler austauschen / bearbeiten (Admin)"
+                  className="p-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700/60 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center gap-1 transition-colors border border-neutral-200/80 dark:border-neutral-600 shadow-2xs cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
+                  <span className="hidden sm:inline">Ändern</span>
+                </button>
+              )}
               <button
-                onClick={() => onAdminEdit(player ? player.id : `guest_${assignment.guestName}`)}
-                title="Spieler ändern oder entfernen (Admin)"
-                className="p-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700/60 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center gap-1 transition-colors border border-neutral-200/80 dark:border-neutral-600 shadow-2xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const targetId = player ? player.id : `guest_${assignment.guestName}`;
+                  adminRemovePlayer(weekId, slotTime, targetId);
+                }}
+                title="Spieler aus diesem Slot entfernen (Admin)"
+                className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1 transition-colors border border-rose-200 dark:border-rose-900/60 shadow-2xs cursor-pointer"
               >
-                <Pencil className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
-                <span className="hidden 2xl:inline">Ändern</span>
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span className="hidden sm:inline">Entfernen</span>
               </button>
             </div>
           )}
