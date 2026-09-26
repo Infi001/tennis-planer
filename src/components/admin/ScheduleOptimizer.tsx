@@ -150,7 +150,7 @@ export const ScheduleOptimizer: React.FC = () => {
       {appliedNotice && (
         <div className="p-3.5 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-bold flex items-center space-x-2 animate-in fade-in">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span>Der neue Saisonplan wurde erfolgreich gespeichert und für alle Montage der Saison aktiviert! 🎉</span>
+          <span>Der neue Saisonplan wurde erfolgreich gespeichert und für alle Spieltage der Saison aktiviert! 🎉</span>
         </div>
       )}
 

@@ -24,6 +24,8 @@ export const THEME_PRESETS: ClubTheme[] = [
     name: 'Rot-Weiß Senne (Verein)',
     clubName: 'TC Rot-Weiß Senne',
     logoText: 'RW',
+    groupName: 'Montagsrunde',
+    courtInfo: '1 Platz mit Trainer',
     primary: '#DC2626', // Crimson red
     primaryContainer: '#FEE2E2',
     onPrimary: '#FFFFFF',

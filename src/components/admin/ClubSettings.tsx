@@ -17,6 +17,8 @@ export const ClubSettings: React.FC = () => {
   
   // Theme state
   const [clubName, setClubName] = useState(theme.clubName);
+  const [groupName, setGroupName] = useState(theme.groupName || 'Montagsrunde');
+  const [courtInfo, setCourtInfo] = useState(theme.courtInfo || '1 Platz mit Trainer');
   const [customPrimary, setCustomPrimary] = useState(theme.primary);
   const [customSecondary, setCustomSecondary] = useState(theme.secondary);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -25,6 +27,8 @@ export const ClubSettings: React.FC = () => {
     setTheme({
       ...theme,
       clubName,
+      groupName,
+      courtInfo,
       primary: customPrimary,
       secondary: customSecondary,
       id: 'custom',
@@ -77,17 +81,45 @@ export const ClubSettings: React.FC = () => {
           Vereinsname & Erscheinungsbild
         </h3>
 
-        <div>
-          <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
-            Vereinsname
-          </label>
-          <input
-            type="text"
-            value={clubName}
-            onChange={(e) => setClubName(e.target.value)}
-            placeholder="z. B. TC Grün-Weiß"
-            className="w-full max-w-md text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          <div>
+            <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
+              Vereinsname
+            </label>
+            <input
+              type="text"
+              value={clubName}
+              onChange={(e) => setClubName(e.target.value)}
+              placeholder="z. B. TC Rot-Weiß Senne"
+              className="w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
+              Name der Runde / Trainingsgruppe
+            </label>
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="z. B. Montagsrunde oder Herren 60"
+              className="w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
+              Platz- & Trainer-Information (z. B. für WhatsApp & Kalender)
+            </label>
+            <input
+              type="text"
+              value={courtInfo}
+              onChange={(e) => setCourtInfo(e.target.value)}
+              placeholder="z. B. 1 Platz mit Trainer • 3x 60 Min."
+              className="w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         {/* Farbauswahl Vorlagen */}

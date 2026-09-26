@@ -7,6 +7,7 @@ import { DoppelGeneratorModal } from './DoppelGeneratorModal';
 import { AdminAssignModal } from './AdminAssignModal';
 import { getWeekSlotKeys } from '../utils/slotTimeUtils';
 import { calculateStandbyCascade } from '../utils/standbyCascade';
+import { formatWeekDate } from '../utils/dateUtils';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -98,7 +99,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
           <div className="text-center">
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              Montag, {selectedWeek.dateString}
+              {formatWeekDate(selectedWeek)}
             </h2>
             <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">
               {selectedWeek.cancelReason || 'Kein Training'}
@@ -122,7 +123,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
             {selectedWeek.cancelReason || 'Spielfreier Feiertag'}
           </h3>
           <p className="text-sm text-neutral-500 max-w-md mx-auto">
-            An diesem Montag findet kein reguläres Vereinstraining statt. Die Hallenplätze sind für dieses Datum pausiert.
+            An diesem Spieltag findet kein reguläres Vereinstraining statt. Die Hallenplätze sind für dieses Datum pausiert.
           </p>
         </div>
       </div>
@@ -257,12 +258,12 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
               <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                Winterrunde 26/27
+                {theme.groupName || 'Trainingsgruppe'}
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center justify-center sm:justify-start gap-2">
               <CalendarIcon className="w-5 h-5 text-neutral-400" />
-              Montag, {selectedWeek.dateString}
+              {formatWeekDate(selectedWeek)}
             </h2>
           </div>
 
@@ -361,11 +362,11 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               </p>
             ) : isCurrentUserSp1 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 1. Springer für diesen Montag {cascade.springer1.status === 'declined' ? '(Abgelehnt ❌)' : ''}
+                🟡 Du bist 1. Springer für diesen Spieltag {cascade.springer1.status === 'declined' ? '(Abgelehnt ❌)' : ''}
               </p>
             ) : isCurrentUserSp2 && springerCount >= 2 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 2. Springer für diesen Montag {cascade.springer2.status === 'declined' ? '(Abgelehnt ❌)' : ''}
+                🟡 Du bist 2. Springer für diesen Spieltag {cascade.springer2.status === 'declined' ? '(Abgelehnt ❌)' : ''}
               </p>
             ) : isCurrentUserFrei ? (
               <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">

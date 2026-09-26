@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { SlotTime } from '../types/tennis';
 import { X, UserPlus, Check } from 'lucide-react';
+import { formatWeekDate } from '../utils/dateUtils';
 
 interface AddGuestModalProps {
   slotTime: SlotTime;
@@ -41,7 +42,7 @@ export const AddGuestModal: React.FC<AddGuestModalProps> = ({ slotTime, onClose 
                 Gastspieler eintragen
               </h3>
               <p className="text-xs text-neutral-500">
-                {slotTime} Uhr (Montag, {selectedWeek.dateString})
+                {slotTime} Uhr ({formatWeekDate(selectedWeek)})
               </p>
             </div>
           </div>

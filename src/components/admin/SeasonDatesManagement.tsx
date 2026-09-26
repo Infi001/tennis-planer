@@ -20,6 +20,8 @@ import {
   Square
 } from 'lucide-react';
 import { getWeekSlotKeys, canReduceWeekSlots, generateSlotTimes, getWeekSlotConfig } from '../../utils/slotTimeUtils';
+import { formatWeekDate, getWeekdayName, generateRecurringSeasonDates } from '../../utils/dateUtils';
+import { generateBaselineCyclicSchedule } from '../../utils/scheduleGenerator';
 import { TrainingWeek } from '../../types/tennis';
 
 const START_TIMES = ['16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
@@ -35,19 +37,30 @@ const UNIT_OPTIONS = [1, 2, 3, 4, 5];
 export const SeasonDatesManagement: React.FC = () => {
   const { 
     weeks, 
+    players,
     theme, 
     addTrainingWeekDate, 
     deleteTrainingWeek, 
     toggleWeekCancellation, 
     updateWeekNotes,
     updateWeekSlotConfig,
-    applySlotConfigToAllWeeks
+    applySlotConfigToAllWeeks,
+    replaceEntireSchedule
   } = useApp();
 
   const [isAddingDate, setIsAddingDate] = useState(false);
   const [newIsoDate, setNewIsoDate] = useState('');
   const [editingNotesWeekId, setEditingNotesWeekId] = useState<string | null>(null);
   const [notesText, setNotesText] = useState('');
+
+  // Season generator modal state
+  const [isGeneratingSeason, setIsGeneratingSeason] = useState(false);
+  const [genStartDate, setGenStartDate] = useState(weeks[0]?.date || '2026-10-05');
+  const [genWeeksCount, setGenWeeksCount] = useState(30);
+  const [genIntervalDays, setGenIntervalDays] = useState(7);
+  const [genStartTime, setGenStartTime] = useState('18:00');
+  const [genDuration, setGenDuration] = useState(60);
+  const [genHours, setGenHours] = useState(3);
 
   // Target slot configuration to be set on training sessions
   const [targetHours, setTargetHours] = useState(3);
@@ -78,7 +91,7 @@ export const SeasonDatesManagement: React.FC = () => {
     setJustAppliedId(week.id);
     setTimeout(() => setJustAppliedId(null), 2500);
 
-    setAppliedFeedback(`Einstellungen für Montag, ${week.dateString} erfolgreich gesetzt (${targetHours} Einheiten)!`);
+    setAppliedFeedback(`Einstellungen für ${formatWeekDate(week)} erfolgreich gesetzt (${targetHours} Einheiten)!`);
     setTimeout(() => setAppliedFeedback(null), 3500);
   };
 
@@ -103,7 +116,7 @@ export const SeasonDatesManagement: React.FC = () => {
     });
 
     setAppliedFeedback(
-      `${successCount} Montage auf ${targetHours} Einheiten gesetzt!${blockedCount > 0 ? ` (${blockedCount} Wochen mit belegten Einheiten geschützt)` : ''}`
+      `${successCount} Spieltage auf ${targetHours} Einheiten gesetzt!${blockedCount > 0 ? ` (${blockedCount} Wochen mit belegten Einheiten geschützt)` : ''}`
     );
     setTimeout(() => setAppliedFeedback(null), 4000);
     setSelectedWeekIds([]);
@@ -114,9 +127,33 @@ export const SeasonDatesManagement: React.FC = () => {
     const blockedWeeks = weeks.filter(w => !w.isCancelled && !canReduceWeekSlots(w, targetHours).allowed);
     applySlotConfigToAllWeeks(targetHours, targetDuration, targetStartTime);
     setAppliedFeedback(
-      `Alle Montage auf ${targetHours} Einheiten gesetzt!${blockedWeeks.length > 0 ? ` (${blockedWeeks.length} Wochen mit belegten Einheiten geschützt)` : ''}`
+      `Alle Spieltage auf ${targetHours} Einheiten gesetzt!${blockedWeeks.length > 0 ? ` (${blockedWeeks.length} Wochen mit belegten Einheiten geschützt)` : ''}`
     );
     setTimeout(() => setAppliedFeedback(null), 4000);
+  };
+
+  const handleGenerateSeason = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!genStartDate) return;
+
+    const weekday = getWeekdayName(genStartDate);
+    if (!window.confirm(`Möchtest du wirklich eine neue Saison mit ${genWeeksCount} Terminen (jeweils am ${weekday}) generieren? Bestehende Termine werden dadurch ersetzt.`)) {
+      return;
+    }
+
+    const recurringDates = generateRecurringSeasonDates(genStartDate, genWeeksCount, genIntervalDays);
+    const newSchedule = generateBaselineCyclicSchedule(
+      players,
+      recurringDates,
+      genHours,
+      genDuration,
+      genStartTime
+    );
+
+    replaceEntireSchedule(newSchedule);
+    setIsGeneratingSeason(false);
+    setAppliedFeedback(`Neue Saison mit ${genWeeksCount} Spieltagen (${weekday}s) erfolgreich generiert! 🎉`);
+    setTimeout(() => setAppliedFeedback(null), 4500);
   };
 
   const handleToggleSelectWeek = (id: string) => {
@@ -168,23 +205,33 @@ export const SeasonDatesManagement: React.FC = () => {
                 Saison-Termine & Trainingseinheiten
               </h3>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-                {weeks.length} Montage
+                {weeks.length} Termine
               </span>
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              {activeCount} aktive Spieltage • {cancelledCount} spielfreie Montage
+              {activeCount} aktive Spieltage • {cancelledCount} spielfreie Termine
             </p>
           </div>
         </div>
 
-        <button
-          onClick={() => setIsAddingDate(true)}
-          className="py-2 px-3.5 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1.5 shrink-0 self-start sm:self-auto"
-          style={{ backgroundColor: theme.primary }}
-        >
-          <CalendarPlus className="w-4 h-4" />
-          <span>Montag hinzufügen</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            onClick={() => setIsGeneratingSeason(true)}
+            className="py-2 px-3.5 rounded-xl text-xs font-bold text-amber-900 dark:text-amber-100 bg-amber-100 dark:bg-amber-950/60 hover:bg-amber-200 dark:hover:bg-amber-900/60 border border-amber-300 dark:border-amber-800 shadow-xs m3-ripple flex items-center space-x-1.5 shrink-0"
+          >
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>Saison generieren</span>
+          </button>
+
+          <button
+            onClick={() => setIsAddingDate(true)}
+            className="py-2 px-3.5 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1.5 shrink-0"
+            style={{ backgroundColor: theme.primary }}
+          >
+            <CalendarPlus className="w-4 h-4" />
+            <span>Termin hinzufügen</span>
+          </button>
+        </div>
       </div>
 
       {/* Global & Per-Training Session Configurator Panel */}
@@ -210,7 +257,7 @@ export const SeasonDatesManagement: React.FC = () => {
           </div>
 
           <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-            {targetHours * 4} Spielerplätze je Montag
+            {targetHours * 4} Spielerplätze je Spieltag
           </span>
         </div>
 
@@ -310,7 +357,7 @@ export const SeasonDatesManagement: React.FC = () => {
               onClick={handleApplyToAll}
               className="flex-1 sm:flex-initial py-2 px-3.5 rounded-xl text-xs font-bold text-neutral-700 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors m3-ripple"
             >
-              Für alle Montage setzen
+              Für alle Spieltage setzen
             </button>
           </div>
         </div>
@@ -397,7 +444,7 @@ export const SeasonDatesManagement: React.FC = () => {
                       <span className={`text-sm font-bold ${
                         isCancelled ? 'line-through text-neutral-400' : 'text-neutral-900 dark:text-neutral-100'
                       }`}>
-                        Montag, {week.dateString}
+                        {formatWeekDate(week)}
                       </span>
                       {isCancelled ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
@@ -441,7 +488,7 @@ export const SeasonDatesManagement: React.FC = () => {
                           : 'bg-blue-600 hover:bg-blue-700 text-white'
                       }`}
                       style={!isJustApplied ? { backgroundColor: theme.primary } : undefined}
-                      title={`Diese Einstellungen (${targetHours} Einheiten ab ${targetStartTime} Uhr) auf diesen Montag setzen`}
+                      title={`Diese Einstellungen (${targetHours} Einheiten ab ${targetStartTime} Uhr) auf diesen Spieltag setzen`}
                     >
                       {isJustApplied ? (
                         <>
@@ -516,7 +563,7 @@ export const SeasonDatesManagement: React.FC = () => {
             <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
                 <CalendarPlus className="w-4 h-4 text-blue-500" />
-                <span>Neuen Montag hinzufügen</span>
+                <span>Neuen Termin hinzufügen</span>
               </h3>
               <button 
                 onClick={() => setIsAddingDate(false)}
@@ -529,7 +576,7 @@ export const SeasonDatesManagement: React.FC = () => {
             <form onSubmit={handleAddDate} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
-                  Datum des Montags
+                  Datum des Spieltags
                 </label>
                 <input
                   type="date"
@@ -538,6 +585,11 @@ export const SeasonDatesManagement: React.FC = () => {
                   onChange={(e) => setNewIsoDate(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                 />
+                {newIsoDate && (
+                  <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 pt-1">
+                    Wochentag: {getWeekdayName(newIsoDate)}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center space-x-2 pt-2">
@@ -554,6 +606,149 @@ export const SeasonDatesManagement: React.FC = () => {
                   style={{ backgroundColor: theme.primary }}
                 >
                   Hinzufügen
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Season Generator Modal */}
+      {isGeneratingSeason && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0"
+                  style={{ backgroundColor: theme.primary }}
+                >
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                    Saison automatisch generieren
+                  </h3>
+                  <p className="text-[11px] text-neutral-500">
+                    Beliebigen Wochentag & Rhythmus wählen
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsGeneratingSeason(false)}
+                className="p-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleGenerateSeason} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                    1. Startdatum
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={genStartDate}
+                    onChange={(e) => setGenStartDate(e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                  />
+                  {genStartDate && (
+                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 block">
+                      Wochentag: {getWeekdayName(genStartDate)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                    2. Rhythmus
+                  </label>
+                  <select
+                    value={genIntervalDays}
+                    onChange={(e) => setGenIntervalDays(Number(e.target.value))}
+                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                  >
+                    <option value={7}>Wöchentlich (alle 7 Tage)</option>
+                    <option value={14}>Alle 2 Wochen (alle 14 Tage)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                    3. Anzahl Termine
+                  </label>
+                  <input
+                    type="number"
+                    min={4}
+                    max={52}
+                    value={genWeeksCount}
+                    onChange={(e) => setGenWeeksCount(Math.max(1, Number(e.target.value)))}
+                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                    4. Startzeit
+                  </label>
+                  <select
+                    value={genStartTime}
+                    onChange={(e) => setGenStartTime(e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                  >
+                    {START_TIMES.map(t => (
+                      <option key={t} value={t}>{t} Uhr</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                    5. Einheiten
+                  </label>
+                  <select
+                    value={genHours}
+                    onChange={(e) => setGenHours(Number(e.target.value))}
+                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                  >
+                    {UNIT_OPTIONS.map(u => (
+                      <option key={u} value={u}>{u} {u === 1 ? 'Std.' : 'Std.'}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Informational banner */}
+              <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                <p className="font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Vorschau & Hinweis:</span>
+                </p>
+                <p className="text-[11px] leading-relaxed">
+                  Generiert <strong>{genWeeksCount} Termine</strong> jeweils am <strong>{getWeekdayName(genStartDate)}</strong> ({genStartTime} Uhr, {genHours} Einheiten). Die {players.length} Spieler werden im fairen Rotationszyklus automatisch eingeteilt.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsGeneratingSeason(false)}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center justify-center gap-1.5"
+                  style={{ backgroundColor: theme.primary }}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Plan generieren</span>
                 </button>
               </div>
             </form>

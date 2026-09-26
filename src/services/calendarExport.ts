@@ -1,4 +1,5 @@
 import { Player, TrainingWeek, SlotTime } from '../types/tennis';
+import { getWeekdayName } from '../utils/dateUtils';
 
 function formatIcsDate(isoDate: string, timeStr: string): string {
   // isoDate is YYYY-MM-DD
@@ -45,8 +46,9 @@ export class CalendarExportService {
           const sp1Name = allPlayers.find((p) => p.id === w.springer1.playerId)?.name || 'Keiner';
           const sp2Name = allPlayers.find((p) => p.id === w.springer2.playerId)?.name || 'Keiner';
 
+          const weekday = getWeekdayName(w.date);
           const summary = `🎾 Tennistraining (${slotKey} Uhr) - ${clubName}`;
-          const description = `Montags-Tennistraining 1 Platz mit Trainer\\nUhrzeit: ${slotKey} Uhr\\nMitspieler: ${coPlayers}\\n1. Springer: ${sp1Name}\\n2. Springer: ${sp2Name}`;
+          const description = `Tennistraining (${weekday})\\nUhrzeit: ${slotKey} Uhr\\nMitspieler: ${coPlayers}\\n1. Springer: ${sp1Name}\\n2. Springer: ${sp2Name}`;
           const uid = `tennis-${w.date}-${slotKey.replace(':', '')}-${player.id}@${clubName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
           const eventBlock = [
@@ -113,8 +115,8 @@ export class CalendarExportService {
     const dtEnd = formatIcsDate(week.date, endStr.trim());
 
     const title = encodeURIComponent(`🎾 Tennistraining (${slotKey} Uhr) - ${clubName}`);
-    const details = encodeURIComponent(`Montagsrunde: 1 Platz mit Trainer auf Platz 1.`);
-    const location = encodeURIComponent('Tennisplatz 1 (mit Trainer)');
+    const details = encodeURIComponent(`Tennistraining (${getWeekdayName(week.date)}): ${slotKey} Uhr`);
+    const location = encodeURIComponent('Tennisplatz (Training)');
 
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dtStart}/${dtEnd}&details=${details}&location=${location}`;
   }

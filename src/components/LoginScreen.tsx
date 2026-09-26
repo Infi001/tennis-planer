@@ -77,7 +77,7 @@ export const LoginScreen: React.FC = () => {
             {theme.clubName}
           </h1>
           <p className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
-            Trainingsplaner • Montagsrunde
+            Trainingsplaner • {theme.groupName || 'Trainingsgruppe'}
           </p>
         </div>
 

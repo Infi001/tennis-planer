@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span 
                 className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-[var(--club-primary)] bg-white/90"
               >
-                Trainingsplaner
+                {theme.groupName || 'Trainingsplaner'}
               </span>
             </div>
           </div>

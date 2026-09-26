@@ -103,7 +103,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 
               <CalendarDays className="w-3.5 h-3.5 text-emerald-500" />
             </div>
             <div className="text-xl font-black text-neutral-900 dark:text-neutral-100 mt-1">
-              {activeWeeksCount} <span className="text-xs font-normal text-neutral-500">von {weeks.length} Mo.</span>
+              {activeWeeksCount} <span className="text-xs font-normal text-neutral-500">von {weeks.length} Terminen</span>
             </div>
           </div>
 

@@ -204,7 +204,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
             <button 
               onClick={() => onOpenDecline(player.id)} 
-              title="Für diesen Montag absagen" 
+              title="Für diesen Spieltag absagen" 
               className="w-full py-1.5 px-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors m3-ripple border border-rose-200 dark:border-rose-900/60"
             >
               <X className="w-3.5 h-3.5 stroke-[2.5]" />

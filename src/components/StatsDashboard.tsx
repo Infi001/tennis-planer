@@ -114,7 +114,7 @@ export const StatsDashboard: React.FC = () => {
             <Flame className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Saison-Montage gesamt</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Saison-Spieltage gesamt</p>
             <p className="text-lg font-extrabold text-neutral-900 dark:text-neutral-100">
               {weeks.filter(w => !w.isCancelled).length} Termine
             </p>

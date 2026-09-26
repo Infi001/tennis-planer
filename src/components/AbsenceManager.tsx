@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Plane, Calendar, Plus, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
-import { SEASON_MONDAYS } from '../constants/initialData';
+import { formatWeekDate } from '../utils/dateUtils';
 
 export const AbsenceManager: React.FC = () => {
   const { 
@@ -14,9 +14,11 @@ export const AbsenceManager: React.FC = () => {
     weeks 
   } = useApp();
 
+  const activeWeeks = weeks.filter(w => !w.isCancelled);
+
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(currentUser.id);
   const [selectedDate, setSelectedDate] = useState<string>(
-    SEASON_MONDAYS.find(m => !m.cancelled)?.iso || '2026-10-05'
+    activeWeeks[0]?.date || ''
   );
   const [reason, setReason] = useState<string>('Urlaub');
   const [customReason, setCustomReason] = useState<string>('');
@@ -29,7 +31,8 @@ export const AbsenceManager: React.FC = () => {
     addAbsence(selectedPlayerId, selectedDate, finalReason);
 
     const playerName = players.find(p => p.id === selectedPlayerId)?.name || 'Spieler';
-    const dateFormatted = SEASON_MONDAYS.find(m => m.iso === selectedDate)?.dateStr || selectedDate;
+    const weekObj = weeks.find(w => w.date === selectedDate);
+    const dateFormatted = weekObj ? formatWeekDate(weekObj) : selectedDate;
     
     setSuccessNotice(`Abwesenheit für ${playerName} am ${dateFormatted} eingetragen. Springer wird automatisch informiert!`);
     setTimeout(() => setSuccessNotice(null), 4000);
@@ -100,16 +103,16 @@ export const AbsenceManager: React.FC = () => {
             {/* Date Selection */}
             <div>
               <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                Trainings-Montag auswählen
+                Trainings-Spieltag auswählen
               </label>
               <select
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="w-full text-sm font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {SEASON_MONDAYS.filter(m => !m.cancelled).map((m) => (
-                  <option key={m.iso} value={m.iso}>
-                    Montag, {m.dateStr}
+                {activeWeeks.map((w) => (
+                  <option key={w.date} value={w.date}>
+                    {formatWeekDate(w)}
                   </option>
                 ))}
               </select>
@@ -173,7 +176,7 @@ export const AbsenceManager: React.FC = () => {
             <div className="space-y-2.5">
               {absences.map((abs) => {
                 const player = players.find(p => p.id === abs.playerId);
-                const dateObj = SEASON_MONDAYS.find(m => m.iso === abs.date);
+                const weekObj = weeks.find(w => w.date === abs.date);
 
                 return (
                   <div
@@ -191,7 +194,7 @@ export const AbsenceManager: React.FC = () => {
                         <div className="text-sm font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
                           <span>{player?.name}</span>
                           <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
-                            Montag, {dateObj?.dateStr || abs.date}
+                            {weekObj ? formatWeekDate(weekObj) : abs.date}
                           </span>
                         </div>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">

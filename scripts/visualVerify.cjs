@@ -92,15 +92,56 @@ async function run() {
     });
 
     // 4. Admin Settings Page Screenshot
-    await page.setViewport({ width: 1024, height: 900 });
+    await page.setViewport({ width: 1280, height: 1000 });
     await page.evaluate(() => {
-      const navBtns = Array.from(document.querySelectorAll('nav button, header button'));
-      const adminNav = navBtns.find(b => b.textContent && (b.textContent.includes('Einstellungen') || b.textContent.includes('Admin')));
+      const bottomNavBtns = Array.from(document.querySelectorAll('nav button'));
+      const adminNav = bottomNavBtns.find(b => b.textContent && b.textContent.includes('Admin'));
       if (adminNav) adminNav.click();
     });
     await new Promise(r => setTimeout(r, 600));
-    console.log('Taking Admin Settings screenshot...');
-    await page.screenshot({ path: 'screenshot_admin_settings.png', fullPage: true });
+
+    // Also click on "Termine & Zeiten" tab in admin dashboard if available
+    await page.evaluate(() => {
+      const adminSubTabs = Array.from(document.querySelectorAll('button'));
+      const datesTab = adminSubTabs.find(b => b.textContent && b.textContent.includes('Termine'));
+      if (datesTab) datesTab.click();
+    });
+    await new Promise(r => setTimeout(r, 600));
+
+    // Scroll to top of window
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await new Promise(r => setTimeout(r, 300));
+    console.log('Taking Admin Season Dates screenshot (top)...');
+    await page.screenshot({ path: 'screenshot_admin_dates_top.png', fullPage: false });
+
+    // Click "Saison generieren" to open generator modal
+    await page.evaluate(() => {
+      const genBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Saison generieren'));
+      if (genBtn) genBtn.click();
+    });
+    await new Promise(r => setTimeout(r, 500));
+    console.log('Taking Season Generator Modal screenshot...');
+    await page.screenshot({ path: 'screenshot_season_generator_modal.png', fullPage: false });
+
+    // Close generator modal
+    await page.evaluate(() => {
+      const cancelBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Abbrechen'));
+      if (cancelBtn) cancelBtn.click();
+    });
+    await new Promise(r => setTimeout(r, 300));
+
+    // Also click on "Einstellungen" tab in admin dashboard
+    await page.evaluate(() => {
+      const adminSubTabs = Array.from(document.querySelectorAll('button'));
+      const settingsTab = adminSubTabs.find(b => b.textContent && b.textContent.includes('Einstellungen'));
+      if (settingsTab) settingsTab.click();
+    });
+    await new Promise(r => setTimeout(r, 600));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await new Promise(r => setTimeout(r, 300));
+
+    console.log('Taking Admin Club Settings screenshot (top)...');
+    await page.screenshot({ path: 'screenshot_admin_settings_top.png', fullPage: false });
 
     console.log('All screenshots captured successfully!');
   } finally {

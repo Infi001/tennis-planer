@@ -51,14 +51,14 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                1. Wie funktioniert unsere Montagsrunde?
+                1. Wie funktioniert unser Trainingsplaner?
               </h2>
               <span className="text-xs text-neutral-500">Das Spiel- und Rotationsprinzip</span>
             </div>
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
             <p>
-              Jeden Montag spielen wir in <strong>3 Einheiten (18:00, 19:00 und 20:00 Uhr)</strong> auf Platz 1 mit unserem Trainer.
+              An jedem Spieltag spielen wir in fest eingeteilten Trainingseinheiten auf dem Platz.
             </p>
             <p>
               In jeder Einheit spielen genau <strong>4 Spieler</strong>. Ein ausgeklügelter Plan sorgt dafür, dass jeder Spieler über die gesamte Saison gleich oft zu den verschiedenen Uhrzeiten spielt und alle paar Wochen planmäßig spielfrei hat.
@@ -84,7 +84,7 @@ export const HelpView: React.FC = () => {
               Laut Saisonplan bist du an deinen Spieltagen automatisch fest eingeteilt. Du musst deine Teilnahme <strong>nicht extra bestätigen</strong>.
             </p>
             <p>
-              Nur wenn du an einem Montag verhindert bist, klickst du bitte rechtzeitig auf <strong>"Termin absagen"</strong>, damit ein Springer nachrücken kann.
+              Nur wenn du an einem Spieltag verhindert bist, klickst du bitte rechtzeitig auf <strong>"Termin absagen"</strong>, damit ein Springer nachrücken kann.
             </p>
           </div>
         </div>
@@ -183,7 +183,7 @@ export const HelpView: React.FC = () => {
               Wenn du schon Wochen vorher weißt, dass du im Urlaub oder auf Dienstreise bist:
             </p>
             <p>
-              Klicke unten im Menü auf <strong>"Urlaub"</strong>, wähle den betreffenden Montag aus und klicke auf <em>"Abwesenheit speichern"</em>.
+              Klicke unten im Menü auf <strong>"Urlaub"</strong>, wähle den betreffenden Spieltag aus und klicke auf <em>"Abwesenheit speichern"</em>.
             </p>
             <p>
               Der Trainingsplan weiß dann frühzeitig Bescheid und teilt automatisch einen Springer für dich ein.
@@ -206,7 +206,7 @@ export const HelpView: React.FC = () => {
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
             <p>
-              Du möchtest alle deine Montags-Termine im Handy-Kalender (iPhone, Android oder Outlook) sehen?
+              Du möchtest alle deine Trainings-Termine im Handy-Kalender (iPhone, Android oder Outlook) sehen?
             </p>
             <p>
               Klicke unten im Menü auf <strong>"Kalender"</strong> und tippe auf den großen Button <strong>"Gesamte Saison abonnieren (.ics)"</strong>. Dein Smartphone trägt alle deine Spiele automatisch mit Erinnerung ein.

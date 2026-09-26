@@ -97,5 +97,7 @@ export interface ClubTheme {
   accent: string;
   clubName: string;
   logoText: string;
+  groupName?: string; // z.B. "Montagsrunde", "Herren 60"
+  courtInfo?: string; // z.B. "1 Platz mit Trainer • 3x 60 Min."
   springerCount?: number; // 1 bis X Springer konfigurierbar
 }

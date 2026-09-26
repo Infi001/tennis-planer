@@ -186,7 +186,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                           onClick={() => declineSubstituteOffer(week.id, p.id)}
                           className="w-full py-1 mt-1 text-[11px] font-semibold text-neutral-500 hover:text-rose-600 text-center transition-colors"
                         >
-                          Kann diesen Montag nicht
+                          Kann an diesem Spieltag nicht
                         </button>
                       </div>
                     ) : (

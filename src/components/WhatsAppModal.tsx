@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getWeekSlotKeys } from '../utils/slotTimeUtils';
+import { formatWeekDate } from '../utils/dateUtils';
 import { X, Copy, Check, MessageSquare, ExternalLink } from 'lucide-react';
 
 interface WhatsAppModalProps {
@@ -8,7 +9,7 @@ interface WhatsAppModalProps {
 }
 
 export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ onClose }) => {
-  const { selectedWeek, players, theme } = useApp();
+  const { selectedWeek, players, theme, springerCount } = useApp();
   const [copied, setCopied] = useState(false);
 
   if (!selectedWeek) return null;
@@ -42,17 +43,23 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ onClose }) => {
   const sp2Name = getPlayerName(selectedWeek.springer2.playerId);
   const freiName = getPlayerName(selectedWeek.frei.playerId);
 
-  const whatsAppText = `🎾 *${theme.clubName} - Trainingsplan*
-📅 Montag, ${selectedWeek.dateString} (${slotKeys.length} Std. • 1 Platz mit Trainer)
+  const courtDescription = theme.courtInfo ? ` • ${theme.courtInfo}` : '';
+  const dateLine = `📅 ${formatWeekDate(selectedWeek)} (${slotKeys.length} Std.${courtDescription})`;
+
+  const springerLines = [
+    `🟡 *1. Springer:* ${sp1Name}`,
+    ...(springerCount >= 2 ? [`🟡 *2. Springer:* ${sp2Name}`] : []),
+    `💤 *Spielfrei:* ${freiName}`,
+  ].join('\n');
+
+  const whatsAppText = `🎾 *${theme.clubName}${theme.groupName ? ` • ${theme.groupName}` : ''}*
+${dateLine}
 
 ${slotsText}
 
-🟡 *1. Springer (Prio 1):* ${sp1Name}
-🟡 *2. Springer (Prio 2):* ${sp2Name}
-💤 *Spielfrei (Prio 3):* ${freiName}
-👥 *Offener Pool (Prio 4):* Alle weiteren Vereinsmitglieder
+${springerLines}
 
-👉 *Bitte Zu- oder Absagen in der WebApp bestätigen!*`;
+👉 *Bitte Zu- oder Absagen in der WebApp verwalten!*`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(whatsAppText);
@@ -82,7 +89,7 @@ ${slotsText}
                 WhatsApp Nachricht
               </h3>
               <p className="text-xs text-neutral-500">
-                Fertig formatierte Vorschau für Montag, {selectedWeek.dateString}
+                Fertig formatierte Vorschau für {formatWeekDate(selectedWeek)}
               </p>
             </div>
           </div>

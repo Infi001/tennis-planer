@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { X, AlertTriangle, ShieldCheck, Share2 } from 'lucide-react';
+import { formatWeekDate } from '../utils/dateUtils';
 
 interface DeclineModalProps {
   playerId: string;
@@ -43,7 +44,7 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
                 Absage für {player.name}
               </h3>
               <p className="text-xs text-neutral-500">
-                Montag, {selectedWeek.dateString}
+                {formatWeekDate(selectedWeek)}
               </p>
             </div>
           </div>

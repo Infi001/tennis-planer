@@ -356,7 +356,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         st !== slot && (wCheck.slots[st] || []).some(a => a.playerId === playerId && a.status !== 'declined')
       );
       if (activeInOtherSlot) {
-        alert('Doppelbuchung verhindert: Du spielst an diesem Montag bereits in einem anderen Zeitslot!');
+        alert('Doppelbuchung verhindert: Du spielst an diesem Spieltag bereits in einem anderen Zeitslot!');
         return;
       }
     }
@@ -427,7 +427,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const acceptSubstitute = (weekId: string, targetSlot: SlotTime, candidatePlayerId: string): boolean => {
     // STRICT NO-DOUBLE-BOOKING: If candidate is already playing, REJECT!
     if (isPlayerScheduledInWeek(weekId, candidatePlayerId)) {
-      alert('Doppelbuchung verhindert: Du bist an diesem Montag bereits in einem anderen Zeitslot eingeteilt!');
+      alert('Doppelbuchung verhindert: Du bist an diesem Spieltag bereits in einem anderen Zeitslot eingeteilt!');
       return false;
     }
 
