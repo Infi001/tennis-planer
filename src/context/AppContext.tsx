@@ -69,7 +69,8 @@ interface AppContextType {
   adminDragDropAssign: (weekId: string, slot: SlotTime, droppedPlayerId: string, targetPlayerIdToReplace?: string) => void;
   adminRemovePlayer: (weekId: string, slot: SlotTime, playerIdOrGuest: string) => void;
   adminAddGuest: (weekId: string, slot: SlotTime, guestName: string) => void;
-  adminRemoveGuest: (weekId: string, slot: SlotTime, guestIndex: number) => void;
+  springerCount: number;
+  setSpringerCount: (count: number) => void;
   resetWeekToOriginal: (weekId: string) => void;
   resetAll: () => void;
 }
@@ -91,6 +92,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setIsDarkMode = (val: boolean) => {
     setIsDarkModeState(val);
     localStorage.setItem('tennis_dark_mode', String(val));
+  };
+
+  const [springerCount, setSpringerCountState] = useState<number>(() => StorageService.getSpringerCount());
+  const setSpringerCount = (count: number) => {
+    const safe = Math.max(1, Math.min(count, 3));
+    setSpringerCountState(safe);
+    StorageService.saveSpringerCount(safe);
   };
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(() => StorageService.getCurrentUserId());
@@ -717,7 +725,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const getStandbyCascadeInfo = (weekId: string): StandbyCascadeResult | null => {
     const w = weeks.find(item => item.id === weekId);
     if (!w) return null;
-    return calculateStandbyCascade(w);
+    return calculateStandbyCascade(w, springerCount);
   };
 
   // --- Claim Open Slot ---
@@ -1382,7 +1390,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminDragDropAssign,
         adminRemovePlayer,
         adminAddGuest,
-        adminRemoveGuest,
+        springerCount,
+        setSpringerCount,
         resetWeekToOriginal,
         addPlayer,
         updatePlayer,

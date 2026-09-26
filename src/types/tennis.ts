@@ -97,4 +97,5 @@ export interface ClubTheme {
   accent: string;
   clubName: string;
   logoText: string;
+  springerCount?: number; // 1 bis X Springer konfigurierbar
 }

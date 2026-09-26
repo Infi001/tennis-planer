@@ -36,14 +36,22 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
     releaseOpenSlotsToAll,
     resetStandbyCascade,
     isPlayerScheduledInWeek,
+    springerCount,
   } = useApp();
 
-  const cascade = calculateStandbyCascade(week);
-  const queueItems = buildStandbyQueueDisplay(week, players, currentUser.id);
+  const cascade = calculateStandbyCascade(week, springerCount);
+  const queueItems = buildStandbyQueueDisplay(week, players, currentUser.id, springerCount);
 
   const { totalOpenSpots, openSlots, openForAnyoneCount, activeOfferedPrios } = cascade;
   const hasOpenSpots = totalOpenSpots > 0;
   const isCurrentUserScheduled = isPlayerScheduledInWeek(week.id, currentUser.id);
+
+  const sequenceText = [
+    '1. Springer',
+    springerCount >= 2 ? '2. Springer' : null,
+    springerCount >= 3 ? '3. Springer' : null,
+    'Alle Vereinsmitglieder'
+  ].filter(Boolean).join(' ➔ ');
 
   return (
     <div className="bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl p-5 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all space-y-4">
@@ -63,11 +71,11 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                 Springer & Nachrücker
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-                Reihenfolge
+                {springerCount} {springerCount === 1 ? 'Springer' : 'Springer'} aktiv
               </span>
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              1. Springer ➔ 2. Springer ➔ Spielfrei ➔ Offener Pool
+              {sequenceText}
             </p>
           </div>
         </div>
@@ -96,8 +104,12 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
             </button>
           )}
 
-          {/* Reset button if any Springer/Frei declined */}
-          {currentUser.isAdmin && (week.springer1.status === 'declined' || week.springer2.status === 'declined' || week.frei?.status === 'declined') && (
+          {/* Reset button if any Springer declined */}
+          {currentUser.isAdmin && (
+            week.springer1.status === 'declined' || 
+            (springerCount >= 2 && week.springer2.status === 'declined') || 
+            (springerCount >= 3 && week.frei?.status === 'declined')
+          ) && (
             <button
               onClick={() => resetStandbyCascade(week.id)}
               className="py-1.5 px-2.5 rounded-xl text-xs font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center space-x-1"
@@ -112,7 +124,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
 
       {/* Visual Sequence Flow Banner */}
       <div className="p-2.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800 overflow-x-auto">
-        <div className="flex items-center min-w-[500px] justify-between text-xs font-bold">
+        <div className="flex items-center min-w-[360px] justify-between text-xs font-bold gap-2">
           
           {/* Step 1 */}
           <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl transition-all ${
@@ -130,60 +142,72 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
             {cascade.springer1.status === 'accepted' && <span>✅</span>}
           </div>
 
-          <ArrowRight className="w-3.5 h-3.5 text-neutral-300 dark:text-neutral-700 shrink-0" />
-
           {/* Step 2 */}
-          <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl transition-all ${
-            activeOfferedPrios.includes(2)
-              ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 ring-2 ring-amber-400/40'
-              : cascade.springer2.status === 'accepted'
-                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-                : cascade.springer2.status === 'declined'
-                  ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 line-through'
-                  : 'text-neutral-500 dark:text-neutral-400'
-          }`}>
-            <span className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[10px]">2</span>
-            <span>2. Springer</span>
-            {activeOfferedPrios.includes(2) && <span className="animate-pulse">🔔</span>}
-            {cascade.springer2.status === 'accepted' && <span>✅</span>}
-          </div>
-
-          <ArrowRight className="w-3.5 h-3.5 text-neutral-300 dark:text-neutral-700 shrink-0" />
+          {springerCount >= 2 && (
+            <>
+              <ArrowRight className="w-3.5 h-3.5 text-neutral-300 dark:text-neutral-700 shrink-0" />
+              <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl transition-all ${
+                activeOfferedPrios.includes(2)
+                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 ring-2 ring-amber-400/40'
+                  : cascade.springer2.status === 'accepted'
+                    ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                    : cascade.springer2.status === 'declined'
+                      ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 line-through'
+                      : 'text-neutral-500 dark:text-neutral-400'
+              }`}>
+                <span className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[10px]">2</span>
+                <span>2. Springer</span>
+                {activeOfferedPrios.includes(2) && <span className="animate-pulse">🔔</span>}
+                {cascade.springer2.status === 'accepted' && <span>✅</span>}
+              </div>
+            </>
+          )}
 
           {/* Step 3 */}
-          <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl transition-all ${
-            activeOfferedPrios.includes(3)
-              ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 ring-2 ring-amber-400/40'
-              : cascade.frei.status === 'accepted'
-                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-                : cascade.frei.status === 'declined'
-                  ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 line-through'
-                  : 'text-neutral-500 dark:text-neutral-400'
-          }`}>
-            <span className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[10px]">3</span>
-            <span>Frei (Pause)</span>
-            {activeOfferedPrios.includes(3) && <span className="animate-pulse">🔔</span>}
-            {cascade.frei.status === 'accepted' && <span>✅</span>}
-          </div>
+          {springerCount >= 3 && (
+            <>
+              <ArrowRight className="w-3.5 h-3.5 text-neutral-300 dark:text-neutral-700 shrink-0" />
+              <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl transition-all ${
+                activeOfferedPrios.includes(3)
+                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 ring-2 ring-amber-400/40'
+                  : cascade.frei.status === 'accepted'
+                    ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                    : cascade.frei.status === 'declined'
+                      ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 line-through'
+                      : 'text-neutral-500 dark:text-neutral-400'
+              }`}>
+                <span className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[10px]">3</span>
+                <span>3. Springer</span>
+                {activeOfferedPrios.includes(3) && <span className="animate-pulse">🔔</span>}
+                {cascade.frei.status === 'accepted' && <span>✅</span>}
+              </div>
+            </>
+          )}
 
           <ArrowRight className="w-3.5 h-3.5 text-neutral-300 dark:text-neutral-700 shrink-0" />
 
-          {/* Step 4 */}
+          {/* Final Step: Alle Vereinsmitglieder */}
           <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl transition-all ${
             openForAnyoneCount > 0
               ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 ring-2 ring-emerald-400/40'
               : 'text-neutral-500 dark:text-neutral-400'
           }`}>
-            <span className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[10px]">4</span>
-            <span>Alle Spieler</span>
+            <span className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[10px]">★</span>
+            <span>Alle Mitglieder</span>
             {openForAnyoneCount > 0 && <span className="animate-pulse">🟢</span>}
           </div>
 
         </div>
       </div>
 
-      {/* The 4 Priority Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+      {/* Priority Cards Grid (dynamic columns based on springerCount) */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${
+        springerCount === 1 
+          ? 'lg:grid-cols-2 max-w-2xl' 
+          : springerCount === 2 
+            ? 'lg:grid-cols-3' 
+            : 'lg:grid-cols-2 xl:grid-cols-4'
+      } gap-3`}>
         {queueItems.map((item) => {
           const isTurn = item.isCurrentTurn;
           const isUser = item.isCurrentUser;
@@ -291,7 +315,9 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                           onClick={() => declineSubstituteOffer(week.id, p.id)}
                           className="w-full py-1 mt-1 text-[11px] font-semibold text-neutral-500 hover:text-rose-600 text-center transition-colors"
                         >
-                          {item.prio === 3 ? 'Lieber Pause behalten (an Alle freigeben ➔)' : 'Kann nicht (an nächsten Nachrücker ➔)'}
+                          {item.prio === springerCount 
+                            ? 'Kann nicht (für alle Vereinsmitglieder freigeben ➔)' 
+                            : 'Kann nicht (an nächsten Nachrücker ➔)'}
                         </button>
                       </div>
                     ) : (

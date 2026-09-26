@@ -8,11 +8,12 @@ import {
   Check, 
   Sparkles,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Users
 } from 'lucide-react';
 
 export const ClubSettings: React.FC = () => {
-  const { theme, setTheme, resetAll, weeks, players } = useApp();
+  const { theme, setTheme, resetAll, weeks, players, springerCount, setSpringerCount } = useApp();
   
   // Theme state
   const [clubName, setClubName] = useState(theme.clubName);
@@ -191,7 +192,41 @@ export const ClubSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Datensicherung */}
+      {/* 2. Springer-Einstellungen (Nachrücker) */}
+      <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+        <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
+          <Users className="w-4 h-4 text-amber-500" />
+          Springer-Einstellungen (Nachrücker)
+        </h3>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          Legt fest, wie viele feste Nachrücker es pro Spieltag gibt (1. Springer, 2. Springer usw.), bevor ein freier Platz für alle Vereinsmitglieder geöffnet wird.
+        </p>
+        
+        <div className="flex flex-wrap gap-2.5">
+          {[1, 2, 3].map((count) => (
+            <button
+              key={count}
+              type="button"
+              onClick={() => setSpringerCount(count)}
+              className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all m3-ripple border flex items-center gap-2 ${
+                springerCount === count
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20'
+                  : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50'
+              }`}
+            >
+              <span>{count} {count === 1 ? 'Springer' : 'Springer'}{count === 2 ? ' (Standard)' : ''}</span>
+              {springerCount === count && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-neutral-500">
+          {springerCount === 1 && 'Bei Absagen rückt zunächst Springer 1 nach. Kann dieser nicht, ist der Platz sofort für alle Mitglieder frei.'}
+          {springerCount === 2 && 'Bei Absagen rückt erst Springer 1, danach Springer 2 nach. Danach ist der Platz für alle Mitglieder frei.'}
+          {springerCount === 3 && 'Bei Absagen rücken nacheinander Springer 1, 2 und 3 nach. Danach ist der Platz für alle Mitglieder frei.'}
+        </p>
+      </div>
+
+      {/* 3. Datensicherung */}
       <div className="space-y-3 pt-4 border-t border-neutral-100 dark:border-neutral-800">
         <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
           <Download className="w-4 h-4 text-emerald-500" />

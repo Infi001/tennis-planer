@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   SWAPS: 'tennis_swaps_v1',
   CURRENT_USER_ID: 'tennis_current_user_id_v1',
   THEME: 'tennis_theme_v1',
+  SPRINGER_COUNT: 'tennis_springer_count_v1',
 };
 
 async function safeSupabaseSync(action: () => PromiseLike<any>) {
@@ -258,6 +259,19 @@ export class StorageService {
     } catch {
       return THEME_PRESETS[0];
     }
+  }
+
+  // --- Springer Count Configuration (1 bis X) ---
+  static getSpringerCount(): number {
+    const raw = localStorage.getItem(STORAGE_KEYS.SPRINGER_COUNT);
+    if (!raw) return 2; // Standard: 2 Springer
+    const num = parseInt(raw, 10);
+    return isNaN(num) || num < 1 || num > 3 ? 2 : num;
+  }
+
+  static saveSpringerCount(count: number) {
+    const safeCount = Math.max(1, Math.min(count, 3));
+    localStorage.setItem(STORAGE_KEYS.SPRINGER_COUNT, safeCount.toString());
   }
 
   static async deleteRecord(table: string, id: string) {

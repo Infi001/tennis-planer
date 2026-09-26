@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { SlotTime } from '../types/tennis';
+import { SlotTime, Player } from '../types/tennis';
 import { PlayerCard } from './PlayerCard';
 import { SpringerHub } from './SpringerHub';
 import { DoppelGeneratorModal } from './DoppelGeneratorModal';
@@ -22,7 +22,8 @@ import {
   ArrowLeftRight, 
   Shuffle,
   Share2,
-  ShieldCheck
+  ShieldCheck,
+  Users
 } from 'lucide-react';
 
 interface WeeklyMatchCenterProps {
@@ -61,11 +62,13 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
     cancelSwap,
     players,
     adminDragDropAssign,
-    resetWeekToOriginal
+    resetWeekToOriginal,
+    springerCount,
   } = useApp();
 
   const [doppelSlot, setDoppelSlot] = useState<SlotTime | null>(null);
   const [adminAssignSlot, setAdminAssignSlot] = useState<{slotTime: SlotTime, targetPlayerIdToReplace?: string} | null>(null);
+  const [assignPlayerTarget, setAssignPlayerTarget] = useState<Player | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const currentIndex = weeks.findIndex(w => w.id === selectedWeekId);
   const prevWeek = currentIndex > 0 ? weeks[currentIndex - 1] : null;
@@ -173,14 +176,14 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   const isCurrentUserFrei = selectedWeek.frei.playerId === currentUser.id;
 
   // Standby Priority Cascade calculations
-  const cascade = calculateStandbyCascade(selectedWeek);
+  const cascade = calculateStandbyCascade(selectedWeek, springerCount);
   const sp1Player = players.find(p => p.id === selectedWeek.springer1.playerId);
   const sp2Player = players.find(p => p.id === selectedWeek.springer2.playerId);
   const freiPlayer = players.find(p => p.id === selectedWeek.frei?.playerId);
 
   const isCurrentUserSp1Turn = isCurrentUserSp1 && cascade.activeOfferedPrios.includes(1);
-  const isCurrentUserSp2Turn = isCurrentUserSp2 && cascade.activeOfferedPrios.includes(2);
-  const isCurrentUserFreiTurn = isCurrentUserFrei && cascade.activeOfferedPrios.includes(3);
+  const isCurrentUserSp2Turn = isCurrentUserSp2 && cascade.activeOfferedPrios.includes(2) && springerCount >= 2;
+  const isCurrentUserFreiTurn = isCurrentUserFrei && cascade.activeOfferedPrios.includes(3) && springerCount >= 3;
   const isCurrentUserStandbyTurn = isCurrentUserSp1Turn || isCurrentUserSp2Turn || isCurrentUserFreiTurn;
 
   // Swap lookups
@@ -522,6 +525,46 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
       </div>
 
+      {/* Mobile Admin Quick-Assign Strip (Visible only on < lg screens) */}
+      {currentUser.isAdmin && (
+        <div className="block lg:hidden p-4 rounded-3xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                Verfügbare Spieler nachsetzen ({players.filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id)).length})
+              </span>
+            </div>
+            <span className="text-[10px] text-neutral-500">Tippen zum Einteilen</span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {players
+              .filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id))
+              .map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setAssignPlayerTarget(p)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xs hover:border-blue-400 active:scale-95 transition-all m3-ripple flex items-center space-x-1.5 text-neutral-800 dark:text-neutral-200"
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] text-white font-bold shrink-0"
+                    style={{ backgroundColor: p.avatarColor || theme.primary }}
+                  >
+                    {p.shortName}
+                  </div>
+                  <span>{p.name}</span>
+                  <span className="text-[11px] text-blue-600 dark:text-blue-400 font-extrabold">+</span>
+                </button>
+              ))}
+            {players.filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id)).length === 0 && (
+              <span className="text-xs text-neutral-500 italic">Alle Spieler sind bereits eingeteilt.</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Courts / Timeslots Layout (Dynamic hours count) */}
       <div className={`grid grid-cols-1 ${
         slotKeys.length === 1 
@@ -573,7 +616,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1.5">
                   <button
                     onClick={() => setDoppelSlot(slotKey)}
                     title="Faire Doppel-Paarung für diese 4 Spieler auslosen"
@@ -582,6 +625,18 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                     <Shuffle className="w-4 h-4" />
                   </button>
 
+                  {/* Nachsetzen Button for Admin */}
+                  {currentUser.isAdmin && (
+                    <button
+                      onClick={() => setAdminAssignSlot({ slotTime: slotKey })}
+                      title="Spieler zu diesem Slot nachsetzen oder austauschen"
+                      className="py-1 px-2.5 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors flex items-center gap-1 shrink-0 m3-ripple"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Nachsetzen</span>
+                    </button>
+                  )}
+
                   {/* Add Guest Button for Admin */}
                   {currentUser.isAdmin && (
                     <button
@@ -589,7 +644,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                       title="Gastspieler zu diesem Slot hinzufügen"
                       className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 m3-ripple"
                     >
-                      <UserPlus className="w-4 h-4" />
+                      <Users className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -681,17 +736,17 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                     prioLabel = 'Prio 1: 1. Springer';
                     prioName = sp1Player.name;
                     isMyPrioTurn = isCurrentUserSp1;
-                  } else if (cascade.activeOfferedPrios.includes(2) && sp2Player) {
+                  } else if (springerCount >= 2 && cascade.activeOfferedPrios.includes(2) && sp2Player) {
                     prioLabel = 'Prio 2: 2. Springer';
                     prioName = sp2Player.name;
                     isMyPrioTurn = isCurrentUserSp2;
-                  } else if (cascade.activeOfferedPrios.includes(3) && freiPlayer) {
-                    prioLabel = 'Prio 3: Frei (Pause)';
+                  } else if (springerCount >= 3 && cascade.activeOfferedPrios.includes(3) && freiPlayer) {
+                    prioLabel = 'Prio 3: 3. Springer';
                     prioName = freiPlayer.name;
                     isMyPrioTurn = isCurrentUserFrei;
                   } else if (cascade.openForAnyoneCount > 0) {
                     prioLabel = 'Offen für alle';
-                    prioName = 'Jeder Spieler';
+                    prioName = 'Alle Vereinsmitglieder';
                     isMyPrioTurn = false;
                   }
 
@@ -781,6 +836,63 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
         })}
       </div>
 
+      {/* Mobile Admin Quick-Assign Card (Visible only on < lg screens) */}
+      {currentUser.isAdmin && (
+        <div className="block lg:hidden p-5 rounded-3xl bg-neutral-100/70 dark:bg-[var(--md-sys-color-surface)] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                Verfügbare Spieler nachsetzen
+              </h3>
+              <p className="text-xs text-neutral-500">
+                Tippe auf einen Spieler, um ihn direkt in einen Zeitslot einzuteilen
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            {players
+              .filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id))
+              .map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setAssignPlayerTarget(p)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xs hover:border-blue-400 active:scale-95 transition-all m3-ripple flex items-center space-x-2 text-neutral-800 dark:text-neutral-200"
+                >
+                  <div 
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold shrink-0"
+                    style={{ backgroundColor: p.avatarColor || theme.primary }}
+                  >
+                    {p.shortName}
+                  </div>
+                  <span>{p.name}</span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold">+</span>
+                </button>
+              ))}
+            {players.filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id)).length === 0 && (
+              <span className="text-xs text-neutral-500 italic">Alle Spieler sind bereits eingeteilt.</span>
+            )}
+          </div>
+
+          <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700/60">
+            <button
+              onClick={() => {
+                if (window.confirm('Möchtest du diesen Spieltag wirklich auf den ursprünglich berechneten Basis-Plan zurücksetzen? Alle manuellen Anpassungen, Tausche und Springer werden entfernt!')) {
+                  resetWeekToOriginal(selectedWeek.id);
+                }
+              }}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center space-x-2 transition-colors m3-ripple"
+              title="Auf den ursprünglichen Plan zurücksetzen"
+            >
+              <RotateCcw className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap">Spieltag auf Original zurücksetzen</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Springer- & Standby-Hub */}
       <SpringerHub week={selectedWeek} />
 
@@ -789,57 +901,62 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
       {/* Admin Drag & Drop Pool (Sidebar on Desktop) */}
       {currentUser.isAdmin && (
         <div className="hidden lg:block w-80 shrink-0">
-          <div className="sticky top-24 p-5 rounded-3xl bg-neutral-100/50 dark:bg-[var(--md-sys-color-surface)] border border-neutral-200/80 dark:border-neutral-800">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                Admin-Bereich: Verfügbare Spieler (Drag & Drop)
-              </h3>
+          <div className="sticky top-24 p-5 rounded-3xl bg-neutral-100/50 dark:bg-[var(--md-sys-color-surface)] border border-neutral-200/80 dark:border-neutral-800 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                  Verfügbare Spieler
+                </h3>
+              </div>
+              <p className="text-[11px] text-neutral-500 mb-3">
+                Klicken zum schnellen Zuweisen oder per Drag & Drop in einen Zeitslot ziehen.
+              </p>
+              
+              <div className="flex flex-wrap gap-2">
+                {players
+                  .filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id))
+                  .map(p => (
+                    <div
+                      key={p.id}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('playerId', p.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                      onClick={() => setAssignPlayerTarget(p)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xs cursor-pointer hover:border-blue-400 active:cursor-grabbing m3-ripple flex items-center space-x-2"
+                      title="Klicken zum Einteilen oder in Slot ziehen"
+                    >
+                      <div 
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white shrink-0"
+                        style={{ backgroundColor: p.avatarColor || theme.primary }}
+                      >
+                        {p.shortName}
+                      </div>
+                      <span>{p.name}</span>
+                    </div>
+                ))}
+                {players.filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id)).length === 0 && (
+                  <span className="text-xs text-neutral-500 italic">Alle Spieler sind bereits eingeteilt.</span>
+                )}
+              </div>
             </div>
-            
-            <button
-              onClick={() => {
-                if (window.confirm('Möchtest du diesen Spieltag wirklich auf den ursprünglich berechneten Basis-Plan zurücksetzen? Alle manuellen Anpassungen, Tausche und Springer werden entfernt!')) {
-                  resetWeekToOriginal(selectedWeek.id);
-                }
-              }}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/60 flex items-center space-x-1.5 transition-colors m3-ripple"
-              title="Auf den ursprünglichen Plan zurücksetzen"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Plan zurücksetzen</span>
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {players
-              .filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id))
-              .map(p => (
-                <div
-                  key={p.id}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData('playerId', p.id);
-                    e.dataTransfer.effectAllowed = 'move';
-                  }}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xs cursor-grab active:cursor-grabbing hover:border-blue-400 m3-ripple flex items-center space-x-2"
-                >
-                  <div 
-                    className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white"
-                    style={{ backgroundColor: p.avatarColor || theme.primary }}
-                  >
-                    {p.shortName}
-                  </div>
-                  <span>{p.name}</span>
-                </div>
-            ))}
-            {players.filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id)).length === 0 && (
-              <span className="text-xs text-neutral-500 italic">Alle Spieler sind bereits eingeteilt.</span>
-            )}
-          </div>
-          <p className="text-[10px] text-neutral-500 mt-3">
-            Ziehe einen Spieler aus diesem Pool auf einen leeren Slot oder auf einen bereits eingeteilten Spieler, um ihn zuzuweisen oder auszutauschen.
-          </p>
+
+            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700/60 mt-4">
+              <button
+                onClick={() => {
+                  if (window.confirm('Möchtest du diesen Spieltag wirklich auf den ursprünglich berechneten Basis-Plan zurücksetzen? Alle manuellen Anpassungen, Tausche und Springer werden entfernt!')) {
+                    resetWeekToOriginal(selectedWeek.id);
+                  }
+                }}
+                className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center space-x-2 transition-colors m3-ripple whitespace-nowrap"
+                title="Auf den ursprünglichen Plan zurücksetzen"
+              >
+                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                <span className="whitespace-nowrap">Spieltag zurücksetzen</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -853,7 +970,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
         />
       )}
 
-      {/* Admin Tap-to-Assign Bottom Sheet */}
+      {/* Admin Tap-to-Assign Bottom Sheet (from slot header button) */}
       {adminAssignSlot && (
         <AdminAssignModal
           isOpen={true}
@@ -862,6 +979,78 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           slotTime={adminAssignSlot.slotTime}
           targetPlayerIdToReplace={adminAssignSlot.targetPlayerIdToReplace}
         />
+      )}
+
+      {/* Admin Quick Slot Chooser Modal (when clicking an unassigned player) */}
+      {assignPlayerTarget && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+          <div 
+            className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm" 
+            onClick={() => setAssignPlayerTarget(null)}
+          />
+          <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-xl overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+              <div className="flex items-center space-x-3">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0"
+                  style={{ backgroundColor: assignPlayerTarget.avatarColor || theme.primary }}
+                >
+                  {assignPlayerTarget.shortName}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                    {assignPlayerTarget.name} nachsetzen
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    In welchen Zeitslot soll der Spieler eingeteilt werden?
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setAssignPlayerTarget(null)}
+                className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {slotKeys.map(slot => {
+                const slotPlayers = selectedWeek.slots[slot] || [];
+                const activeCount = slotPlayers.filter(a => a.status !== 'declined').length;
+                const isFull = activeCount >= 4;
+
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => {
+                      adminDragDropAssign(selectedWeek.id, slot, assignPlayerTarget.id);
+                      setAssignPlayerTarget(null);
+                    }}
+                    className="w-full p-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/40 text-left flex items-center justify-between transition-all m3-ripple"
+                  >
+                    <div>
+                      <span className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 block">
+                        {slot} Uhr
+                      </span>
+                      <span className="text-xs text-neutral-500">
+                        {activeCount}/4 Spieler belegt
+                      </span>
+                    </div>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-xl ${
+                      isFull 
+                        ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600'
+                        : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                    }`}>
+                      {isFull ? 'Slot voll (ersetzen)' : 'Freier Platz 🎾'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
