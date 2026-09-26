@@ -152,7 +152,7 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                5. Uhrzeit tauschen mit einem Kollegen
+                5. Uhrzeit tauschen mit einem Mitspieler
               </h2>
               <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold">Button "Tauschen"</span>
             </div>
@@ -162,7 +162,7 @@ export const HelpView: React.FC = () => {
               Du bist um 18:00 Uhr eingeteilt, kannst aber an diesem Tag erst um 19:00 oder 20:00 Uhr?
             </p>
             <p>
-              Klicke auf <strong>"Tauschen"</strong> und wähle deine Wunsch-Uhrzeit. Ein Kollege aus der anderen Stunde kann deinen Tauschvorschlag mit einem Klick annehmen. Eure Plätze werden dann automatisch getauscht.
+              Klicke auf <strong>"Tauschen"</strong> und wähle deine Wunsch-Uhrzeit. Ein Mitspieler aus der anderen Stunde kann deinen Tauschvorschlag mit einem Klick annehmen. Eure Plätze werden dann automatisch getauscht.
             </p>
           </div>
         </div>

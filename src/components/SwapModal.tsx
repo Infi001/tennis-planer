@@ -63,7 +63,7 @@ export const SwapModal: React.FC<SwapModalProps> = ({ playerId, fromSlot, onClos
             </div>
             <div>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                Zeitslot tauschen
+                Uhrzeit tauschen
               </h3>
               <p className="text-xs text-neutral-500">
                 {player.name} spielt aktuell um {fromSlot} Uhr
@@ -115,7 +115,7 @@ export const SwapModal: React.FC<SwapModalProps> = ({ playerId, fromSlot, onClos
             onChange={(e) => setTargetPlayerId(e.target.value)}
             className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="any">Offen für jeden Spieler in diesem Slot</option>
+            <option value="any">Offen für alle Mitspieler um {targetSlot} Uhr</option>
             {targetSlotPlayers.map((tp) => (
               <option key={tp.id} value={tp.id}>
                 Direkt mit {tp.name} tauschen
