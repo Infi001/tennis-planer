@@ -558,9 +558,9 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                     #{slotIdx + 1}
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-neutral-400" />
-                      {slotKey} Uhr
+                    <h3 className="text-sm sm:text-base font-extrabold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5 whitespace-nowrap">
+                      <Clock className="w-4 h-4 text-neutral-400 shrink-0" />
+                      <span>{slotKey} Uhr</span>
                     </h3>
                     <p className="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                       <span>{activeAssignments.length}/4 Spieler besetzt</span>

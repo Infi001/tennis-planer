@@ -1,7 +1,7 @@
 import React from 'react';
-import { Player, SlotAssignment, SlotTime } from '../types/tennis';
+import { SlotAssignment, SlotTime } from '../types/tennis';
 import { useApp } from '../context/AppContext';
-import { Check, X, ArrowLeftRight, UserCheck, AlertCircle, RotateCcw, Calendar } from 'lucide-react';
+import { Check, X, ArrowLeftRight, UserCheck, AlertCircle, RotateCcw } from 'lucide-react';
 
 interface PlayerCardProps {
   assignment: SlotAssignment;
@@ -22,7 +22,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   onOpenDecline,
   onOpenSwap,
   onAdminEdit,
-  onOpenCalendar,
 }) => {
   const { 
     weeks, players, currentUser, theme,
@@ -86,150 +85,197 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     }
   };
 
+  const playerName = isGuest ? (assignment.guestName || 'Gastspieler') : (player?.name || 'Unbekannt');
+
   return (
     <div
       draggable={isAdmin && !isGuest}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className={`relative overflow-hidden rounded-xl border transition-all duration-200 shadow-sm border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800
-      ${isMe ? 'ring-1 ring-[var(--club-primary)] dark:ring-[var(--club-primary)]/80' : ''}
-      ${isAdmin && !isGuest ? 'cursor-grab active:cursor-grabbing hover:border-blue-400' : ''}
-      ${isDeclined ? 'opacity-70 grayscale-[0.3]' : ''}
-      ${isSubstitute ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
+      className={`rounded-2xl border transition-all duration-200 shadow-xs overflow-hidden ${
+        isMe 
+          ? 'border-2 border-[var(--club-primary)] bg-blue-50/30 dark:bg-blue-950/20 shadow-sm' 
+          : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-800'
+      } ${isAdmin && !isGuest ? 'cursor-grab active:cursor-grabbing hover:border-blue-400' : ''} ${
+        isDeclined ? 'opacity-70 grayscale-[0.2]' : ''
+      }`}
     >
-      {/* Admin Quick Remove Button */}
-      {isAdmin && !isDeclined && (
-        <button
-          onClick={(e) => { e.stopPropagation(); adminDragDropAssign(weekId, slotTime, player ? player.id : `guest_${assignment.guestName}`, 'remove'); }}
-          className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-rose-100 dark:bg-rose-900/50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-full flex items-center justify-center border border-white dark:border-neutral-800 shadow-sm transition-colors z-10"
-          title="Spieler aus Slot entfernen"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      )}
-
-      <div className="flex items-center justify-between gap-2 p-2 sm:p-3">
-        
-        {/* Left Side: Avatar + Info */}
-        <div className="flex items-center gap-2 overflow-hidden flex-1">
-          <div 
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs`}
-            style={{ backgroundColor: isGuest ? '#6b7280' : player?.avatarColor || theme.primary }}
-          >
-            {isGuest ? 'G' : player?.shortName}
-          </div>
+      {/* Main Info Row */}
+      <div className="p-3">
+        <div className="flex items-center justify-between gap-2.5">
           
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className={`text-sm font-bold truncate ${isDeclined ? 'text-neutral-500 line-through' : 'text-neutral-900 dark:text-neutral-100'}`}>
-                {isGuest ? assignment.guestName || 'Gastspieler' : player?.name}
-              </span>
-              {isMe && <span className="hidden sm:inline-block px-1 py-0.5 rounded text-[9px] font-black uppercase bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">Du</span>}
+          {/* Avatar + Player Details */}
+          <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+            <div 
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs"
+              style={{ backgroundColor: isGuest ? '#6b7280' : player?.avatarColor || theme.primary }}
+            >
+              {isGuest ? 'G' : player?.shortName}
             </div>
-            
-            {/* Sub-status line */}
-            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-neutral-500 dark:text-neutral-400">
-              {!isDeclined && !isSubstitute && <span>P{index + 1}</span>}
-              {isConfirmed && <span className="text-emerald-600 dark:text-emerald-400 flex items-center"><Check className="w-3 h-3 mr-0.5"/>Dabei</span>}
-              {isDeclined && <span className="text-rose-600 dark:text-rose-400 flex items-center"><AlertCircle className="w-3 h-3 mr-0.5"/>{assignment.declineReason || 'Abgesagt'}</span>}
-              {isSubstitute && originalPlayer && <span className="text-blue-600 dark:text-blue-400 truncate">Springer für {originalPlayer.name}</span>}
-              {isSwapped && <span className="text-purple-600 dark:text-purple-400 flex items-center"><ArrowLeftRight className="w-3 h-3 mr-0.5"/>Tausch</span>}
-              {assignment.status === 'pending' && <span className="text-amber-600 dark:text-amber-400">Offen</span>}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`text-sm font-bold truncate leading-tight ${isDeclined ? 'text-neutral-500 line-through' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                  {playerName}
+                </span>
+
+                {isMe && (
+                  <span 
+                    className="px-1.5 py-0.2 rounded text-[10px] font-black uppercase text-white shadow-xs shrink-0"
+                    style={{ backgroundColor: theme.primary }}
+                  >
+                    DU
+                  </span>
+                )}
+              </div>
+
+              {/* Status Line */}
+              <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                <span className="text-[10px] text-neutral-400 font-medium">P{index + 1}</span>
+                <span className="text-neutral-300 dark:text-neutral-600">•</span>
+
+                {isConfirmed && (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" /> Dabei
+                  </span>
+                )}
+
+                {isDeclined && (
+                  <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-0.5">
+                    <AlertCircle className="w-3.5 h-3.5" /> {assignment.declineReason || 'Abgesagt'}
+                  </span>
+                )}
+
+                {isSubstitute && originalPlayer && (
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold truncate">
+                    Springer für {originalPlayer.name}
+                  </span>
+                )}
+
+                {isSwapped && (
+                  <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-0.5">
+                    <ArrowLeftRight className="w-3.5 h-3.5" /> Getauscht
+                  </span>
+                )}
+
+                {assignment.status === 'pending' && (
+                  <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                    Offen
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Admin Controls on other players' cards (Discrete, non-intrusive) */}
+          {isAdmin && !isMe && (
+            <div className="flex items-center space-x-1 shrink-0">
+              {onAdminEdit && (
+                <button
+                  onClick={() => onAdminEdit(player ? player.id : `guest_${assignment.guestName}`)}
+                  title="Spieler austauschen / bearbeiten"
+                  className="p-1.5 rounded-lg text-neutral-400 hover:text-blue-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                >
+                  <UserCheck className="w-4 h-4" />
+                </button>
+              )}
+              {!isDeclined && (
+                <button
+                  onClick={() => adminDragDropAssign(weekId, slotTime, player ? player.id : `guest_${assignment.guestName}`, 'remove')}
+                  title="Aus Slot entfernen"
+                  className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Right Side: Clear, Descriptive Action Buttons */}
-        <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-          
-          {/* Action Bar for Regular Scheduled Player */}
-          {(isMe || currentUser.isAdmin) && !isGuest && player && !isDeclined && !isSubstitute && (
-            <>
-              {!isConfirmed && (
-                <button 
-                  onClick={() => confirmAttendance(weekId, player.id)} 
-                  title="Ich bin dabei (Zusagen)" 
-                  className="py-1 px-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 hover:bg-emerald-200 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1 shadow-xs transition-colors"
-                >
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>Zusagen</span>
-                </button>
-              )}
-
+        {/* Dedicated Action Row ONLY for the logged-in user (isMe) */}
+        {isMe && !isDeclined && !isGuest && player && !isSubstitute && (
+          <div className="mt-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-700/60 flex items-center gap-2">
+            {!isConfirmed && (
               <button 
-                onClick={() => onOpenSwap(player.id, slotTime)} 
-                title="Mit anderem Spieler Uhrzeit tauschen" 
-                className="py-1 px-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-700/60 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center gap-1 transition-colors"
+                onClick={() => confirmAttendance(weekId, player.id)} 
+                title="Ich bin dabei (Zusagen)" 
+                className="flex-1 py-1.5 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors m3-ripple"
               >
-                <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span>Tauschen</span>
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Zusagen</span>
               </button>
+            )}
 
-              <button 
-                onClick={() => onOpenDecline(player.id)} 
-                title="Für diesen Montag absagen" 
-                className="py-1 px-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1 transition-colors"
-              >
-                <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Absagen</span>
-              </button>
+            <button 
+              onClick={() => onOpenSwap(player.id, slotTime)} 
+              title="Mit anderem Spieler Uhrzeit tauschen" 
+              className="flex-1 py-1.5 px-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors m3-ripple border border-neutral-200/60 dark:border-neutral-600"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+              <span>Tauschen</span>
+            </button>
 
-              {currentUser.isAdmin && onAdminEdit && (
-                <button 
-                  onClick={() => onAdminEdit(player.id)} 
-                  title="Spieler ändern (Admin)" 
-                  className="py-1 px-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center gap-1 transition-colors"
-                >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ändern</span>
-                </button>
-              )}
-            </>
-          )}
+            <button 
+              onClick={() => onOpenDecline(player.id)} 
+              title="Für diesen Montag absagen" 
+              className="flex-1 py-1.5 px-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors m3-ripple border border-rose-200 dark:border-rose-900/60"
+            >
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Absagen</span>
+            </button>
+          </div>
+        )}
 
-          {/* Action Bar for Substitute who wants to cancel */}
-          {isSubstitute && !isGuest && player && (isMe || currentUser.isAdmin) && (
+        {/* Action Row for Substitute who wants to cancel (isSubstitute && isMe) */}
+        {isSubstitute && !isGuest && player && (isMe || isAdmin) && (
+          <div className="mt-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-700/60">
             <button 
               onClick={() => cancelSubstitute(weekId, slotTime, player.id, 'Springer kann doch nicht')} 
               title="Einsatz absagen" 
-              className="py-1 px-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1 transition-colors"
+              className="w-full py-1.5 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors border border-rose-200 dark:border-rose-900"
             >
               <X className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Aussteigen</span>
+              <span>Einsatz absagen (Aussteigen)</span>
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Declined Slot Claim Area (Rendered compactly as a bottom strip if declined) */}
+      {/* Declined Slot Claim Area */}
       {isDeclined && (
-        <div className="bg-rose-50 dark:bg-rose-900/10 border-t border-rose-100 dark:border-rose-900/30 p-2 flex items-center justify-between">
+        <div className="bg-rose-50 dark:bg-rose-900/10 border-t border-rose-100 dark:border-rose-900/30 p-2.5 flex items-center justify-between">
           {wasDeclinedByMe ? (
             <>
-              <span className="text-[10px] text-rose-600 font-semibold px-1">Du hast abgesagt</span>
-              <button onClick={() => reclaimSlot(weekId, slotTime, currentUser.id)} className="px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-600 text-white flex items-center gap-1 shadow-sm">
-                <RotateCcw className="w-3 h-3" /> Reaktivieren
+              <span className="text-xs text-rose-600 dark:text-rose-400 font-semibold px-1">Du hast abgesagt</span>
+              <button 
+                onClick={() => reclaimSlot(weekId, slotTime, currentUser.id)} 
+                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-xs transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> 
+                <span>Doch dabei!</span>
               </button>
             </>
           ) : isCurrentUserAlreadyPlaying ? (
             <div className="w-full flex items-center justify-between px-1">
-              <span className="font-bold text-[10px] text-rose-600">1 Platz frei</span>
-              <span className="text-[10px] text-neutral-500">Du spielst um {myCurrentSlot} Uhr</span>
+              <span className="font-bold text-xs text-rose-600 dark:text-rose-400">1 Platz frei</span>
+              <span className="text-xs text-neutral-500">Du spielst um {myCurrentSlot} Uhr</span>
             </div>
           ) : (
             <>
               <div className="flex flex-col px-1 leading-tight">
-                <span className="text-[11px] font-bold text-rose-600">1 Platz frei!</span>
+                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">1 Platz frei!</span>
                 {(cascade?.openForAnyoneCount ?? 0) > 0 ? (
-                  <span className="text-[9px] text-emerald-600 font-semibold">Für alle offen</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Für alle offen</span>
                 ) : prioName ? (
-                  <span className="text-[9px] text-neutral-500">Vorrang: {prioName}</span>
+                  <span className="text-[10px] text-neutral-500">Vorrang: {prioName}</span>
                 ) : null}
               </div>
               <button
                 onClick={() => claimOpenSlot(weekId, slotTime, currentUser.id)}
-                className={`px-2 py-1.5 rounded-md text-[11px] font-bold text-white shadow-sm flex items-center gap-1 ${isMeOfferedStandby ? 'bg-amber-500' : ''}`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs flex items-center gap-1 transition-colors ${
+                  isMeOfferedStandby ? 'bg-amber-600 hover:bg-amber-700' : ''
+                }`}
                 style={!isMeOfferedStandby ? { backgroundColor: theme.primary } : undefined}
               >
                 {isMeOfferedStandby ? 'Annehmen 🎾' : 'Einspringen 🎾'}
