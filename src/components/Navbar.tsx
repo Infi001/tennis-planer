@@ -17,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { theme, currentUser, isDarkMode, setIsDarkMode } = useApp();
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--club-primary)] dark:bg-neutral-900/95 backdrop-blur-md border-b border-transparent dark:border-neutral-800 transition-colors">
+    <header className="sticky top-0 z-40 bg-[var(--club-primary)] dark:bg-neutral-900/95 backdrop-blur-md border-b border-transparent dark:border-neutral-800 transition-colors shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Club Logo & Brand */}

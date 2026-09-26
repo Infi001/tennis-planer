@@ -55,7 +55,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 pb-[env(safe-area-inset-bottom)] sm:relative sm:border-0 sm:bg-transparent sm:dark:bg-transparent sm:backdrop-blur-none sm:pb-0 w-full flex items-center justify-center sm:py-2 sm:px-4">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 pb-[env(safe-area-inset-bottom)] sm:relative sm:z-0 sm:border-0 sm:bg-transparent sm:dark:bg-transparent sm:backdrop-blur-none sm:pb-0 w-full flex items-center justify-center sm:py-2 sm:px-4">
       <div className="w-full sm:max-w-3xl sm:bg-neutral-100 sm:dark:bg-[var(--md-sys-color-surface)]/80 sm:p-1.5 sm:rounded-2xl flex items-center justify-between sm:justify-center space-x-0 sm:space-x-1 sm:border sm:border-neutral-200/60 sm:dark:border-neutral-800 sm:shadow-xs px-1 py-1 sm:px-0 sm:py-0">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
