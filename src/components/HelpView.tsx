@@ -66,7 +66,7 @@ export const HelpView: React.FC = () => {
           </div>
         </div>
 
-        {/* 2. Zusagen */}
+        {/* 2. Automatisch eingeteilt */}
         <div className="bg-white dark:bg-[var(--md-sys-color-surface)] p-5 sm:p-6 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs space-y-3">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
@@ -74,17 +74,17 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                2. Zusagen ("Ich bin dabei")
+                2. Automatisch eingeteilt (Keine Bestätigung nötig)
               </h2>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Grüner Button mit Haken</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Standardmäßig dabei</span>
             </div>
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
             <p>
-              Wenn du am Montag spielen kannst, klicke einfach auf den grünen Button <strong>"Zusagen"</strong> (oder oben im Kasten auf <em>"Ich bin dabei 👍"</em>).
+              Laut Saisonplan bist du an deinen Spieltagen automatisch fest eingeteilt. Du musst deine Teilnahme <strong>nicht extra bestätigen</strong>.
             </p>
             <p>
-              Dein Status ändert sich auf <strong>"Dabei ✅"</strong>. So wissen deine 3 Mitspieler und der Trainer sofort Bescheid, dass deine 4er-Gruppe vollzählig ist.
+              Nur wenn du an einem Montag verhindert bist, klickst du bitte rechtzeitig auf <strong>"Termin absagen"</strong>, damit ein Springer nachrücken kann.
             </p>
           </div>
         </div>

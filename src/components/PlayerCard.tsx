@@ -128,36 +128,32 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             {/* Status Line */}
             <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-1">
               <span className="text-[11px] text-neutral-400 font-semibold">P{index + 1}</span>
-              <span className="text-neutral-300 dark:text-neutral-600">•</span>
-
-              {isConfirmed && (
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" /> Dabei
-                </span>
-              )}
 
               {isDeclined && (
-                <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5" /> {assignment.declineReason || 'Abgesagt'}
-                </span>
+                <>
+                  <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                  <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {assignment.declineReason || 'Abgesagt'}
+                  </span>
+                </>
               )}
 
               {isSubstitute && originalPlayer && (
-                <span className="text-blue-600 dark:text-blue-400 font-semibold truncate">
-                  Springer für {originalPlayer.name}
-                </span>
+                <>
+                  <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold truncate">
+                    Springer für {originalPlayer.name}
+                  </span>
+                </>
               )}
 
               {isSwapped && (
-                <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
-                  <ArrowLeftRight className="w-3.5 h-3.5" /> Getauscht
-                </span>
-              )}
-
-              {assignment.status === 'pending' && (
-                <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                  Offen
-                </span>
+                <>
+                  <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                  <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
+                    <ArrowLeftRight className="w-3.5 h-3.5" /> Getauscht
+                  </span>
+                </>
               )}
             </div>
           </div>
@@ -197,17 +193,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Dedicated Action Row ONLY for the logged-in user (isMe) */}
         {isMe && !isDeclined && !isGuest && player && !isSubstitute && (
           <div className="mt-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-700/60 space-y-1.5">
-            {!isConfirmed && (
-              <button 
-                onClick={() => confirmAttendance(weekId, player.id)} 
-                title="Ich bin dabei (Zusagen)" 
-                className="w-full py-1.5 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors m3-ripple"
-              >
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Zusagen</span>
-              </button>
-            )}
-
             <button 
               onClick={() => onOpenSwap(player.id, slotTime)} 
               title="Tauschanfrage an Mitspieler stellen" 

@@ -350,7 +350,6 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               <p className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 leading-snug">
                 <span>{isMySlotSubstitute ? '🦘 Du bist als Springer eingeteilt um ' : '🎾 Du spielst um '}</span>
                 <span className="text-blue-600 dark:text-blue-400 whitespace-nowrap">{myCurrentSlot} Uhr</span>
-                <span className="whitespace-nowrap">{myAssignment?.status === 'confirmed' ? ' (Bestätigt ✅)' : ' (Noch offen ⏳)'}</span>
               </p>
             ) : myDeclinedSlot ? (
               <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
@@ -387,18 +386,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
         {/* Dynamic Personal Action Buttons */}
         <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-end">
           
-          {/* Action 1: If scheduled and pending */}
-          {myCurrentSlot && myAssignment?.status === 'pending' && (
-            <button
-              onClick={() => confirmAttendance(selectedWeek.id, currentUser.id)}
-              className="py-2 px-3.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 flex items-center space-x-1.5 shadow-xs m3-ripple"
-            >
-              <Check className="w-4 h-4 stroke-[3]" />
-              <span>Ich bin dabei 👍 (Zusagen)</span>
-            </button>
-          )}
-
-          {/* Action 2: If scheduled, allow swap and decline */}
+          {/* Action: If scheduled, allow swap and decline */}
           {myCurrentSlot && !isMySlotSubstitute && (
             <>
               <button
