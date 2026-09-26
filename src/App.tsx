@@ -18,11 +18,20 @@ import { MyCalendarView } from './components/MyCalendarView';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { HelpView } from './components/HelpView';
 import { SlotTime } from './types/tennis';
-import { Calendar, Share2, Sparkles } from 'lucide-react';
+import { Calendar, Share2, Sparkles, Eye, ArrowRight } from 'lucide-react';
 import { generateMaterialDynamicPalette } from './utils/materialTheme';
 
 const AppContent: React.FC = () => {
-  const { theme, isDarkMode, setSelectedWeekId, isLoggedIn } = useApp();
+  const { 
+    theme, 
+    isDarkMode, 
+    setSelectedWeekId, 
+    isLoggedIn,
+    currentUser,
+    isImpersonating,
+    actualAdminPlayer,
+    exitImpersonation
+  } = useApp();
   const [activeTab, setActiveTab] = useState<TabKey>('matchcenter');
 
   // Modals state
@@ -97,6 +106,26 @@ const AppContent: React.FC = () => {
       }}
     >
       
+      {/* Admin Impersonation Banner */}
+      {isImpersonating && (
+        <div className="sticky top-0 z-50 bg-amber-400 text-neutral-950 px-4 py-2 text-xs font-bold flex items-center justify-between shadow-md border-b border-amber-500">
+          <div className="flex items-center space-x-2 min-w-0">
+            <Eye className="w-4 h-4 text-neutral-950 shrink-0" />
+            <span className="truncate">
+              Admin-Vorschau: Du siehst die App aus Sicht von <span className="underline font-black">{currentUser.name}</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={exitImpersonation}
+            className="px-2.5 py-1 bg-neutral-950 hover:bg-neutral-800 text-white rounded-xl text-[11px] font-bold flex items-center space-x-1 shrink-0 ml-3 transition-colors shadow-xs"
+          >
+            <span>Vorschau beenden ({actualAdminPlayer?.name || 'Admin'})</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       {/* Top Navbar */}
       <Navbar
         onOpenUserSwitch={() => setShowUserSwitch(true)}

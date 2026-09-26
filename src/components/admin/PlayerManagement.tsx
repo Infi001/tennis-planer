@@ -17,7 +17,8 @@ import {
   Lock,
   Share2,
   Copy,
-  MessageSquare
+  MessageSquare,
+  Eye
 } from 'lucide-react';
 
 const AVATAR_COLORS = [
@@ -28,7 +29,7 @@ const AVATAR_COLORS = [
 ];
 
 export const PlayerManagement: React.FC = () => {
-  const { players, currentUser, theme, addPlayer, updatePlayer, deletePlayer } = useApp();
+  const { players, currentUser, theme, addPlayer, updatePlayer, deletePlayer, impersonateUser } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -257,6 +258,16 @@ export const PlayerManagement: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-1 shrink-0 ml-2">
+                {!isCurrent && (
+                  <button
+                    onClick={() => impersonateUser(player.id)}
+                    title={`Aus Sicht von ${player.name} ansehen (Admin-Vorschau)`}
+                    className="p-1.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-600 dark:text-amber-400 transition-colors m3-ripple"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleWhatsAppInvite(player)}
                   title="WhatsApp Einladungs-Link senden"

@@ -8,7 +8,17 @@ interface AccountModalProps {
 }
 
 export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
-  const { players, currentUser, setCurrentUser, logout, theme } = useApp();
+  const { 
+    players, 
+    currentUser, 
+    setCurrentUser, 
+    logout, 
+    theme,
+    isImpersonating,
+    actualAdminPlayer,
+    impersonateUser,
+    exitImpersonation
+  } = useApp();
   const [copiedLink, setCopiedLink] = useState(false);
   const [showSwitchGrid, setShowSwitchGrid] = useState(false);
 
@@ -109,26 +119,52 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
           </p>
         </div>
 
-        {/* Admin Switch Perspective Option */}
-        {currentUser?.isAdmin && (
-          <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800">
+        {/* Admin Perspective / Impersonation Section */}
+        {(currentUser?.isAdmin || isImpersonating) && (
+          <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 space-y-2">
+            {isImpersonating ? (
+              <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-amber-600" />
+                    Admin-Vorschau aktiv
+                  </span>
+                  <span className="text-[10px] text-amber-700 dark:text-amber-300">
+                    Ansicht als {currentUser.name}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    exitImpersonation();
+                    onClose();
+                  }}
+                  className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:opacity-90 flex items-center justify-center space-x-1.5 transition-all shadow-xs"
+                >
+                  <span>Vorschau beenden (Zurück zu {actualAdminPlayer?.name || 'Admin'})</span>
+                </button>
+              </div>
+            ) : null}
+
             {!showSwitchGrid ? (
               <button
+                type="button"
                 onClick={() => setShowSwitchGrid(true)}
-                className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 flex items-center justify-center space-x-1.5 transition-colors"
+                className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center justify-center space-x-1.5 transition-colors"
               >
                 <Users className="w-4 h-4 text-blue-500" />
-                <span>Als anderer Spieler ansehen (Test-Modus)</span>
+                <span>Als anderer Spieler ansehen (Admin-Vorschau)</span>
               </button>
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
-                    Spieleransicht auswählen:
+                    Spieleransicht für Admin-Vorschau:
                   </span>
                   <button
+                    type="button"
                     onClick={() => setShowSwitchGrid(false)}
-                    className="text-xs text-neutral-400 hover:text-neutral-600"
+                    className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
                   >
                     Schließen
                   </button>
@@ -137,8 +173,10 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
                   {players.map((p) => (
                     <button
                       key={p.id}
+                      type="button"
                       onClick={() => {
-                        setCurrentUser(p);
+                        impersonateUser(p.id);
+                        setShowSwitchGrid(false);
                         onClose();
                       }}
                       className={`p-2 rounded-xl text-left border flex items-center space-x-1.5 text-xs font-bold transition-all ${

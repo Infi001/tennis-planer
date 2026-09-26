@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, AlertTriangle, ShieldCheck, Share2 } from 'lucide-react';
+import { X, AlertTriangle, ShieldCheck, Share2, Mail } from 'lucide-react';
 import { formatWeekDate } from '../utils/dateUtils';
+import { EmailModal } from './EmailModal';
 
 interface DeclineModalProps {
   playerId: string;
@@ -10,21 +11,33 @@ interface DeclineModalProps {
 }
 
 export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, onOpenWhatsApp }) => {
-  const { players, selectedWeek, declineAttendance, theme } = useApp();
+  const { players, selectedWeek, declineAttendance, theme, springerCount, getPlayerCurrentSlotInWeek } = useApp();
   const player = players.find(p => p.id === playerId);
   const [reason, setReason] = useState<string>('Krank / Verletzung');
   const [customNote, setCustomNote] = useState<string>('');
+  const [notifySpringerViaEmail, setNotifySpringerViaEmail] = useState(true);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   if (!selectedWeek || !player) return null;
 
   const sp1Player = players.find(p => p.id === selectedWeek.springer1.playerId);
   const sp2Player = players.find(p => p.id === selectedWeek.springer2.playerId);
-  const freiPlayer = players.find(p => p.id === selectedWeek.frei?.playerId);
+
+  const playerSlot = getPlayerCurrentSlotInWeek(selectedWeek.id, playerId) || undefined;
+  const nextSpringer = (selectedWeek.springer1.playerId && selectedWeek.springer1.status !== 'declined' && selectedWeek.springer1.playerId !== playerId)
+    ? sp1Player
+    : (springerCount >= 2 && selectedWeek.springer2.playerId && selectedWeek.springer2.status !== 'declined' && selectedWeek.springer2.playerId !== playerId)
+      ? sp2Player
+      : null;
 
   const handleConfirmDecline = () => {
     const finalReason = customNote ? `${reason} (${customNote})` : reason;
     declineAttendance(selectedWeek.id, playerId, finalReason);
-    onClose();
+    if (notifySpringerViaEmail && nextSpringer) {
+      setShowEmailModal(true);
+    } else {
+      onClose();
+    }
   };
 
   return (
@@ -91,15 +104,32 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
         <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-1.5">
           <div className="flex items-center space-x-1.5 font-bold text-amber-800 dark:text-amber-300">
             <ShieldCheck className="w-4 h-4" />
-            <span>Feste Nachrück-Reihenfolge:</span>
+            <span>Nachrücker-Regelung:</span>
           </div>
-          <p className="text-amber-700 dark:text-amber-300/90 leading-relaxed space-y-0.5">
-            1. <strong>1. Springer ({sp1Player?.name || 'André R.'})</strong> erhält Vorrang.<br />
-            2. Falls verhindert ➔ <strong>2. Springer ({sp2Player?.name || 'Markus B.'})</strong>.<br />
-            3. Falls verhindert ➔ <strong>Frei / Pause ({freiPlayer?.name || 'Thomas M.'})</strong>.<br />
-            4. Danach ➔ <strong>Offener Pool für alle Vereinsmitglieder</strong>.
+          <p className="text-amber-800 dark:text-amber-200 leading-relaxed text-xs">
+            {nextSpringer ? (
+              <>Der freie Platz geht vorrangig an <strong>{nextSpringer.name}</strong> (Springer).</>
+            ) : (
+              <>Der freie Platz wird für nachrückende Vereinsmitglieder freigegeben.</>
+            )}
           </p>
         </div>
+
+        {/* Optional Email Notification to Springer */}
+        {nextSpringer && (
+          <label className="flex items-center space-x-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none px-1">
+            <input
+              type="checkbox"
+              checked={notifySpringerViaEmail}
+              onChange={(e) => setNotifySpringerViaEmail(e.target.checked)}
+              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
+            />
+            <span className="flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>Springer <strong>{nextSpringer.name}</strong> per E-Mail benachrichtigen</span>
+            </span>
+          </label>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-2 pt-2">
@@ -120,6 +150,17 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
         </div>
 
       </div>
+
+      {/* Email Notification Modal */}
+      {showEmailModal && nextSpringer && (
+        <EmailModal
+          springer={nextSpringer}
+          week={selectedWeek}
+          slotKey={playerSlot}
+          decliningPlayer={player}
+          onClose={onClose}
+        />
+      )}
     </div>
   );
 };

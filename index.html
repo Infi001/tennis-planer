@@ -13,10 +13,11 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#DC2626" />
     <title>Tennis Trainingsplaner | Montagsrunde</title>
-    <!-- Immediate Theme Initialization to eliminate color flash on refresh -->
+    <!-- Immediate Theme & Dark Mode Initialization to eliminate flash on refresh -->
     <script>
       (function() {
         try {
+          // 1. Club Theme
           var saved = localStorage.getItem('tennis_app_theme');
           var primary = '#DC2626';
           var container = '#FEE2E2';
@@ -31,6 +32,20 @@
           document.documentElement.style.setProperty('--club-primary-container', container);
           var metaTheme = document.querySelector('meta[name="theme-color"]');
           if (metaTheme) metaTheme.setAttribute('content', primary);
+
+          // 2. Dark Mode: default to system preference if not set
+          var savedDarkMode = localStorage.getItem('tennis_dark_mode');
+          var isDark = false;
+          if (savedDarkMode !== null) {
+            isDark = savedDarkMode === 'true';
+          } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            isDark = true;
+          }
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
         } catch (e) {}
       })();
     </script>

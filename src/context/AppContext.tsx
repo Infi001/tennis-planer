@@ -17,6 +17,11 @@ interface AppContextType {
   isLoggedIn: boolean;
   logout: () => void;
   setCurrentUser: (player: Player) => void;
+  impersonatorAdminId: string | null;
+  isImpersonating: boolean;
+  actualAdminPlayer: Player | null;
+  impersonateUser: (targetPlayerId: string) => void;
+  exitImpersonation: () => void;
   theme: ClubTheme;
   setTheme: (theme: ClubTheme) => void;
   isDarkMode: boolean;
@@ -87,7 +92,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isDarkMode, setIsDarkModeState] = useState<boolean>(() => {
     const saved = localStorage.getItem('tennis_dark_mode');
     if (saved !== null) return saved === 'true';
-    return false; // Vibrant light mode default so club colors shine
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false; // Vibrant light mode fallback
   });
 
   const setIsDarkMode = (val: boolean) => {
@@ -95,14 +103,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('tennis_dark_mode', String(val));
   };
 
+  // Follow system theme changes if user hasn't explicitly set a preference
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      const saved = localStorage.getItem('tennis_dark_mode');
+      if (saved === null) {
+        setIsDarkModeState(e.matches);
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   const [springerCount, setSpringerCountState] = useState<number>(() => StorageService.getSpringerCount());
   const setSpringerCount = (count: number) => {
-    const safe = Math.max(1, Math.min(count, 3));
+    const safe = Math.max(0, Math.min(count, 10));
     setSpringerCountState(safe);
     StorageService.saveSpringerCount(safe);
   };
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(() => StorageService.getCurrentUserId());
+
+  // Impersonation state: Allows admins to view the app as any regular member
+  const [impersonatorAdminId, setImpersonatorAdminId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      return sessionStorage.getItem('tennis_impersonator_admin_id');
+    }
+    return null;
+  });
   
   // Default selected week: Find the first upcoming Monday or week 0
   const [selectedWeekId, setSelectedWeekId] = useState<string>(() => {
@@ -120,6 +150,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const activePlayer = players.find(p => p.id === currentUserId) || null;
   const isLoggedIn = activePlayer !== null;
   const currentUser: Player = activePlayer || players[0] || { id: 'p1', name: 'Gast', shortName: 'GA', isAdmin: false };
+
+  const isImpersonating = !!impersonatorAdminId;
+  const actualAdminPlayer = impersonatorAdminId 
+    ? (players.find(p => p.id === impersonatorAdminId) || null) 
+    : (currentUser.isAdmin ? currentUser : null);
+
+  const impersonateUser = (targetPlayerId: string) => {
+    const canImpersonate = currentUser.isAdmin || !!impersonatorAdminId;
+    if (!canImpersonate) return;
+
+    const originalAdminId = impersonatorAdminId || currentUser.id;
+    setImpersonatorAdminId(originalAdminId);
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.setItem('tennis_impersonator_admin_id', originalAdminId);
+    }
+    setCurrentUserId(targetPlayerId);
+  };
+
+  const exitImpersonation = () => {
+    if (impersonatorAdminId) {
+      setCurrentUserId(impersonatorAdminId);
+      setImpersonatorAdminId(null);
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.removeItem('tennis_impersonator_admin_id');
+      }
+    }
+  };
 
   // Fetch from Supabase and listen for realtime changes
   
@@ -194,6 +251,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logout = () => {
     setCurrentUserId(null);
+    setImpersonatorAdminId(null);
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.removeItem('tennis_impersonator_admin_id');
+    }
     StorageService.clearCurrentUserId();
   };
 
@@ -1380,6 +1441,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedWeekId,
         currentUser,
         setCurrentUser,
+        impersonatorAdminId,
+        isImpersonating,
+        actualAdminPlayer,
+        impersonateUser,
+        exitImpersonation,
         isLoggedIn,
         logout,
         theme,

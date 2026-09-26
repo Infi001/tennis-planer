@@ -1,16 +1,18 @@
-import React from 'react';
-import { TrainingWeek } from '../types/tennis';
+import React, { useState } from 'react';
+import { TrainingWeek, Player } from '../types/tennis';
 import { useApp } from '../context/AppContext';
 import { 
   ShieldCheck, 
   AlertCircle, 
   Check, 
-  RotateCcw
+  RotateCcw,
+  Mail
 } from 'lucide-react';
 import { 
   buildStandbyQueueDisplay, 
   calculateStandbyCascade 
 } from '../utils/standbyCascade';
+import { EmailModal } from './EmailModal';
 
 interface SpringerHubProps {
   week: TrainingWeek;
@@ -30,6 +32,8 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
 
   const cascade = calculateStandbyCascade(week, springerCount);
   const queueItems = buildStandbyQueueDisplay(week, players, currentUser.id, springerCount);
+
+  const [emailTarget, setEmailTarget] = useState<{ springer: Player; slotKey?: string } | null>(null);
 
   const { totalOpenSpots, openSlots } = cascade;
   const hasOpenSpots = totalOpenSpots > 0;
@@ -212,12 +216,35 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                     )}
                   </div>
                 )}
+
+                {/* E-Mail Springer Notification Button when slot is free */}
+                {hasOpenSpots && p && item.status !== 'declined' && item.status !== 'accepted' && (
+                  <button
+                    type="button"
+                    onClick={() => setEmailTarget({ springer: p, slotKey: openSlots[0] })}
+                    className="w-full mt-2.5 py-1.5 px-2.5 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center space-x-1.5 transition-all shadow-2xs"
+                    title={`E-Mail Benachrichtigung an ${p.name} senden`}
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>E-Mail an {p.name.split(' ')[0]} senden</span>
+                  </button>
+                )}
               </div>
 
             </div>
           );
         })}
       </div>
+
+      {/* Email Notification Modal */}
+      {emailTarget && (
+        <EmailModal
+          springer={emailTarget.springer}
+          week={week}
+          slotKey={emailTarget.slotKey}
+          onClose={() => setEmailTarget(null)}
+        />
+      )}
 
     </div>
   );

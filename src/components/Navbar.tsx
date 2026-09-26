@@ -14,7 +14,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenUserSwitch, 
   onOpenWhatsApp,
 }) => {
-  const { theme, currentUser, isDarkMode, setIsDarkMode } = useApp();
+  const { theme, currentUser, isDarkMode, setIsDarkMode, isImpersonating } = useApp();
 
   return (
     <header className="sticky top-0 z-40 bg-[var(--club-primary)] dark:bg-neutral-900/95 backdrop-blur-md border-b border-transparent dark:border-neutral-800 transition-colors shadow-md">
@@ -56,8 +56,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Current User Pill / Account */}
           <button
             onClick={onOpenUserSwitch}
-            className="flex items-center space-x-1.5 sm:space-x-2 pl-1.5 pr-2.5 sm:pr-3 py-1 rounded-full bg-white/20 dark:bg-neutral-800 border border-white/10 dark:border-neutral-700 hover:bg-white/30 dark:hover:bg-neutral-700 cursor-pointer transition-all m3-ripple"
-            title="Mein Profil & Zugangslink"
+            className={`flex items-center space-x-1.5 sm:space-x-2 pl-1.5 pr-2.5 sm:pr-3 py-1 rounded-full border cursor-pointer transition-all m3-ripple ${
+              isImpersonating
+                ? 'bg-amber-400 text-neutral-900 border-amber-300 shadow-xs'
+                : 'bg-white/20 dark:bg-neutral-800 border-white/10 dark:border-neutral-700 hover:bg-white/30 dark:hover:bg-neutral-700'
+            }`}
+            title={isImpersonating ? `Admin-Vorschau aktiv: ${currentUser.name}` : 'Mein Profil & Zugangslink'}
           >
             <div 
               className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-xs border border-white/20"
@@ -66,13 +70,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               {currentUser.shortName}
             </div>
             <div className="text-left">
-              <div className="text-xs font-bold text-white dark:text-neutral-200 leading-tight flex items-center gap-1 max-w-[75px] sm:max-w-[120px] truncate">
+              <div className={`text-xs font-bold leading-tight flex items-center gap-1 max-w-[85px] sm:max-w-[130px] truncate ${
+                isImpersonating ? 'text-neutral-900' : 'text-white dark:text-neutral-200'
+              }`}>
                 <span>{currentUser.name.split(' ')[0]}</span>
-                {currentUser.isAdmin && (
+                {isImpersonating ? (
+                  <span className="text-[9px] bg-neutral-900 text-white px-1 py-0.2 rounded font-semibold hidden sm:inline">
+                    Vorschau
+                  </span>
+                ) : currentUser.isAdmin ? (
                   <span className="text-[9px] bg-white/20 text-white dark:bg-amber-500/20 dark:text-amber-300 px-1 py-0.2 rounded font-semibold hidden sm:inline">
                     Admin
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           </button>
