@@ -47,7 +47,7 @@ interface AppContextType {
   cancelSubstitute: (weekId: string, slot: SlotTime, substitutePlayerId: string, reason?: string) => void;
   declineSubstituteOffer: (weekId: string, springerPlayerId: string) => void;
   claimOpenSlot: (weekId: string, slot: SlotTime, candidatePlayerId: string) => boolean;
-  skipStandbyPriorityToNext: (weekId: string, prioLevel: 1 | 2) => void;
+  skipStandbyPriorityToNext: (weekId: string, prioLevel: number) => void;
   releaseOpenSlotsToAll: (weekId: string) => void;
   resetStandbyCascade: (weekId: string) => void;
   getStandbyCascadeInfo: (weekId: string) => StandbyCascadeResult | null;
@@ -357,10 +357,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       });
 
-      // Automatically activate 1. Springer (or 2. Springer if 1. is busy/declined)
+      // Automatically activate 1. Springer (or 2. / 3. Springer if earlier is busy/declined)
       let autoAssignedSpringerId: string | null = null;
       let newSp1 = { ...weekItem.springer1 };
       let newSp2 = { ...weekItem.springer2 };
+      let newFrei = weekItem.frei ? { ...weekItem.frei } : { playerId: '', status: 'idle' as const };
 
       const isActivelyPlaying = (pId: string) => {
         if (!pId) return true;
@@ -369,12 +370,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         );
       };
 
-      if (newSp1.playerId && newSp1.playerId !== playerId && newSp1.status !== 'declined' && !isActivelyPlaying(newSp1.playerId)) {
+      if (springerCount >= 1 && newSp1.playerId && newSp1.playerId !== playerId && newSp1.status !== 'declined' && !isActivelyPlaying(newSp1.playerId)) {
         autoAssignedSpringerId = newSp1.playerId;
         newSp1.status = 'accepted';
-      } else if (newSp2.playerId && newSp2.playerId !== playerId && newSp2.status !== 'declined' && !isActivelyPlaying(newSp2.playerId)) {
+      } else if (springerCount >= 2 && newSp2.playerId && newSp2.playerId !== playerId && newSp2.status !== 'declined' && !isActivelyPlaying(newSp2.playerId)) {
         autoAssignedSpringerId = newSp2.playerId;
         newSp2.status = 'accepted';
+      } else if (springerCount >= 3 && newFrei.playerId && newFrei.playerId !== playerId && newFrei.status !== 'declined' && !isActivelyPlaying(newFrei.playerId)) {
+        autoAssignedSpringerId = newFrei.playerId;
+        newFrei.status = 'accepted';
       }
 
       if (autoAssignedSpringerId && declinedSlotKey) {
@@ -396,8 +400,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...weekItem, 
         slots: newSlots,
         springer1: newSp1,
-        springer2: newSp2
-      });
+        springer2: newSp2,
+        frei: newFrei,
+      }, springerCount);
 
       return { 
         ...weekItem, 
@@ -456,8 +461,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       let newSp1 = { ...w.springer1 };
       let newSp2 = { ...w.springer2 };
+      let newFrei = w.frei ? { ...w.frei } : { playerId: '', status: 'idle' as const };
       if (bumpedSubId === newSp1.playerId) newSp1.status = 'idle';
       if (bumpedSubId === newSp2.playerId) newSp2.status = 'idle';
+      if (bumpedSubId === newFrei.playerId) newFrei.status = 'idle';
 
       // Strict deduplication guarantee for this slot
       const uniqueMap = new Map<string, SlotAssignment>();
@@ -472,8 +479,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...w, 
         slots: newSlots,
         springer1: newSp1,
-        springer2: newSp2
-      });
+        springer2: newSp2,
+        frei: newFrei,
+      }, springerCount);
 
       return { 
         ...w, 
@@ -629,9 +637,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Check if Springer 2 is available to step in automatically
       let nextAutoSpringerId: string | null = null;
-      if (newSp1.playerId === substitutePlayerId && newSp2.playerId && newSp2.status !== 'declined' && !isActivelyPlaying(newSp2.playerId)) {
+      if (newSp1.playerId === substitutePlayerId && springerCount >= 2 && newSp2.playerId && newSp2.status !== 'declined' && !isActivelyPlaying(newSp2.playerId)) {
         nextAutoSpringerId = newSp2.playerId;
         newSp2.status = 'accepted';
+      } else if (newSp2.playerId === substitutePlayerId && springerCount >= 3 && newFrei.playerId && newFrei.status !== 'declined' && !isActivelyPlaying(newFrei.playerId)) {
+        nextAutoSpringerId = newFrei.playerId;
+        newFrei.status = 'accepted';
       }
 
       if (nextAutoSpringerId) {
@@ -649,7 +660,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         springer1: newSp1,
         springer2: newSp2,
         frei: newFrei,
-      });
+      }, springerCount);
 
       return { 
         ...w, 
@@ -682,7 +693,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         springer1: newSp1,
         springer2: newSp2,
         frei: newFrei,
-      });
+      }, springerCount);
 
       return { 
         ...w, 
@@ -694,26 +705,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // --- Skip Priority to next candidate (Admin or Fast-Forward) ---
-  const skipStandbyPriorityToNext = (weekId: string, prioLevel: 1 | 2) => {
+  const skipStandbyPriorityToNext = (weekId: string, prioLevel: number) => {
     setWeeks(prevWeeks => prevWeeks.map(w => {
       if (w.id !== weekId) return w;
       let newSp1 = { ...w.springer1 };
       let newSp2 = { ...w.springer2 };
+      let newFrei = w.frei ? { ...w.frei } : { playerId: '', status: 'idle' as const };
 
       if (prioLevel === 1) newSp1.status = 'declined';
       if (prioLevel === 2) newSp2.status = 'declined';
+      if (prioLevel === 3) newFrei.status = 'declined';
 
       const cascade = calculateStandbyCascade({
         ...w,
         springer1: newSp1,
         springer2: newSp2,
+        frei: newFrei,
       }, springerCount);
 
       return { 
         ...w, 
         springer1: cascade.springer1, 
         springer2: cascade.springer2,
-        frei: w.frei,
+        frei: cascade.frei,
       };
     }));
   };
@@ -724,21 +738,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (w.id !== weekId) return w;
       let newSp1 = { ...w.springer1 };
       let newSp2 = { ...w.springer2 };
+      let newFrei = w.frei ? { ...w.frei } : { playerId: '', status: 'idle' as const };
 
       if (newSp1.status !== 'accepted') newSp1.status = 'declined';
       if (newSp2.status !== 'accepted') newSp2.status = 'declined';
+      if (newFrei.status !== 'accepted') newFrei.status = 'declined';
 
       const cascade = calculateStandbyCascade({
         ...w,
         springer1: newSp1,
         springer2: newSp2,
+        frei: newFrei,
       }, springerCount);
 
       return { 
         ...w, 
         springer1: cascade.springer1, 
         springer2: cascade.springer2,
-        frei: w.frei
+        frei: cascade.frei
       };
     }));
   };
@@ -749,26 +766,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (w.id !== weekId) return w;
       let newSp1 = { ...w.springer1 };
       let newSp2 = { ...w.springer2 };
+      let newFrei = w.frei ? { ...w.frei } : { playerId: '', status: 'idle' as const };
 
       // Reset to idle if not currently playing actively
       const allSlotKeys = getWeekSlotKeys(w);
       const isSp1Playing = allSlotKeys.some(st => (w.slots[st] || []).some(a => a.playerId === newSp1.playerId && a.status !== 'declined'));
       const isSp2Playing = allSlotKeys.some(st => (w.slots[st] || []).some(a => a.playerId === newSp2.playerId && a.status !== 'declined'));
+      const isFreiPlaying = allSlotKeys.some(st => (w.slots[st] || []).some(a => a.playerId === newFrei.playerId && a.status !== 'declined'));
 
       if (!isSp1Playing) newSp1.status = 'idle';
       if (!isSp2Playing) newSp2.status = 'idle';
+      if (!isFreiPlaying) newFrei.status = 'idle';
 
       const cascade = calculateStandbyCascade({
         ...w,
         springer1: newSp1,
         springer2: newSp2,
+        frei: newFrei,
       }, springerCount);
 
       return { 
         ...w, 
         springer1: cascade.springer1, 
         springer2: cascade.springer2,
-        frei: w.frei
+        frei: cascade.frei
       };
     }));
   };

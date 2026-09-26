@@ -80,7 +80,8 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
           {/* Reset button if any Springer declined */}
           {currentUser.isAdmin && (
             week.springer1.status === 'declined' || 
-            (springerCount >= 2 && week.springer2.status === 'declined')
+            (springerCount >= 2 && week.springer2.status === 'declined') ||
+            (springerCount >= 3 && week.frei?.status === 'declined')
           ) && (
             <button
               onClick={() => resetStandbyCascade(week.id)}
@@ -95,7 +96,13 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
       </div>
 
       {/* Simplified Springer Cards */}
-      <div className={`grid grid-cols-1 ${springerCount >= 2 ? 'sm:grid-cols-2' : 'max-w-md'} gap-3`}>
+      <div className={`grid grid-cols-1 ${
+        springerCount === 2 
+          ? 'sm:grid-cols-2' 
+          : springerCount >= 3 
+            ? 'sm:grid-cols-2 lg:grid-cols-3' 
+            : 'max-w-md'
+      } gap-3`}>
         {queueItems.map((item) => {
           const isTurn = item.isCurrentTurn;
           const isUser = item.isCurrentUser;
@@ -120,7 +127,9 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                   <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
                     item.prio === 1
                       ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
-                      : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200'
+                      : item.prio === 2
+                        ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200'
+                        : 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-900 dark:text-indigo-200'
                   }`}>
                     {item.title}
                   </span>

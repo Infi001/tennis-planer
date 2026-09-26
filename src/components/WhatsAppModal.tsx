@@ -47,9 +47,9 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ onClose }) => {
   const dateLine = `📅 ${formatWeekDate(selectedWeek)} (${slotKeys.length} Std.${courtDescription})`;
 
   const springerLines = [
-    `🟡 *1. Springer:* ${sp1Name}`,
+    ...(springerCount >= 1 ? [`🟡 *1. Springer:* ${sp1Name}`] : []),
     ...(springerCount >= 2 ? [`🟡 *2. Springer:* ${sp2Name}`] : []),
-    `💤 *Spielfrei:* ${freiName}`,
+    ...(springerCount >= 3 ? [`🟡 *3. Springer:* ${freiName}`] : [`💤 *Spielfrei:* ${freiName}`]),
   ].join('\n');
 
   const whatsAppText = `🎾 *${theme.clubName}${theme.groupName ? ` • ${theme.groupName}` : ''}*

@@ -8,7 +8,7 @@ interface FullScheduleTableProps {
 }
 
 export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWeek }) => {
-  const { players, weeks, currentUser, theme } = useApp();
+  const { players, weeks, currentUser, theme, springerCount } = useApp();
   const [selectedPlayerFilter, setSelectedPlayerFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -24,7 +24,14 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
       return { text: 'Kein Training', type: 'cancelled' };
     }
 
-    if (week.frei.playerId === player.id) {
+    if (week.frei && week.frei.playerId === player.id) {
+      if (springerCount >= 3) {
+        return { 
+          text: week.frei.status === 'accepted' ? 'Eingesprungen (3. Springer)' : '3. Springer', 
+          type: 'sp3',
+          isSub: week.frei.status === 'accepted'
+        };
+      }
       return { 
         text: week.frei.status === 'accepted' ? 'Eingesprungen (Frei)' : 'Frei', 
         type: 'frei',
@@ -198,6 +205,9 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
                       } else if (info.type === 'sp2') {
                         cellBg = 'bg-yellow-50 dark:bg-yellow-950/20';
                         cellText = 'text-yellow-700 dark:text-yellow-400 font-bold';
+                      } else if (info.type === 'sp3') {
+                        cellBg = 'bg-orange-50 dark:bg-orange-950/20';
+                        cellText = 'text-orange-700 dark:text-orange-400 font-bold';
                       } else if (info.type === 'declined') {
                         cellBg = 'bg-rose-100/60 dark:bg-rose-950/60';
                         cellText = 'text-rose-500 line-through';

@@ -174,7 +174,8 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
   const isCurrentUserSp1 = selectedWeek.springer1.playerId === currentUser.id;
   const isCurrentUserSp2 = selectedWeek.springer2.playerId === currentUser.id;
-  const isCurrentUserFrei = selectedWeek.frei.playerId === currentUser.id;
+  const isCurrentUserSp3 = springerCount >= 3 && selectedWeek.frei?.playerId === currentUser.id;
+  const isCurrentUserFrei = springerCount < 3 && selectedWeek.frei?.playerId === currentUser.id;
 
   // Standby Priority Cascade calculations
   const cascade = calculateStandbyCascade(selectedWeek, springerCount);
@@ -184,7 +185,8 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
   const isCurrentUserSp1Turn = isCurrentUserSp1 && cascade.activeOfferedPrios.includes(1);
   const isCurrentUserSp2Turn = isCurrentUserSp2 && cascade.activeOfferedPrios.includes(2) && springerCount >= 2;
-  const isCurrentUserStandbyTurn = isCurrentUserSp1Turn || isCurrentUserSp2Turn;
+  const isCurrentUserSp3Turn = isCurrentUserSp3 && cascade.activeOfferedPrios.includes(3) && springerCount >= 3;
+  const isCurrentUserStandbyTurn = isCurrentUserSp1Turn || isCurrentUserSp2Turn || isCurrentUserSp3Turn;
 
   // Swap lookups
   const incomingSwapForMe = swaps.find(s => 
@@ -358,15 +360,19 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               </p>
             ) : isCurrentUserStandbyTurn ? (
               <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
-                🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer' : '2. Springer'} an der Reihe!
+                🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer' : isCurrentUserSp2Turn ? '2. Springer' : '3. Springer'} an der Reihe!
               </p>
-            ) : isCurrentUserSp1 ? (
+            ) : isCurrentUserSp1 && springerCount >= 1 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
                 🟡 Du bist 1. Springer für diesen Spieltag {cascade.springer1.status === 'declined' ? '(Abgelehnt ❌)' : ''}
               </p>
             ) : isCurrentUserSp2 && springerCount >= 2 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
                 🟡 Du bist 2. Springer für diesen Spieltag {cascade.springer2.status === 'declined' ? '(Abgelehnt ❌)' : ''}
+              </p>
+            ) : isCurrentUserSp3 ? (
+              <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                🟡 Du bist 3. Springer für diesen Spieltag {cascade.frei?.status === 'declined' ? '(Abgelehnt ❌)' : ''}
               </p>
             ) : isCurrentUserFrei ? (
               <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
@@ -745,6 +751,10 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                     prioLabel = '2. Springer';
                     prioName = sp2Player.name;
                     isMyPrioTurn = isCurrentUserSp2;
+                  } else if (springerCount >= 3 && cascade.activeOfferedPrios.includes(3) && freiPlayer) {
+                    prioLabel = '3. Springer';
+                    prioName = freiPlayer.name;
+                    isMyPrioTurn = isCurrentUserSp3;
                   } else {
                     prioLabel = 'Freier Platz';
                     prioName = 'Offen für Nachrücker';

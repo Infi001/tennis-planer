@@ -18,7 +18,7 @@ export interface StandbyCascadeResult {
     status: 'idle' | 'offered' | 'accepted' | 'declined';
   };
   openForAnyoneCount: number;
-  activeOfferedPrios: Array<1 | 2>;
+  activeOfferedPrios: number[];
 }
 
 /**
@@ -104,7 +104,7 @@ export function calculateStandbyCascade(week: TrainingWeek, maxSpringers: number
 
   // Available spots to offer to the springers
   let availableSpots = totalOpenSpots;
-  const activeOfferedPrios: Array<1 | 2> = [];
+  const activeOfferedPrios: number[] = [];
 
   // --- 1. Springer (Prio 1) ---
   if (maxSpringers >= 1 && !isSp1Playing && sp1.status !== 'declined' && sp1.status !== 'accepted') {
@@ -128,6 +128,18 @@ export function calculateStandbyCascade(week: TrainingWeek, maxSpringers: number
     }
   }
 
+  // --- 3. Springer (Prio 3) - Uses frei slot as 3. Springer ---
+  const isFreiPlaying = isPlayerActivelyPlayingInWeek(week, frei.playerId);
+  if (maxSpringers >= 3 && frei.playerId && !isFreiPlaying && frei.status !== 'declined' && frei.status !== 'accepted') {
+    if (availableSpots > 0) {
+      frei.status = 'offered';
+      activeOfferedPrios.push(3);
+      availableSpots -= 1;
+    } else {
+      frei.status = 'idle';
+    }
+  }
+
   const openForAnyoneCount = Math.max(0, availableSpots);
 
   return {
@@ -143,7 +155,7 @@ export function calculateStandbyCascade(week: TrainingWeek, maxSpringers: number
 }
 
 export interface StandbyQueueDisplayItem {
-  prio: 1 | 2;
+  prio: number;
   title: string;
   prioBadge: string;
   player?: Player;
@@ -252,6 +264,49 @@ export function buildStandbyQueueDisplay(
       isCurrentUser: isUserSp2,
       canClaim: activeOfferedPrios.includes(2) && isUserSp2,
       explanation: sp2Explanation,
+    });
+  }
+
+  // --- 3. Springer (Uses week.frei) ---
+  if (maxSpringers >= 3 && week.frei?.playerId) {
+    const isUserSp3 = currentUserId === week.frei.playerId;
+    const freiPlayer = players.find(p => p.id === week.frei.playerId);
+    const isSp3Playing = isPlayerActivelyPlayingInWeek(week, week.frei.playerId);
+    let sp3Status: StandbyQueueDisplayItem['status'] = 'idle';
+    let sp3Label = 'Nachrücker Stufe 3';
+    let sp3Explanation = 'Kommt zum Zug bei Absage von Springer 1 & 2 oder ab 3 freien Plätzen';
+
+    if (isSp3Playing) {
+      sp3Status = 'playing';
+      sp3Label = 'Spielt aktiv mit ✅';
+      sp3Explanation = 'Bereits für einen Zeitslot eingeteilt';
+    } else if (cascade.frei?.status === 'accepted') {
+      sp3Status = 'accepted';
+      sp3Label = 'Eingesprungen ✅';
+      sp3Explanation = 'Hat einen freien Platz übernommen';
+    } else if (cascade.frei?.status === 'declined') {
+      sp3Status = 'declined';
+      sp3Label = 'Abgelehnt / Ausgestiegen ❌';
+      sp3Explanation = 'Kann diese Woche nicht einspringen';
+    } else if (cascade.frei?.status === 'offered') {
+      sp3Status = 'offered';
+      sp3Label = 'An der Reihe 🔔';
+      sp3Explanation = 'Kann jetzt einen freien Platz übernehmen';
+    } else if (totalOpenSpots > 0 && !activeOfferedPrios.includes(3)) {
+      sp3Label = 'Wartet auf vorherige Springer ⏳';
+    }
+
+    items.push({
+      prio: 3,
+      title: '3. Springer',
+      prioBadge: '3. Springer',
+      player: freiPlayer,
+      status: sp3Status,
+      statusLabel: sp3Label,
+      isCurrentTurn: activeOfferedPrios.includes(3),
+      isCurrentUser: isUserSp3,
+      canClaim: activeOfferedPrios.includes(3) && isUserSp3,
+      explanation: sp3Explanation,
     });
   }
 

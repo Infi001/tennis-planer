@@ -22,13 +22,16 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
 
   const sp1Player = players.find(p => p.id === selectedWeek.springer1.playerId);
   const sp2Player = players.find(p => p.id === selectedWeek.springer2.playerId);
+  const freiPlayer = players.find(p => p.id === selectedWeek.frei?.playerId);
 
   const playerSlot = getPlayerCurrentSlotInWeek(selectedWeek.id, playerId) || undefined;
   const nextSpringer = (selectedWeek.springer1.playerId && selectedWeek.springer1.status !== 'declined' && selectedWeek.springer1.playerId !== playerId)
     ? sp1Player
     : (springerCount >= 2 && selectedWeek.springer2.playerId && selectedWeek.springer2.status !== 'declined' && selectedWeek.springer2.playerId !== playerId)
       ? sp2Player
-      : null;
+      : (springerCount >= 3 && selectedWeek.frei?.playerId && selectedWeek.frei?.status !== 'declined' && selectedWeek.frei?.playerId !== playerId)
+        ? freiPlayer
+        : null;
 
   const handleConfirmDecline = () => {
     const finalReason = customNote ? `${reason} (${customNote})` : reason;
