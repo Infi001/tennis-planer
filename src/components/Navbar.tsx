@@ -38,9 +38,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Trainingsplaner
               </span>
             </div>
-            <p className="text-xs text-white/80 dark:text-neutral-400 hidden sm:block">
-              Montagsrunde • 1 Platz mit Trainer • 3x 60 Min.
-            </p>
           </div>
         </div>
 

@@ -102,103 +102,100 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       }`}
     >
       {/* Main Info Row */}
-      <div className="p-3">
-        <div className="flex items-center justify-between gap-2.5">
-          
-          {/* Avatar + Player Details */}
-          <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-            <div 
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs"
-              style={{ backgroundColor: isGuest ? '#6b7280' : player?.avatarColor || theme.primary }}
-            >
-              {isGuest ? 'G' : player?.shortName}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className={`text-sm font-bold truncate leading-tight ${isDeclined ? 'text-neutral-500 line-through' : 'text-neutral-900 dark:text-neutral-100'}`}>
-                  {playerName}
-                </span>
-
-                {isMe && (
-                  <span 
-                    className="px-1.5 py-0.2 rounded text-[10px] font-black uppercase text-white shadow-xs shrink-0"
-                    style={{ backgroundColor: theme.primary }}
-                  >
-                    DU
-                  </span>
-                )}
-              </div>
-
-              {/* Status Line */}
-              <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                <span className="text-[10px] text-neutral-400 font-medium">P{index + 1}</span>
-                <span className="text-neutral-300 dark:text-neutral-600">•</span>
-
-                {isConfirmed && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
-                    <Check className="w-3.5 h-3.5 stroke-[3]" /> Dabei
-                  </span>
-                )}
-
-                {isDeclined && (
-                  <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-0.5">
-                    <AlertCircle className="w-3.5 h-3.5" /> {assignment.declineReason || 'Abgesagt'}
-                  </span>
-                )}
-
-                {isSubstitute && originalPlayer && (
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold truncate">
-                    Springer für {originalPlayer.name}
-                  </span>
-                )}
-
-                {isSwapped && (
-                  <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-0.5">
-                    <ArrowLeftRight className="w-3.5 h-3.5" /> Getauscht
-                  </span>
-                )}
-
-                {assignment.status === 'pending' && (
-                  <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                    Offen
-                  </span>
-                )}
-              </div>
-            </div>
+      <div className="p-3.5">
+        {/* Top: Avatar + Player Details (Full uninterrupted width) */}
+        <div className="flex items-center space-x-3 min-w-0">
+          <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-xs"
+            style={{ backgroundColor: isGuest ? '#6b7280' : player?.avatarColor || theme.primary }}
+          >
+            {isGuest ? 'G' : player?.shortName}
           </div>
 
-          {/* Admin Controls on other players' cards */}
-          {isAdmin && !isMe && (
-            <div className="flex items-center gap-1 shrink-0">
-              {onAdminEdit && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAdminEdit(player ? player.id : `guest_${assignment.guestName}`);
-                  }}
-                  title="Spieler austauschen / bearbeiten (Admin)"
-                  className="p-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700/60 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center gap-1 transition-colors border border-neutral-200/80 dark:border-neutral-600 shadow-2xs cursor-pointer"
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`text-base font-bold truncate leading-tight ${isDeclined ? 'text-neutral-500 line-through' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                {playerName}
+              </span>
+
+              {isMe && (
+                <span 
+                  className="px-2 py-0.5 rounded text-[10px] font-black uppercase text-white shadow-xs shrink-0"
+                  style={{ backgroundColor: theme.primary }}
                 >
-                  <Pencil className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
-                  <span className="hidden sm:inline">Ändern</span>
-                </button>
+                  DU
+                </span>
               )}
+            </div>
+
+            {/* Status Line */}
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+              <span className="text-[11px] text-neutral-400 font-semibold">P{index + 1}</span>
+              <span className="text-neutral-300 dark:text-neutral-600">•</span>
+
+              {isConfirmed && (
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" /> Dabei
+                </span>
+              )}
+
+              {isDeclined && (
+                <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" /> {assignment.declineReason || 'Abgesagt'}
+                </span>
+              )}
+
+              {isSubstitute && originalPlayer && (
+                <span className="text-blue-600 dark:text-blue-400 font-semibold truncate">
+                  Springer für {originalPlayer.name}
+                </span>
+              )}
+
+              {isSwapped && (
+                <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
+                  <ArrowLeftRight className="w-3.5 h-3.5" /> Getauscht
+                </span>
+              )}
+
+              {assignment.status === 'pending' && (
+                <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                  Offen
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Dedicated Admin Action Row for other players (Clean, spacious, full width) */}
+        {isAdmin && !isMe && (
+          <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center gap-2">
+            {onAdminEdit && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const targetId = player ? player.id : `guest_${assignment.guestName}`;
-                  adminRemovePlayer(weekId, slotTime, targetId);
+                  onAdminEdit(player ? player.id : `guest_${assignment.guestName}`);
                 }}
-                title="Spieler aus diesem Slot entfernen (Admin)"
-                className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1 transition-colors border border-rose-200 dark:border-rose-900/60 shadow-2xs cursor-pointer"
+                title="Spieler austauschen / bearbeiten (Admin)"
+                className="flex-1 py-1.5 px-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700/60 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors border border-neutral-200/80 dark:border-neutral-600 shadow-2xs cursor-pointer"
               >
-                <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span className="hidden sm:inline">Entfernen</span>
+                <Pencil className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
+                <span>Ändern</span>
               </button>
-            </div>
-          )}
-        </div>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const targetId = player ? player.id : `guest_${assignment.guestName}`;
+                adminRemovePlayer(weekId, slotTime, targetId);
+              }}
+              title="Spieler aus diesem Slot entfernen (Admin)"
+              className="flex-1 py-1.5 px-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors border border-rose-200 dark:border-rose-900/60 shadow-2xs cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Entfernen</span>
+            </button>
+          </div>
+        )}
 
         {/* Dedicated Action Row ONLY for the logged-in user (isMe) */}
         {isMe && !isDeclined && !isGuest && player && !isSubstitute && (
