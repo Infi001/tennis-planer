@@ -1,7 +1,7 @@
 import React from 'react';
 import { SlotAssignment, SlotTime } from '../types/tennis';
 import { useApp } from '../context/AppContext';
-import { Check, X, ArrowLeftRight, UserCheck, AlertCircle, RotateCcw } from 'lucide-react';
+import { Check, X, ArrowLeftRight, AlertCircle, RotateCcw, Pencil } from 'lucide-react';
 
 interface PlayerCardProps {
   assignment: SlotAssignment;
@@ -115,7 +115,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5">
                 <span className={`text-sm font-bold truncate leading-tight ${isDeclined ? 'text-neutral-500 line-through' : 'text-neutral-900 dark:text-neutral-100'}`}>
                   {playerName}
                 </span>
@@ -168,39 +168,29 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             </div>
           </div>
 
-          {/* Admin Controls on other players' cards (Discrete, non-intrusive) */}
-          {isAdmin && !isMe && (
-            <div className="flex items-center space-x-1 shrink-0">
-              {onAdminEdit && (
-                <button
-                  onClick={() => onAdminEdit(player ? player.id : `guest_${assignment.guestName}`)}
-                  title="Spieler austauschen / bearbeiten"
-                  className="p-1.5 rounded-lg text-neutral-400 hover:text-blue-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                >
-                  <UserCheck className="w-4 h-4" />
-                </button>
-              )}
-              {!isDeclined && (
-                <button
-                  onClick={() => adminDragDropAssign(weekId, slotTime, player ? player.id : `guest_${assignment.guestName}`, 'remove')}
-                  title="Aus Slot entfernen"
-                  className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+          {/* Admin Controls on other players' cards (Clean pencil button) */}
+          {isAdmin && !isMe && onAdminEdit && (
+            <div className="shrink-0">
+              <button
+                onClick={() => onAdminEdit(player ? player.id : `guest_${assignment.guestName}`)}
+                title="Spieler ändern oder entfernen (Admin)"
+                className="p-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700/60 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center gap-1 transition-colors border border-neutral-200/80 dark:border-neutral-600 shadow-2xs"
+              >
+                <Pencil className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
+                <span className="hidden 2xl:inline">Ändern</span>
+              </button>
             </div>
           )}
         </div>
 
         {/* Dedicated Action Row ONLY for the logged-in user (isMe) */}
         {isMe && !isDeclined && !isGuest && player && !isSubstitute && (
-          <div className="mt-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-700/60 flex items-center gap-2">
+          <div className="mt-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-700/60 space-y-1.5">
             {!isConfirmed && (
               <button 
                 onClick={() => confirmAttendance(weekId, player.id)} 
                 title="Ich bin dabei (Zusagen)" 
-                className="flex-1 py-1.5 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors m3-ripple"
+                className="w-full py-1.5 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors m3-ripple"
               >
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
                 <span>Zusagen</span>
@@ -209,20 +199,20 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
             <button 
               onClick={() => onOpenSwap(player.id, slotTime)} 
-              title="Mit anderem Spieler Uhrzeit tauschen" 
-              className="flex-1 py-1.5 px-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors m3-ripple border border-neutral-200/60 dark:border-neutral-600"
+              title="Tauschanfrage an Mitspieler stellen" 
+              className="w-full py-1.5 px-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors m3-ripple border border-neutral-200/60 dark:border-neutral-600"
             >
-              <ArrowLeftRight className="w-3.5 h-3.5" />
-              <span>Tauschen</span>
+              <ArrowLeftRight className="w-3.5 h-3.5 shrink-0" />
+              <span>Tauschanfrage stellen</span>
             </button>
 
             <button 
               onClick={() => onOpenDecline(player.id)} 
               title="Für diesen Montag absagen" 
-              className="flex-1 py-1.5 px-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors m3-ripple border border-rose-200 dark:border-rose-900/60"
+              className="w-full py-1.5 px-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors m3-ripple border border-rose-200 dark:border-rose-900/60"
             >
               <X className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Absagen</span>
+              <span>Termin absagen</span>
             </button>
           </div>
         )}

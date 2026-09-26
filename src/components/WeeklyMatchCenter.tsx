@@ -345,10 +345,10 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
             </div>
             
             {myCurrentSlot ? (
-              <p className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                {isMySlotSubstitute ? '🦘 Du bist als Springer eingeteilt um ' : '🎾 Du spielst um '}
-                <span className="text-blue-600 dark:text-blue-400">{myCurrentSlot} Uhr</span>
-                {myAssignment?.status === 'confirmed' ? ' (Bestätigt ✅)' : ' (Noch offen ⏳)'}
+              <p className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 leading-snug">
+                <span>{isMySlotSubstitute ? '🦘 Du bist als Springer eingeteilt um ' : '🎾 Du spielst um '}</span>
+                <span className="text-blue-600 dark:text-blue-400 whitespace-nowrap">{myCurrentSlot} Uhr</span>
+                <span className="whitespace-nowrap">{myAssignment?.status === 'confirmed' ? ' (Bestätigt ✅)' : ' (Noch offen ⏳)'}</span>
               </p>
             ) : myDeclinedSlot ? (
               <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
@@ -404,7 +404,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                 className="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 flex items-center space-x-1.5 m3-ripple"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span>Uhrzeit tauschen</span>
+                <span>Tauschanfrage stellen</span>
               </button>
               <button
                 onClick={() => onOpenDecline(currentUser.id)}
