@@ -594,59 +594,61 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               }`}
             >
               {/* Slot Header */}
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-100 dark:border-neutral-800">
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-xs font-bold text-xs"
-                    style={{ backgroundColor: theme.primary }}
-                  >
-                    #{slotIdx + 1}
-                  </div>
-                  <div>
+              <div className="pb-3 mb-3 border-b border-neutral-100 dark:border-neutral-800 space-y-1.5">
+                {/* Row 1: Slot Number, Time, and Quick Actions */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-white shadow-xs font-bold text-xs shrink-0"
+                      style={{ backgroundColor: theme.primary }}
+                    >
+                      #{slotIdx + 1}
+                    </div>
                     <h3 className="text-sm sm:text-base font-extrabold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5 whitespace-nowrap">
                       <Clock className="w-4 h-4 text-neutral-400 shrink-0" />
                       <span>{slotKey} Uhr</span>
                     </h3>
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
-                      <span>{activeAssignments.length}/4 Spieler besetzt</span>
-                      {openSpotsInThisSlot > 0 && (
-                        <span className="text-amber-600 dark:text-amber-400 font-bold">
-                          • {openSpotsInThisSlot} {openSpotsInThisSlot === 1 ? 'Platz frei' : 'Plätze frei'}!
-                        </span>
-                      )}
-                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-1 shrink-0">
+                    <button
+                      onClick={() => setDoppelSlot(slotKey)}
+                      title="Faire Doppel-Paarung für diese 4 Spieler auslosen"
+                      className="p-1.5 rounded-lg text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 m3-ripple"
+                    >
+                      <Shuffle className="w-4 h-4" />
+                    </button>
+                    {currentUser.isAdmin && (
+                      <button
+                        onClick={() => onOpenAddGuest(slotKey)}
+                        title="Gastspieler zu diesem Slot hinzufügen"
+                        className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 m3-ripple"
+                      >
+                        <Users className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-1.5">
-                  <button
-                    onClick={() => setDoppelSlot(slotKey)}
-                    title="Faire Doppel-Paarung für diese 4 Spieler auslosen"
-                    className="p-1.5 rounded-lg text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 m3-ripple"
-                  >
-                    <Shuffle className="w-4 h-4" />
-                  </button>
+                {/* Row 2: Occupancy count & Admin Nachsetzen button */}
+                <div className="flex items-center justify-between text-xs pt-0.5">
+                  <span className="text-neutral-500 dark:text-neutral-400 font-medium">
+                    {activeAssignments.length}/4 Spieler besetzt
+                    {openSpotsInThisSlot > 0 && (
+                      <span className="text-amber-600 dark:text-amber-400 font-bold ml-1">
+                        • {openSpotsInThisSlot} frei
+                      </span>
+                    )}
+                  </span>
 
-                  {/* Nachsetzen Button for Admin */}
                   {currentUser.isAdmin && (
                     <button
                       onClick={() => setAdminAssignSlot({ slotTime: slotKey })}
-                      title="Spieler zu diesem Slot nachsetzen oder austauschen"
-                      className="py-1 px-2.5 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors flex items-center gap-1 shrink-0 m3-ripple"
+                      title="Spieler nachsetzen oder einteilen"
+                      className="py-0.5 px-2 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 flex items-center gap-1 transition-colors m3-ripple active:scale-95"
                     >
-                      <UserPlus className="w-3.5 h-3.5" />
+                      <UserPlus className="w-3 h-3" />
                       <span>Nachsetzen</span>
-                    </button>
-                  )}
-
-                  {/* Add Guest Button for Admin */}
-                  {currentUser.isAdmin && (
-                    <button
-                      onClick={() => onOpenAddGuest(slotKey)}
-                      title="Gastspieler zu diesem Slot hinzufügen"
-                      className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 m3-ripple"
-                    >
-                      <Users className="w-4 h-4" />
                     </button>
                   )}
                 </div>
