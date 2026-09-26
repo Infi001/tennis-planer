@@ -359,19 +359,23 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               </p>
             ) : isCurrentUserStandbyTurn ? (
               <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
-                🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer (Prio 1)' : isCurrentUserSp2Turn ? '2. Springer (Prio 2)' : 'Freiwilliger aus Pause (Prio 3)'} an der Reihe!
+                🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer (Prio 1)' : isCurrentUserSp2Turn ? '2. Springer (Prio 2)' : '3. Springer (Prio 3)'} an der Reihe!
               </p>
             ) : isCurrentUserSp1 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
                 🟡 Du bist 1. Springer für diesen Montag {cascade.springer1.status === 'declined' ? '(Abgelehnt ❌)' : '(Prio 1)'}
               </p>
-            ) : isCurrentUserSp2 ? (
+            ) : isCurrentUserSp2 && springerCount >= 2 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
                 🟡 Du bist 2. Springer für diesen Montag {cascade.springer2.status === 'declined' ? '(Abgelehnt ❌)' : '(Prio 2)'}
               </p>
+            ) : isCurrentUserFrei && springerCount >= 3 ? (
+              <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                🟡 Du bist 3. Springer für diesen Montag {cascade.frei?.status === 'declined' ? '(Abgelehnt ❌)' : '(Prio 3)'}
+              </p>
             ) : isCurrentUserFrei ? (
               <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                💤 Du hast diese Woche laut Rotationsplan regulär frei {cascade.frei?.status === 'declined' ? '(Pause behalten)' : ''}
+                💤 Du hast diese Woche regulär spielfrei
               </p>
             ) : cascade.openForAnyoneCount > 0 ? (
               <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
@@ -482,48 +486,63 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
         </div>
 
-        {/* Outgoing swap notice */}
-        {myOutgoingSwap && (
-          <div className="w-full mt-2 p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-purple-900 dark:text-purple-200">
-            <span className="flex items-center gap-1.5 font-medium">
-              <ArrowLeftRight className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-              <span>Deine Tauschanfrage an <strong>{myOutgoingSwap.targetSlot} Uhr</strong> ist aktiv (Warte auf Bestätigung)...</span>
-            </span>
+      </div>
+
+      {/* Incoming swap offer for me (Prominent Full-Width Alert Card) */}
+      {incomingSwapForMe && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-purple-50 dark:bg-purple-950/40 border-2 border-purple-300 dark:border-purple-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in">
+          <div className="flex items-start sm:items-center space-x-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+              <ArrowLeftRight className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
+                  Tauschanfrage erhalten
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                  {incomingSwapForMe.fromSlot} ➔ {myCurrentSlot} Uhr
+                </span>
+              </div>
+              <p className="text-sm font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
+                <strong>{requesterOfIncomingSwap?.name}</strong> ({incomingSwapForMe.fromSlot} Uhr) möchte mit deiner Spielzeit (<strong>{myCurrentSlot} Uhr</strong>) tauschen.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full md:w-auto">
             <button
-              onClick={() => cancelSwap(myOutgoingSwap.id)}
-              className="py-1 px-2.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900 shrink-0 m3-ripple"
+              onClick={() => acceptSwap(incomingSwapForMe.id, currentUser.id)}
+              className="w-full sm:w-auto py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-xs m3-ripple flex items-center justify-center space-x-1.5 text-center active:scale-95 transition-all"
             >
-              Anfrage abbrechen
+              <Check className="w-4 h-4 shrink-0" />
+              <span>Tausch annehmen (auf {incomingSwapForMe.fromSlot} wechseln)</span>
+            </button>
+            <button
+              onClick={() => declineSwap(incomingSwapForMe.id)}
+              className="w-full sm:w-auto py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-neutral-600 dark:text-neutral-300 hover:text-rose-600 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-center active:scale-95"
+            >
+              Ablehnen
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Incoming swap offer for me */}
-        {incomingSwapForMe && (
-          <div className="w-full mt-2 p-3 rounded-2xl bg-purple-100 dark:bg-purple-950/70 border border-purple-300 dark:border-purple-700 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-xs animate-pulse">
-            <div className="flex items-center space-x-2 text-xs font-bold text-purple-950 dark:text-purple-100">
-              <ArrowLeftRight className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-              <span>{requesterOfIncomingSwap?.name} ({incomingSwapForMe.fromSlot} Uhr) möchte mit deiner Spielzeit ({myCurrentSlot} Uhr) tauschen!</span>
-            </div>
-            <div className="flex items-center space-x-2 shrink-0">
-              <button
-                onClick={() => acceptSwap(incomingSwapForMe.id, currentUser.id)}
-                className="py-1.5 px-3 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-xs m3-ripple flex items-center space-x-1"
-              >
-                <Check className="w-3.5 h-3.5" />
-                <span>Tausch annehmen (auf {incomingSwapForMe.fromSlot} wechseln)</span>
-              </button>
-              <button
-                onClick={() => declineSwap(incomingSwapForMe.id)}
-                className="py-1.5 px-2.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-rose-600 bg-white dark:bg-neutral-800 rounded-xl"
-              >
-                Ablehnen
-              </button>
-            </div>
+      {/* Outgoing swap notice (Full-Width Card) */}
+      {myOutgoingSwap && (
+        <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-purple-900 dark:text-purple-200">
+          <div className="flex items-center space-x-2.5">
+            <ArrowLeftRight className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+            <span>Deine Tauschanfrage an <strong>{myOutgoingSwap.targetSlot} Uhr</strong> ist aktiv (Warte auf Bestätigung)...</span>
           </div>
-        )}
-
-      </div>
+          <button
+            onClick={() => cancelSwap(myOutgoingSwap.id)}
+            className="py-1.5 px-3 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900 shrink-0 m3-ripple whitespace-nowrap"
+          >
+            Anfrage abbrechen
+          </button>
+        </div>
+      )}
 
       {/* Mobile Admin Quick-Assign Strip (Visible only on < lg screens) */}
       {currentUser.isAdmin && (
