@@ -84,52 +84,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
     );
   }
 
-  // Handle cancelled week (e.g. holiday or admin-paused week)
-  if (selectedWeek.isCancelled) {
-    return (
-      <div className="space-y-6">
-        {/* Navigation */}
-        <div className="flex items-center justify-between bg-white dark:bg-[var(--md-sys-color-surface)] p-4 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xs">
-          <button
-            onClick={() => prevWeek && setSelectedWeekId(prevWeek.id)}
-            disabled={!prevWeek}
-            className="p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 disabled:opacity-30 hover:bg-neutral-100 dark:hover:bg-neutral-800 m3-ripple"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
 
-          <div className="text-center">
-            <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              {formatWeekDate(selectedWeek)}
-            </h2>
-            <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">
-              {selectedWeek.cancelReason || 'Kein Training'}
-            </p>
-          </div>
-
-          <button
-            onClick={() => nextWeek && setSelectedWeekId(nextWeek.id)}
-            disabled={!nextWeek}
-            className="p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 disabled:opacity-30 hover:bg-neutral-100 dark:hover:bg-neutral-800 m3-ripple"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-12 rounded-3xl bg-neutral-100/50 dark:bg-[var(--md-sys-color-surface)] text-center border border-dashed border-neutral-300 dark:border-neutral-800">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-            <CalendarIcon className="w-8 h-8" />
-          </div>
-          <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-            {selectedWeek.cancelReason || 'Pausierter Spieltag'}
-          </h3>
-          <p className="text-sm text-neutral-500 max-w-md mx-auto">
-            An diesem Spieltag findet kein reguläres Vereinstraining statt. Die Hallenplätze sind für dieses Datum pausiert.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // Dynamic slots & capacity: 4 spots per available hour
   const slotKeys = getWeekSlotKeys(selectedWeek);
@@ -266,7 +221,12 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center justify-center sm:justify-start gap-2">
               <CalendarIcon className="w-5 h-5 text-neutral-400" />
-              {formatWeekDate(selectedWeek)}
+              <span>{formatWeekDate(selectedWeek)}</span>
+              {selectedWeek.isCancelled && (
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold border border-rose-200 dark:border-rose-900">
+                  {selectedWeek.cancelReason || 'Ausfall'}
+                </span>
+              )}
             </h2>
           </div>
 
@@ -283,22 +243,31 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
         {/* Quick Status Chips */}
         <div className="flex items-center flex-wrap gap-2 text-xs font-semibold">
-          <div className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>{confirmedCount}/{totalCapacity} Besetzt</span>
-          </div>
-
-          {totalOpenSpots > 0 && (
-            <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center space-x-1.5 animate-pulse">
+          {selectedWeek.isCancelled ? (
+            <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center space-x-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>{totalOpenSpots} {totalOpenSpots === 1 ? 'Platz frei' : 'Plätze frei'} – Kaskade aktiv!</span>
+              <span>Spieltag pausiert ({selectedWeek.cancelReason || 'Ausfall'})</span>
             </div>
-          )}
+          ) : (
+            <>
+              <div className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>{confirmedCount}/{totalCapacity} Besetzt</span>
+              </div>
 
-          {pendingCount > 0 && (
-            <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 flex items-center space-x-1.5">
-              <span>{pendingCount} Offen</span>
-            </div>
+              {totalOpenSpots > 0 && (
+                <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center space-x-1.5 animate-pulse">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{totalOpenSpots} {totalOpenSpots === 1 ? 'Platz frei' : 'Plätze frei'} – Kaskade aktiv!</span>
+                </div>
+              )}
+
+              {pendingCount > 0 && (
+                <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 flex items-center space-x-1.5">
+                  <span>{pendingCount} Offen</span>
+                </div>
+              )}
+            </>
           )}
 
           {/* Action Buttons for this Week */}
@@ -329,6 +298,26 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
       </div>
 
+      {/* Week Ausfall Banner */}
+      {selectedWeek.isCancelled && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-start sm:items-center space-x-3.5 text-amber-900 dark:text-amber-100 shadow-xs">
+          <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400">
+            <CalendarIcon className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-bold text-sm sm:text-base flex items-center gap-2">
+              <span>Dieser Spieltag fällt aus</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200 font-semibold">
+                {selectedWeek.cancelReason || 'Kein Training'}
+              </span>
+            </div>
+            <p className="text-xs text-amber-700/90 dark:text-amber-300/90 mt-0.5">
+              An diesem Spieltag findet kein reguläres Vereinstraining statt. Die untenstehenden Plätze und Springer-Einteilungen zeigen die reguläre Rotation für diesen Termin.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Prominent Personal Status & Action Banner */}
       <div className={`p-4 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs transition-all ${
         isCurrentUserStandbyTurn 
@@ -350,7 +339,23 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               Dein persönlicher Status ({currentUser.name})
             </div>
             
-            {myCurrentSlot ? (
+            {selectedWeek.isCancelled ? (
+              <p className="text-sm font-extrabold text-amber-800 dark:text-amber-300 leading-snug">
+                {myCurrentSlot ? (
+                  <span>Reguläre Rotation: {myCurrentSlot} Uhr (Spieltag fällt aus)</span>
+                ) : isCurrentUserSp1 ? (
+                  <span>Reguläre Rotation: 1. Springer (Spieltag fällt aus)</span>
+                ) : isCurrentUserSp2 ? (
+                  <span>Reguläre Rotation: 2. Springer (Spieltag fällt aus)</span>
+                ) : isCurrentUserSp3 ? (
+                  <span>Reguläre Rotation: 3. Springer (Spieltag fällt aus)</span>
+                ) : isCurrentUserFrei ? (
+                  <span>Reguläre Rotation: Spielfrei</span>
+                ) : (
+                  <span>Spieltag fällt aus ({selectedWeek.cancelReason || 'Kein Training'})</span>
+                )}
+              </p>
+            ) : myCurrentSlot ? (
               <p className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 leading-snug">
                 <span>{isMySlotSubstitute ? '🦘 Du bist als Springer eingeteilt um ' : '🎾 Du spielst um '}</span>
                 <span className="text-blue-600 dark:text-blue-400 whitespace-nowrap">{myCurrentSlot} Uhr</span>
@@ -393,86 +398,93 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
         {/* Dynamic Personal Action Buttons */}
         <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-end">
-          
-          {/* Action: If scheduled, allow swap and decline */}
-          {myCurrentSlot && !isMySlotSubstitute && (
+          {selectedWeek.isCancelled ? (
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              Spieltag pausiert
+            </span>
+          ) : (
             <>
-              <button
-                onClick={() => onOpenSwap(currentUser.id, myCurrentSlot)}
-                className="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 flex items-center space-x-1.5 m3-ripple"
-              >
-                <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span>Tauschanfrage stellen</span>
-              </button>
-              <button
-                onClick={() => onOpenDecline(currentUser.id)}
-                className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
-              >
-                <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Termin absagen</span>
-              </button>
+              {/* Action: If scheduled, allow swap and decline */}
+              {myCurrentSlot && !isMySlotSubstitute && (
+                <>
+                  <button
+                    onClick={() => onOpenSwap(currentUser.id, myCurrentSlot)}
+                    className="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 flex items-center space-x-1.5 m3-ripple"
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                    <span>Tauschanfrage stellen</span>
+                  </button>
+                  <button
+                    onClick={() => onOpenDecline(currentUser.id)}
+                    className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
+                  >
+                    <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Termin absagen</span>
+                  </button>
+                </>
+              )}
+
+              {/* Action 3: If substitute, allow exit */}
+              {myCurrentSlot && isMySlotSubstitute && (
+                <button
+                  onClick={() => cancelSubstitute(selectedWeek.id, myCurrentSlot, currentUser.id, 'Ersatzspieler kann doch nicht')}
+                  className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
+                >
+                  <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Einsatz absagen / Aussteigen</span>
+                </button>
+              )}
+
+              {/* Action 4: If previously declined and spot is still open, allow reclaim */}
+              {myDeclinedSlot && (
+                <button
+                  onClick={() => myDeclinedSlot && reclaimSlot(selectedWeek.id, myDeclinedSlot, currentUser.id)}
+                  className="py-2 px-3.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs m3-ripple flex items-center space-x-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Doch dabei! (Wieder zusagen 👍)</span>
+                </button>
+              )}
+
+              {/* Action 5A: Standby Priority Call to Action */}
+              {isCurrentUserStandbyTurn && openSlots.length > 0 && (
+                <div className="flex items-center flex-wrap gap-1.5">
+                  {openSlots.map(slot => (
+                    <button
+                      key={slot}
+                      onClick={() => acceptSubstitute(selectedWeek.id, slot, currentUser.id)}
+                      className="py-2 px-3 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-xs m3-ripple flex items-center space-x-1"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{slot} Uhr annehmen 🎾</span>
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => declineSubstituteOffer(selectedWeek.id, currentUser.id)}
+                    className="py-2 px-3 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-rose-600 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 m3-ripple"
+                  >
+                    Ablehnen (Weitergeben ➔)
+                  </button>
+                </div>
+              )}
+
+              {/* Action 5B: General Claim if not scheduled and open spots exist */}
+              {!isCurrentlyPlaying && !isCurrentUserStandbyTurn && openSlots.length > 0 && !myDeclinedSlot && (
+                <div className="flex items-center space-x-1.5">
+                  {openSlots.map(slot => (
+                    <button
+                      key={slot}
+                      onClick={() => acceptSubstitute(selectedWeek.id, slot, currentUser.id)}
+                      className="py-2 px-3 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1"
+                      style={{ backgroundColor: theme.primary }}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{slot} Uhr übernehmen 🎾</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </>
-          )}
-
-          {/* Action 3: If substitute, allow exit */}
-          {myCurrentSlot && isMySlotSubstitute && (
-            <button
-              onClick={() => cancelSubstitute(selectedWeek.id, myCurrentSlot, currentUser.id, 'Ersatzspieler kann doch nicht')}
-              className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
-            >
-              <X className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Einsatz absagen / Aussteigen</span>
-            </button>
-          )}
-
-          {/* Action 4: If previously declined and spot is still open, allow reclaim */}
-          {myDeclinedSlot && (
-            <button
-              onClick={() => myDeclinedSlot && reclaimSlot(selectedWeek.id, myDeclinedSlot, currentUser.id)}
-              className="py-2 px-3.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs m3-ripple flex items-center space-x-1"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Doch dabei! (Wieder zusagen 👍)</span>
-            </button>
-          )}
-
-          {/* Action 5A: Standby Priority Call to Action */}
-          {isCurrentUserStandbyTurn && openSlots.length > 0 && (
-            <div className="flex items-center flex-wrap gap-1.5">
-              {openSlots.map(slot => (
-                <button
-                  key={slot}
-                  onClick={() => acceptSubstitute(selectedWeek.id, slot, currentUser.id)}
-                  className="py-2 px-3 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-xs m3-ripple flex items-center space-x-1"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>{slot} Uhr annehmen 🎾</span>
-                </button>
-              ))}
-              <button
-                onClick={() => declineSubstituteOffer(selectedWeek.id, currentUser.id)}
-                className="py-2 px-3 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-rose-600 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 m3-ripple"
-              >
-                Ablehnen (Weitergeben ➔)
-              </button>
-            </div>
-          )}
-
-          {/* Action 5B: General Claim if not scheduled and open spots exist */}
-          {!isCurrentlyPlaying && !isCurrentUserStandbyTurn && openSlots.length > 0 && !myDeclinedSlot && (
-            <div className="flex items-center space-x-1.5">
-              {openSlots.map(slot => (
-                <button
-                  key={slot}
-                  onClick={() => acceptSubstitute(selectedWeek.id, slot, currentUser.id)}
-                  className="py-2 px-3 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1"
-                  style={{ backgroundColor: theme.primary }}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{slot} Uhr übernehmen 🎾</span>
-                </button>
-              ))}
-            </div>
           )}
 
         </div>

@@ -22,57 +22,58 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
 
   // Helper to determine role for a player in a week
   const getPlayerCellInfo = (week: typeof weeks[0], player: Player) => {
-    if (week.isCancelled) {
-      return { text: 'Kein Training', type: 'cancelled' };
-    }
+    let roleText = '-';
+    let roleType = 'none';
+    let isSub = false;
 
     if (week.frei && week.frei.playerId === player.id) {
       if (springerCount >= 3) {
-        return { 
-          text: week.frei.status === 'accepted' ? 'Eingesprungen (3. Springer)' : '3. Springer', 
-          type: 'sp3',
-          isSub: week.frei.status === 'accepted'
-        };
+        roleText = week.frei.status === 'accepted' ? 'Eingesprungen (3. Springer)' : '3. Springer';
+        roleType = 'sp3';
+        isSub = week.frei.status === 'accepted';
+      } else {
+        roleText = week.frei.status === 'accepted' ? 'Eingesprungen (Frei)' : 'Frei';
+        roleType = 'frei';
+        isSub = week.frei.status === 'accepted';
       }
-      return { 
-        text: week.frei.status === 'accepted' ? 'Eingesprungen (Frei)' : 'Frei', 
-        type: 'frei',
-        isSub: week.frei.status === 'accepted'
-      };
-    }
-
-    if (week.springer1.playerId === player.id) {
-      return { 
-        text: '1. Springer', 
-        type: 'sp1', 
-        isSub: week.springer1.status === 'accepted' 
-      };
-    }
-
-    if (week.springer2.playerId === player.id) {
-      return { 
-        text: '2. Springer', 
-        type: 'sp2', 
-        isSub: week.springer2.status === 'accepted' 
-      };
-    }
-
-    // Check slots dynamically
-    const slotTimes = Object.keys(week.slots || {}).sort();
-    for (const time of slotTimes) {
-      const assignment = (week.slots[time] || []).find(a => a.playerId === player.id);
-      if (assignment) {
-        if (assignment.status === 'declined') {
-          return { text: `${time} (Abgesagt)`, type: 'declined' };
+    } else if (week.springer1.playerId === player.id) {
+      roleText = '1. Springer';
+      roleType = 'sp1';
+      isSub = week.springer1.status === 'accepted';
+    } else if (week.springer2.playerId === player.id) {
+      roleText = '2. Springer';
+      roleType = 'sp2';
+      isSub = week.springer2.status === 'accepted';
+    } else {
+      // Check slots dynamically
+      const slotTimes = Object.keys(week.slots || {}).sort();
+      for (const time of slotTimes) {
+        const assignment = (week.slots[time] || []).find(a => a.playerId === player.id);
+        if (assignment) {
+          if (assignment.status === 'declined') {
+            roleText = `${time} (Abgesagt)`;
+            roleType = 'declined';
+          } else if (assignment.status === 'substitute') {
+            roleText = `${time} (Springer)`;
+            roleType = 'substitute';
+          } else {
+            roleText = time;
+            roleType = 'slot';
+          }
+          break;
         }
-        if (assignment.status === 'substitute') {
-          return { text: `${time} (Springer)`, type: 'substitute' };
-        }
-        return { text: time, type: 'slot' };
       }
     }
 
-    return { text: '-', type: 'none' };
+    if (week.isCancelled) {
+      return { 
+        text: roleText !== '-' ? `${roleText} (Ausfall)` : 'Kein Training', 
+        type: 'cancelled',
+        isSub: false
+      };
+    }
+
+    return { text: roleText, type: roleType, isSub };
   };
 
   return (

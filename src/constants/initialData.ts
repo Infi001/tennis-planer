@@ -137,7 +137,7 @@ export const SEASON_MONDAYS: Array<{ dateStr: string; iso: string; cancelled?: b
   { dateStr: '08.03.27', iso: '2027-03-08' },
   { dateStr: '15.03.27', iso: '2027-03-15' },
   { dateStr: '22.03.27', iso: '2027-03-22' },
-  { dateStr: '29.03.27', iso: '2027-03-29' },
+  { dateStr: '29.03.27', iso: '2027-03-29', cancelled: true, cancelReason: 'Kein Training (Ostermontag)' },
   { dateStr: '05.04.27', iso: '2027-04-05' },
   { dateStr: '12.04.27', iso: '2027-04-12' },
   { dateStr: '19.04.27', iso: '2027-04-19' },
@@ -151,24 +151,6 @@ export function generateInitialSchedule(): TrainingWeek[] {
   let activeWeekIndex = 0;
 
   return SEASON_MONDAYS.map((m) => {
-    if (m.cancelled) {
-      return {
-        id: m.iso,
-        dateString: m.dateStr,
-        date: m.iso,
-        isCancelled: true,
-        cancelReason: m.cancelReason,
-        slots: {
-          '18:00-19:00': [],
-          '19:00-20:00': [],
-          '20:00-21:00': [],
-        },
-        springer1: { playerId: '', status: 'idle' },
-        springer2: { playerId: '', status: 'idle' },
-        frei: { playerId: '', status: 'idle' },
-      };
-    }
-
     const weekIdx = activeWeekIndex % 15;
     activeWeekIndex++;
 
@@ -205,7 +187,8 @@ export function generateInitialSchedule(): TrainingWeek[] {
       id: m.iso,
       dateString: m.dateStr,
       date: m.iso,
-      isCancelled: false,
+      isCancelled: !!m.cancelled,
+      cancelReason: m.cancelReason,
       slots: {
         '18:00-19:00': slots['18:00-19:00'],
         '19:00-20:00': slots['19:00-20:00'],

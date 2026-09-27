@@ -89,11 +89,11 @@ export class StorageService {
     let initialSchedule: TrainingWeek[] | null = null;
 
     weeks.forEach(w => {
-      // Migrate Ostermontag: should be a normal regular training day
+      // Migrate Ostermontag (2027-03-29): marked cancelled, but with full rotation slots!
       if (w.id === '2027-03-29' || w.cancelReason?.toLowerCase().includes('ostern')) {
-        if (w.isCancelled || w.cancelReason) {
-          w.isCancelled = false;
-          delete w.cancelReason;
+        if (!w.isCancelled || w.cancelReason !== 'Kein Training (Ostermontag)') {
+          w.isCancelled = true;
+          w.cancelReason = 'Kein Training (Ostermontag)';
           changed = true;
         }
         // If slots are completely empty, populate with standard rotation
