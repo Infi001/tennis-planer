@@ -137,13 +137,20 @@ export const ClubSettings: React.FC = () => {
       });
       return;
     }
+    if (!emailConfig.endpointUrl || !emailConfig.endpointUrl.trim()) {
+      setTestEmailStatus({
+        success: false,
+        message: 'Keine Webhook-URL hinterlegt! Bitte trage zuerst oben eine Webhook-URL (z. B. von Formspree oder Make.com) ein und klicke auf Speichern, um den automatischen Hintergrund-Direktversand zu testen.',
+      });
+      return;
+    }
     setIsSendingTestEmail(true);
     setTestEmailStatus(null);
     try {
       const res = await sendDirectEmail({
         to: testEmailAddress.trim(),
         subject: `🎾 Test-Nachricht von ${theme.clubName}`,
-        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer Direktversand aus der App funktioniert einwandfrei!`,
+        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer Direktversand aus der App via Webhook funktioniert einwandfrei!`,
         config: emailConfig,
       });
       setTestEmailStatus(res);
@@ -422,15 +429,37 @@ export const ClubSettings: React.FC = () => {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
             <Mail className="w-4 h-4 text-blue-500" />
-            E-Mail-Direktversand (Aus dem Tool senden)
+            E-Mail-Benachrichtigungen
           </h3>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
-            Aktiv
-          </span>
+          {emailConfig.endpointUrl && emailConfig.endpointUrl.trim() ? (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
+              Webhook aktiv
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+              Standard: Mail-App
+            </span>
+          )}
         </div>
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-          Benachrichtigt Springer bei kurzfristig freien Plätzen direkt aus der App im Hintergrund, ohne ein lokales Mailprogramm öffnen zu müssen.
+          Benachrichtigt Springer bei kurzfristig freien Plätzen per E-Mail inklusive Direkt-Link zum Annehmen.
         </p>
+
+        {/* Explanation card */}
+        <div className="max-w-2xl p-4 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-100 space-y-2">
+          <div className="font-bold flex items-center gap-1.5 text-blue-950 dark:text-blue-100">
+            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>Wie funktioniert der E-Mail-Versand?</span>
+          </div>
+          <div className="space-y-1.5 text-[11px] text-blue-800 dark:text-blue-200 leading-relaxed">
+            <p>
+              <strong>1. Standard (Ohne Einrichtung):</strong> Wenn keine Webhook-URL hinterlegt ist, öffnet die App beim Absenden direkt dein normales Mail-Programm (Apple Mail, Outlook, Gmail) mit vorausgefüllter Nachricht. Das klappt immer zu 100%!
+            </p>
+            <p>
+              <strong>2. Automatischer Hintergrundversand:</strong> Möchtest du, dass E-Mails vollautomatisch im Hintergrund ohne Mailprogramm versendet werden, erstelle ein kostenloses Formular auf <a href="https://formspree.io" target="_blank" rel="noopener noreferrer" className="underline font-bold text-blue-700 dark:text-blue-300">formspree.io</a> und trage die Formular-URL unten als Webhook ein.
+            </p>
+          </div>
+        </div>
 
         <form onSubmit={handleSaveEmailConfig} className="space-y-3 max-w-2xl bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl border border-neutral-200/80 dark:border-neutral-700/80">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -462,17 +491,17 @@ export const ClubSettings: React.FC = () => {
 
           <div>
             <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-              Webhook URL (optional für Zapier, Make, n8n, Cloudflare Worker oder Formspree)
+              Webhook URL (optional für automatischen Hintergrundversand via Formspree, Make, Zapier etc.)
             </label>
             <input
               type="url"
               value={emailConfig.endpointUrl || ''}
               onChange={(e) => setEmailConfig({ ...emailConfig, endpointUrl: e.target.value })}
-              placeholder="https://hook.eu1.make.com/... oder https://formspree.io/f/..."
+              placeholder="https://formspree.io/f/xyz... oder https://hook.eu1.make.com/..."
               className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-[10px] text-neutral-400 mt-1">
-              Leer lassen für integrierten Cloud-Direktversand oder Webhook eintragen.
+              Trage hier deine Webhook-URL ein (z. B. von Formspree oder Make.com), um E-Mails vollautomatisch im Hintergrund zu senden.
             </p>
           </div>
 

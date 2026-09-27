@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Player, TrainingWeek } from '../types/tennis';
 import { generateSpringerEmailContent, sendDirectEmail } from '../services/emailService';
+import { StorageService } from '../services/storage';
 import { X, Mail, Send, Loader2, Copy, Check, AlertCircle, ExternalLink } from 'lucide-react';
 
 interface EmailModalProps {
@@ -20,6 +21,9 @@ export const EmailModal: React.FC<EmailModalProps> = ({
   onClose,
 }) => {
   const { theme, updatePlayer } = useApp();
+  const emailConfig = StorageService.getEmailConfig();
+  const hasWebhook = Boolean(emailConfig.endpointUrl && emailConfig.endpointUrl.trim());
+
   const [emailInput, setEmailInput] = useState(springer.email || '');
   const [copied, setCopied] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -90,8 +94,15 @@ export const EmailModal: React.FC<EmailModalProps> = ({
   };
 
   const handleOpenClientFallback = () => {
-    const mailto = `mailto:${encodeURIComponent(emailInput.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailto, '_blank');
+    const trimmedEmail = emailInput.trim();
+    if (trimmedEmail && trimmedEmail !== springer.email) {
+      updatePlayer({
+        ...springer,
+        email: trimmedEmail,
+      });
+    }
+    const mailto = `mailto:${encodeURIComponent(trimmedEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
   };
 
   return (
@@ -112,10 +123,10 @@ export const EmailModal: React.FC<EmailModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                E-Mail direkt versenden
+                E-Mail an Springer senden
               </h3>
               <p className="text-xs text-neutral-500">
-                Direktbenachrichtigung für Springer {springer.name}
+                Benachrichtigung für {springer.name}
               </p>
             </div>
           </div>
@@ -128,6 +139,19 @@ export const EmailModal: React.FC<EmailModalProps> = ({
           </button>
         </div>
 
+        {/* Tip banner if no webhook is configured */}
+        {!hasWebhook && (
+          <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-100 flex items-start space-x-2">
+            <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <span className="font-bold">E-Mail mit einem Klick absenden:</span>
+              <p className="text-[11px] text-blue-800 dark:text-blue-200 leading-relaxed">
+                Klicke unten auf <strong>"In Mail-App öffnen"</strong> – die E-Mail wird sofort in deinem Mail-Programm (Apple Mail, Outlook, Gmail) mit allem Text geöffnet!
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Status result banner */}
         {sendResult && (
           <div 
@@ -137,7 +161,7 @@ export const EmailModal: React.FC<EmailModalProps> = ({
                 : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-800'
             }`}
           >
-            {sendResult.success ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
+            {sendResult.success ? <Check className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
             <span>{sendResult.message}</span>
           </div>
         )}
@@ -198,62 +222,71 @@ export const EmailModal: React.FC<EmailModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center space-x-1">
+        <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
+          <div className="flex items-center space-x-1.5">
             <button
               type="button"
               onClick={handleCopy}
               disabled={isSending}
               className="py-2.5 px-3 rounded-xl text-xs font-bold border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 flex items-center space-x-1.5 transition-colors"
-              title="Text in Zwischenablage kopieren"
+              title="Text in Zwischenablage kopieren (z. B. für WhatsApp)"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{copied ? 'Kopiert!' : 'Kopieren'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenClientFallback}
-              disabled={isSending}
-              className="py-2.5 px-2 rounded-xl text-[11px] font-medium text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
-              title="In externer Mail-App öffnen (Fallback)"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <span>{copied ? 'Kopiert!' : 'Text kopieren'}</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-end">
             <button
               type="button"
               onClick={onClose}
               disabled={isSending}
               className="py-2.5 px-3 rounded-xl text-xs font-semibold text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
             >
-              Abbrechen
+              Schließen
             </button>
+
             <button
               type="button"
-              onClick={handleDirectSend}
-              disabled={isSending || sendResult?.success}
-              className="py-2.5 px-4 rounded-xl text-xs font-bold text-white flex items-center space-x-2 shadow-sm transition-all hover:opacity-95 disabled:opacity-50 m3-ripple"
-              style={{ backgroundColor: theme.primary }}
+              onClick={handleOpenClientFallback}
+              disabled={isSending}
+              className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all m3-ripple ${
+                !hasWebhook 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20' 
+                  : 'bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700'
+              }`}
+              title="In Standard-Mailprogramm öffnen"
             >
-              {isSending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Wird direkt gesendet...</span>
-                </>
-              ) : sendResult?.success ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>Gesendet!</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Direkt aus Tool senden</span>
-                </>
-              )}
+              <ExternalLink className="w-4 h-4" />
+              <span>In Mail-App öffnen</span>
             </button>
+
+            {hasWebhook && (
+              <button
+                type="button"
+                onClick={handleDirectSend}
+                disabled={isSending || sendResult?.success}
+                className="py-2.5 px-4 rounded-xl text-xs font-bold text-white flex items-center space-x-2 shadow-sm transition-all hover:opacity-95 disabled:opacity-50 m3-ripple"
+                style={{ backgroundColor: theme.primary }}
+              >
+                {isSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Sendet...</span>
+                  </>
+                ) : sendResult?.success ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Gesendet!</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Via Webhook senden</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
 

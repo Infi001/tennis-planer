@@ -72,16 +72,25 @@ export async function sendDirectEmail(options: {
 
   const config = options.config || StorageService.getEmailConfig();
 
-  // 1. Webhook Endpoint (e.g. Zapier, Make, n8n, Cloudflare Worker, Formspree, etc.)
+  // 1. Webhook Endpoint (e.g. Formspree, Make.com, Zapier, n8n, Cloudflare Worker)
   if (config.endpointUrl && config.endpointUrl.trim()) {
     try {
       const res = await fetch(config.endpointUrl.trim(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json' 
+        },
         body: JSON.stringify({
+          // Compatible with Formspree, Make, Zapier, n8n, etc.
           to: recipient,
+          email: recipient, // for Formspree
+          _replyto: config.fromEmail || recipient,
           subject: options.subject,
+          message: options.body, // for Formspree
           text: options.body,
+          body: options.body,
+          name: config.fromName || 'Tennis Trainingsplaner',
           fromName: config.fromName || 'Tennis Trainingsplaner',
           fromEmail: config.fromEmail || undefined,
           timestamp: new Date().toISOString(),
@@ -91,15 +100,29 @@ export async function sendDirectEmail(options: {
       if (res.ok) {
         return { 
           success: true, 
-          message: `E-Mail direkt über Webhook an ${recipient} gesendet!` 
+          message: `E-Mail erfolgreich via Webhook an ${recipient} übermittelt!` 
+        };
+      } else {
+        const errText = await res.text().catch(() => '');
+        let detail = '';
+        try {
+          const parsed = JSON.parse(errText);
+          detail = parsed.error || parsed.message || (parsed.errors && parsed.errors.map((e: any) => e.message).join(', ')) || '';
+        } catch {}
+        return {
+          success: false,
+          message: `Webhook-Fehler (Status ${res.status}): ${detail || res.statusText || 'Versand nicht akzeptiert'}. Bitte prüfe die Webhook-URL in den Einstellungen.`
         };
       }
     } catch (err: any) {
-      console.warn('Webhook dispatch failed, trying fallbacks:', err);
+      return {
+        success: false,
+        message: `Verbindungsfehler zur Webhook-URL: ${err.message || 'Netzwerkfehler'}. Bitte prüfe die URL.`
+      };
     }
   }
 
-  // 2. Supabase Edge Function (send-email)
+  // 2. Supabase Edge Function (send-email) if active
   const sb = getSupabase();
   if (sb && config.provider === 'supabase') {
     try {
@@ -116,59 +139,24 @@ export async function sendDirectEmail(options: {
           success: true, 
           message: `E-Mail direkt über Supabase an ${recipient} gesendet!` 
         };
-      }
-    } catch (err) {
-      console.warn('Supabase edge function error:', err);
-    }
-  }
-
-  // 3. Resend API Key if configured
-  if (config.apiKey && config.apiKey.trim()) {
-    try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.apiKey.trim()}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: config.fromEmail || 'Tennis Trainingsplaner <onboarding@resend.dev>',
-          to: [recipient],
-          subject: options.subject,
-          text: options.body,
-        }),
-      });
-      if (res.ok) {
-        return { 
-          success: true, 
-          message: `E-Mail erfolgreich via Resend an ${recipient} gesendet!` 
+      } else {
+        return {
+          success: false,
+          message: `Supabase Edge Function Fehler: ${error.message || 'Fehler beim Senden'}`
         };
       }
-    } catch (err) {
-      console.warn('Resend direct call failed:', err);
+    } catch (err: any) {
+      return {
+        success: false,
+        message: `Supabase Verbindungsfehler: ${err.message}`
+      };
     }
   }
 
-  // 4. In-App Direct Dispatch Mode
-  // Simulates immediate cloud delivery and logs the notification
-  await new Promise(resolve => setTimeout(resolve, 600));
-
-  console.log(`[Tennis Email Service] Direct Email Sent to ${recipient}:\nSubject: ${options.subject}\n${options.body}`);
-  
-  // Store sent record in sessionStorage for activity log
-  try {
-    const logs = JSON.parse(sessionStorage.getItem('tennis_sent_emails') || '[]');
-    logs.unshift({
-      to: recipient,
-      subject: options.subject,
-      timestamp: new Date().toISOString()
-    });
-    sessionStorage.setItem('tennis_sent_emails', JSON.stringify(logs.slice(0, 20)));
-  } catch {}
-
+  // 3. If no delivery service configured, do NOT fake delivery!
   return {
-    success: true,
-    message: `E-Mail direkt an ${recipient} gesendet!`
+    success: false,
+    message: 'Kein E-Mail-Dienst eingerichtet! Bitte trage unter Admin ➔ Einstellungen eine Webhook-URL (z. B. kostenlose Formspree-URL) ein, oder klicke auf "In Mail-App öffnen", um die E-Mail über dein normales E-Mail-Programm abzusenden.'
   };
 }
 
@@ -184,5 +172,5 @@ export async function sendDirectSpringerEmail(params: SpringerEmailParams): Prom
 export function openSpringerEmailClient(params: SpringerEmailParams): void {
   const { to, subject, body } = generateSpringerEmailContent(params);
   const mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.open(mailtoUrl, '_blank');
+  window.location.href = mailtoUrl;
 }
