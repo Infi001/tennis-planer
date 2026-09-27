@@ -113,7 +113,7 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
             {nextSpringer ? (
               <>Der freie Platz geht vorrangig an <strong>{nextSpringer.name}</strong> (Springer).</>
             ) : (
-              <>Der freie Platz wird für nachrückende Vereinsmitglieder freigegeben.</>
+              <>Der freie Platz wird für nachrückende Gruppenmitglieder freigegeben.</>
             )}
           </p>
         </div>

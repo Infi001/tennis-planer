@@ -139,7 +139,7 @@ export const HelpView: React.FC = () => {
               <li><strong>1. Springer:</strong> Hat das Vorrecht, den frei gewordenen Platz sofort zu übernehmen.</li>
               <li><strong>2. Springer:</strong> Rückt nach, sobald der 1. Springer absagt oder keine Zeit hat.</li>
               <li><strong>Weitere Springer (z. B. 3. Springer):</strong> Werden schrittweise nacheinander aktiviert.</li>
-              <li><strong>Offener Pool:</strong> Sagen alle Springer ab, wird der Platz für alle weiteren Vereinsmitglieder freigegeben.</li>
+              <li><strong>Offener Pool:</strong> Sagen alle Springer ab, wird der Platz für alle weiteren Gruppenmitglieder freigegeben.</li>
             </ol>
             <p>
               <strong>E-Mail-Direktversand:</strong> Springer können direkt aus der App per E-Mail benachrichtigt werden, sobald ein Platz frei wird – inklusive Klick-Link zum sofortigen Annehmen!

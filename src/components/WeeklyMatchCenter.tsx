@@ -799,7 +799,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                           </div>
                           <div className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
                             {cascade.openForAnyoneCount > 0 ? (
-                              <span className="text-emerald-700 dark:text-emerald-400 font-bold">Freigegeben für alle Vereinsmitglieder</span>
+                              <span className="text-emerald-700 dark:text-emerald-400 font-bold">Freigegeben für alle Gruppenmitglieder</span>
                             ) : (
                               <span>Vorrang für {prioName}</span>
                             )}

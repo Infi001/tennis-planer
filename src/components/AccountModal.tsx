@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Check, Users, Shield, Copy, LogOut, ExternalLink, Key } from 'lucide-react';
+import { X, Check, Users, Shield, Copy, LogOut, ExternalLink, Key, Mail, Bell, BellOff } from 'lucide-react';
 import { Player } from '../types/tennis';
 
 interface AccountModalProps {
@@ -12,6 +12,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
     players, 
     currentUser, 
     setCurrentUser, 
+    updatePlayer,
     logout, 
     theme,
     isImpersonating,
@@ -21,6 +22,11 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
   } = useApp();
   const [copiedLink, setCopiedLink] = useState(false);
   const [showSwitchGrid, setShowSwitchGrid] = useState(false);
+
+  // Email and notification preferences
+  const [emailInput, setEmailInput] = useState(currentUser?.email || '');
+  const [emailNotifications, setEmailNotifications] = useState(currentUser?.emailNotifications !== false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
   const personalLink = currentUser?.accessToken 
     ? `${window.location.origin}/?token=${currentUser.accessToken}`
@@ -32,6 +38,18 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    updatePlayer({
+      ...currentUser,
+      email: emailInput.trim(),
+      emailNotifications,
+    });
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 3000);
+  };
+
   const handleLogout = () => {
     logout();
     onClose();
@@ -40,7 +58,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-md bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800 space-y-5"
+        className="w-full max-w-md bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800 space-y-4 max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
       >
@@ -59,7 +77,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
                 Mein Profil
               </h3>
               <p className="text-xs text-neutral-500">
-                Kontoverwaltung & Zugangslink
+                Kontoverwaltung & E-Mail-Einstellungen
               </p>
             </div>
           </div>
@@ -90,11 +108,63 @@ export const AccountModal: React.FC<AccountModalProps> = ({ onClose }) => {
                 )}
               </div>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                {currentUser?.isAdmin ? 'Voller Administrator-Zugriff' : 'Vereinsmitglied'}
+                {currentUser?.isAdmin ? 'Voller Administrator-Zugriff' : 'Gruppenmitglied'}
               </p>
             </div>
           </div>
         </div>
+
+        {/* E-Mail & Benachrichtigungs-Einstellungen */}
+        <form onSubmit={handleSaveProfile} className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-700/80 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-blue-500" />
+              <span>Deine E-Mail-Adresse</span>
+            </label>
+            {savedSuccess && (
+              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 animate-in fade-in">
+                <Check className="w-3 h-3" /> Gespeichert!
+              </span>
+            )}
+          </div>
+
+          <input
+            type="email"
+            value={emailInput}
+            onChange={(e) => setEmailInput(e.target.value)}
+            placeholder="z. B. deinedresse@tcrw-senne.de"
+            className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <label className="flex items-start space-x-2.5 cursor-pointer pt-1 select-none">
+            <input
+              type="checkbox"
+              checked={emailNotifications}
+              onChange={(e) => setEmailNotifications(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded text-blue-600 border-neutral-300 dark:border-neutral-600 focus:ring-blue-500"
+            />
+            <div className="text-xs text-neutral-700 dark:text-neutral-300 leading-snug">
+              <span className="font-semibold block flex items-center gap-1.5">
+                {emailNotifications ? <Bell className="w-3 h-3 text-blue-500" /> : <BellOff className="w-3 h-3 text-neutral-400" />}
+                E-Mail-Benachrichtigungen empfangen
+              </span>
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                Benachrichtige mich per E-Mail, wenn ich als Springer an der Reihe bin oder ein Platz frei wird.
+              </span>
+            </div>
+          </label>
+
+          <div className="pt-1 flex justify-end">
+            <button
+              type="submit"
+              className="py-1.5 px-3 rounded-xl text-xs font-bold text-white transition-all shadow-xs flex items-center gap-1 m3-ripple"
+              style={{ backgroundColor: savedSuccess ? '#10B981' : theme.primary }}
+            >
+              {savedSuccess ? <Check className="w-3.5 h-3.5" /> : null}
+              <span>{savedSuccess ? 'Gespeichert' : 'E-Mail-Einstellungen speichern'}</span>
+            </button>
+          </div>
+        </form>
 
         {/* Personal Magic Link Box */}
         <div className="space-y-1.5">

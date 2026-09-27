@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Player, TrainingWeek } from '../types/tennis';
 import { generateSpringerEmailContent, sendDirectEmail } from '../services/emailService';
 import { StorageService } from '../services/storage';
-import { X, Mail, Send, Loader2, Copy, Check, AlertCircle, ExternalLink } from 'lucide-react';
+import { X, Mail, Send, Loader2, Copy, Check, AlertCircle, ExternalLink, BellOff } from 'lucide-react';
 
 interface EmailModalProps {
   springer: Player;
@@ -138,6 +138,14 @@ export const EmailModal: React.FC<EmailModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Opt-out notice if springer disabled notifications */}
+        {springer.emailNotifications === false && (
+          <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200 flex items-center space-x-2">
+            <BellOff className="w-4 h-4 text-amber-600 shrink-0" />
+            <span><strong>Hinweis:</strong> {springer.name} hat E-Mail-Benachrichtigungen im Profil deaktiviert.</span>
+          </div>
+        )}
 
         {/* Tip banner if no webhook is configured */}
         {!hasWebhook && (

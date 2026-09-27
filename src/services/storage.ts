@@ -316,25 +316,22 @@ export class StorageService {
   // --- Email Config ---
   static getEmailConfig(): EmailConfig {
     const raw = localStorage.getItem(STORAGE_KEYS.EMAIL_CONFIG);
-    if (!raw) {
-      return {
-        provider: 'webhook',
-        fromName: 'TC Rot-Weiß Senne',
-        fromEmail: '',
-        endpointUrl: '',
-        apiKey: '',
-      };
-    }
+    const defaults: EmailConfig = {
+      provider: 'smtp',
+      fromName: 'TC Rot-Weiß Senne',
+      fromEmail: 'info@tcrw-senne.de',
+      endpointUrl: '',
+      smtpHost: 'mail.tcrw-senne.de',
+      smtpPort: 465,
+      smtpUser: '',
+      smtpPass: '',
+      smtpSecure: true,
+    };
+    if (!raw) return defaults;
     try {
-      return JSON.parse(raw);
+      return { ...defaults, ...JSON.parse(raw) };
     } catch {
-      return {
-        provider: 'webhook',
-        fromName: 'TC Rot-Weiß Senne',
-        fromEmail: '',
-        endpointUrl: '',
-        apiKey: '',
-      };
+      return defaults;
     }
   }
 

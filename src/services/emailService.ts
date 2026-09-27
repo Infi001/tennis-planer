@@ -56,6 +56,31 @@ ${clubName}`;
   };
 }
 
+// Helper to dynamically load SMTPJS for direct browser-to-SMTP dispatch
+let smtpJsPromise: Promise<void> | null = null;
+function loadSmtpJs(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.reject(new Error('Nur im Browser verfügbar'));
+  if ((window as any).Email) return Promise.resolve();
+  if (smtpJsPromise) return smtpJsPromise;
+
+  smtpJsPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[src*="smtpjs"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => reject(new Error('Konnte SMTP.js nicht laden')));
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://smtpjs.com/v3/smtp.js';
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Konnte SMTP-Client (smtpjs.com) nicht laden. Bitte Internetverbindung prüfen.'));
+    document.head.appendChild(script);
+  });
+
+  return smtpJsPromise;
+}
+
 export async function sendDirectEmail(options: {
   to: string;
   subject: string;
@@ -72,7 +97,7 @@ export async function sendDirectEmail(options: {
 
   const config = options.config || StorageService.getEmailConfig();
 
-  // 1. Webhook Endpoint (e.g. Formspree, Make.com, Zapier, n8n, Cloudflare Worker)
+  // 1. Website-Endpoint auf tcrw-senne.de (send-mail.php oder Webhook)
   if (config.endpointUrl && config.endpointUrl.trim()) {
     try {
       const res = await fetch(config.endpointUrl.trim(), {
@@ -82,17 +107,15 @@ export async function sendDirectEmail(options: {
           'Accept': 'application/json' 
         },
         body: JSON.stringify({
-          // Compatible with Formspree, Make, Zapier, n8n, etc.
           to: recipient,
-          email: recipient, // for Formspree
+          email: recipient,
           _replyto: config.fromEmail || recipient,
           subject: options.subject,
-          message: options.body, // for Formspree
+          message: options.body,
           text: options.body,
           body: options.body,
-          name: config.fromName || 'Tennis Trainingsplaner',
-          fromName: config.fromName || 'Tennis Trainingsplaner',
-          fromEmail: config.fromEmail || undefined,
+          fromName: config.fromName || 'TC Rot-Weiß Senne',
+          fromEmail: config.fromEmail || config.smtpUser || 'info@tcrw-senne.de',
           timestamp: new Date().toISOString(),
         }),
       });
@@ -100,7 +123,7 @@ export async function sendDirectEmail(options: {
       if (res.ok) {
         return { 
           success: true, 
-          message: `E-Mail erfolgreich via Webhook an ${recipient} übermittelt!` 
+          message: `E-Mail erfolgreich über deinen Server (${config.endpointUrl}) an ${recipient} gesendet!` 
         };
       } else {
         const errText = await res.text().catch(() => '');
@@ -111,18 +134,56 @@ export async function sendDirectEmail(options: {
         } catch {}
         return {
           success: false,
-          message: `Webhook-Fehler (Status ${res.status}): ${detail || res.statusText || 'Versand nicht akzeptiert'}. Bitte prüfe die Webhook-URL in den Einstellungen.`
+          message: `Server-Antwort (Status ${res.status}): ${detail || res.statusText || 'Versand nicht akzeptiert'}. Bitte prüfe die Skript-URL in den Einstellungen.`
         };
       }
     } catch (err: any) {
       return {
         success: false,
-        message: `Verbindungsfehler zur Webhook-URL: ${err.message || 'Netzwerkfehler'}. Bitte prüfe die URL.`
+        message: `Verbindungsfehler zu ${config.endpointUrl}: ${err.message || 'Netzwerkfehler'}. Bitte prüfe, ob die Datei auf dem Server erreichbar ist.`
       };
     }
   }
 
-  // 2. Supabase Edge Function (send-email) if active
+  // 2. Direkter SMTP-Server (z. B. mail.tcrw-senne.de)
+  if (config.smtpHost && config.smtpUser && config.smtpPass) {
+    try {
+      await loadSmtpJs();
+      if (!(window as any).Email || typeof (window as any).Email.send !== 'function') {
+        throw new Error('SMTP-Dienst konnte nicht initialisiert werden.');
+      }
+
+      const senderEmail = config.fromEmail?.trim() || config.smtpUser.trim();
+      const sendResult = await (window as any).Email.send({
+        Host: config.smtpHost.trim(),
+        Username: config.smtpUser.trim(),
+        Password: config.smtpPass.trim(),
+        To: recipient,
+        From: senderEmail,
+        Subject: options.subject,
+        Body: options.body.replace(/\n/g, '<br/>'),
+      });
+
+      if (sendResult === 'OK') {
+        return {
+          success: true,
+          message: `E-Mail erfolgreich via SMTP (${config.smtpHost}) an ${recipient} gesendet!`,
+        };
+      } else {
+        return {
+          success: false,
+          message: `SMTP-Fehler von ${config.smtpHost}: ${sendResult}`,
+        };
+      }
+    } catch (err: any) {
+      return {
+        success: false,
+        message: `SMTP-Verbindungsfehler: ${err.message || 'Fehler beim Kontaktieren des SMTP-Servers'}`,
+      };
+    }
+  }
+
+  // 3. Supabase Edge Function (send-email) if active
   const sb = getSupabase();
   if (sb && config.provider === 'supabase') {
     try {
@@ -153,10 +214,10 @@ export async function sendDirectEmail(options: {
     }
   }
 
-  // 3. If no delivery service configured, do NOT fake delivery!
+  // 4. If no delivery service configured:
   return {
     success: false,
-    message: 'Kein E-Mail-Dienst eingerichtet! Bitte trage unter Admin ➔ Einstellungen eine Webhook-URL (z. B. kostenlose Formspree-URL) ein, oder klicke auf "In Mail-App öffnen", um die E-Mail über dein normales E-Mail-Programm abzusenden.'
+    message: 'Kein E-Mail-Server eingerichtet! Bitte trage unter Admin ➔ Einstellungen deine SMTP-Zugangsdaten (oder die URL zu send-mail.php auf tcrw-senne.de) ein, oder nutze den Button "In Mail-App öffnen".'
   };
 }
 

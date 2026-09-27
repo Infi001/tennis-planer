@@ -72,6 +72,7 @@ export const PlayerManagement: React.FC = () => {
   const [formPhone, setFormPhone] = useState('');
   const [formPin, setFormPin] = useState('');
   const [formIsAdmin, setFormIsAdmin] = useState(false);
+  const [formEmailNotifications, setFormEmailNotifications] = useState(true);
 
   const openAddModal = () => {
     setFormName('');
@@ -81,6 +82,7 @@ export const PlayerManagement: React.FC = () => {
     setFormPhone('');
     setFormPin('');
     setFormIsAdmin(false);
+    setFormEmailNotifications(true);
     setIsAddingNew(true);
   };
 
@@ -93,6 +95,7 @@ export const PlayerManagement: React.FC = () => {
     setFormPhone(player.phone || '');
     setFormPin(player.pin || '');
     setFormIsAdmin(!!player.isAdmin);
+    setFormEmailNotifications(player.emailNotifications !== false);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -110,6 +113,7 @@ export const PlayerManagement: React.FC = () => {
         phone: formPhone.trim() || undefined,
         pin: formPin.trim() || undefined,
         isAdmin: formIsAdmin,
+        emailNotifications: formEmailNotifications,
       });
       setIsAddingNew(false);
     } else if (editingPlayer) {
@@ -122,6 +126,7 @@ export const PlayerManagement: React.FC = () => {
         phone: formPhone.trim() || undefined,
         pin: formPin.trim() || undefined,
         isAdmin: formIsAdmin,
+        emailNotifications: formEmailNotifications,
       });
       setEditingPlayer(null);
     }
@@ -436,6 +441,25 @@ export const PlayerManagement: React.FC = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Email Notifications Checkbox */}
+              <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-blue-500" />
+                    <span>E-Mail-Benachrichtigungen</span>
+                  </div>
+                  <div className="text-[10px] text-neutral-500">
+                    E-Mails erhalten, wenn als Springer eingeteilt oder ein Platz frei wird
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formEmailNotifications}
+                  onChange={(e) => setFormEmailNotifications(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 border-neutral-300 dark:border-neutral-600 focus:ring-blue-500"
+                />
               </div>
 
               {/* Admin Checkbox */}

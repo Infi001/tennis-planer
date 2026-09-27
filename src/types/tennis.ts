@@ -25,6 +25,7 @@ export interface Player {
   pin?: string;
   isAdmin?: boolean;
   accessToken?: string;
+  emailNotifications?: boolean; // Ob der Spieler E-Mail-Benachrichtigungen erhalten möchte (Standard: true)
 }
 
 export interface SlotAssignment {
@@ -103,10 +104,17 @@ export interface ClubTheme {
 }
 
 export interface EmailConfig {
-  provider: 'webhook' | 'resend' | 'supabase';
-  endpointUrl?: string; // Webhook URL (Zapier, Make, n8n, Cloudflare Worker, Formspree)
-  apiKey?: string;     // e.g. Resend re_...
-  fromName?: string;   // e.g. "TC Rot-Weiß Senne"
-  fromEmail?: string;  // e.g. "tennis@tc-senne.de"
+  provider: 'smtp' | 'webhook' | 'supabase';
+  endpointUrl?: string; // Website-Relay auf tcrw-senne.de (z. B. https://tcrw-senne.de/send-mail.php)
+  fromName?: string;   // z. B. "TC Rot-Weiß Senne"
+  fromEmail?: string;  // z. B. "info@tcrw-senne.de"
+  // Eigener SMTP Server Konfiguration (z. B. mail.tcrw-senne.de)
+  smtpHost?: string;   // z. B. "mail.tcrw-senne.de"
+  smtpPort?: number;   // z. B. 465 (SSL) oder 587 (TLS)
+  smtpUser?: string;   // z. B. "training@tcrw-senne.de"
+  smtpPass?: string;   // Passwort für das Postfach
+  smtpSecure?: boolean;// SSL/TLS aktiv
+  apiKey?: string;
 }
+
 
