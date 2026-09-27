@@ -21,15 +21,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Club Logo & Brand */}
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+        <a href="#/wochenplan" className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 group no-underline">
           <div 
-            className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[var(--club-primary)] shadow-sm transition-transform duration-200 hover:scale-105 bg-white"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[var(--club-primary)] shadow-sm transition-transform duration-200 group-hover:scale-105 bg-white shrink-0"
           >
             🎾
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white dark:text-neutral-50 truncate">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white dark:text-neutral-50 truncate group-hover:opacity-90">
                 {theme.clubName}
               </span>
               <span 
@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
           </div>
-        </div>
+        </a>
 
         {/* Action Controls & User Switcher */}
         <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">

@@ -12,37 +12,43 @@ interface NavigationTabsProps {
 export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTabChange }) => {
   const { theme, absences, currentUser } = useApp();
 
-  const tabs: Array<{ id: TabKey; label: string; icon: React.ReactNode; badge?: number }> = [
+  const tabs: Array<{ id: TabKey; label: string; icon: React.ReactNode; badge?: number; hash: string }> = [
     {
       id: 'matchcenter',
       label: 'Wochenplan',
       icon: <Calendar className="w-5 h-5" />,
+      hash: '#/wochenplan',
     },
     {
       id: 'schedule',
       label: 'Gesamtplan',
       icon: <Table2 className="w-5 h-5" />,
+      hash: '#/gesamtplan',
     },
     {
       id: 'calendar',
       label: 'Kalender',
       icon: <Calendar className="w-5 h-5" />,
+      hash: '#/kalender',
     },
     {
       id: 'absences',
       label: 'Abwesenheiten',
       icon: <Plane className="w-5 h-5" />,
       badge: absences.length > 0 ? absences.length : undefined,
+      hash: '#/abwesenheiten',
     },
     {
       id: 'stats',
       label: 'Statistik',
       icon: <BarChart3 className="w-5 h-5" />,
+      hash: '#/statistik',
     },
     {
       id: 'help',
       label: 'Hilfe',
       icon: <HelpCircle className="w-5 h-5" />,
+      hash: '#/hilfe',
     }
   ];
 
@@ -51,6 +57,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
       id: 'admin',
       label: 'Admin',
       icon: <Shield className="w-5 h-5" />,
+      hash: '#/admin',
     });
   }
 
@@ -60,10 +67,16 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
-            <button
+            <a
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1 sm:py-1.5 px-0.5 sm:px-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all m3-ripple relative ${
+              href={tab.hash}
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                  e.preventDefault();
+                  onTabChange(tab.id);
+                }
+              }}
+              className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1 sm:py-1.5 px-0.5 sm:px-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all m3-ripple relative no-underline select-none ${
                 isActive
                   ? 'text-neutral-950 dark:text-white font-extrabold bg-neutral-100/90 dark:bg-neutral-800/90 shadow-2xs'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50'
@@ -81,7 +94,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
                   {tab.badge}
                 </span>
               )}
-            </button>
+            </a>
           );
         })}
       </div>

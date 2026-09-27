@@ -22,11 +22,23 @@ export type AdminSubTab = 'players' | 'dates' | 'optimizer' | 'settings';
 
 interface AdminDashboardProps {
   initialSubTab?: AdminSubTab;
+  onSubTabChange?: (tab: AdminSubTab) => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 'players' }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 'players', onSubTabChange }) => {
   const { currentUser, players, weeks, theme } = useApp();
   const [activeSubTab, setActiveSubTab] = useState<AdminSubTab>(initialSubTab);
+
+  React.useEffect(() => {
+    if (initialSubTab && initialSubTab !== activeSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
+  const handleSubTabClick = (tab: AdminSubTab) => {
+    setActiveSubTab(tab);
+    onSubTabChange?.(tab);
+  };
 
   // Calculate live overview metrics
   const activeWeeksCount = weeks.filter(w => !w.isCancelled).length;
@@ -132,7 +144,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 
       {/* Sub-Navigation Pill Tabs */}
       <div className="flex flex-wrap items-center gap-1 sm:gap-2 bg-white dark:bg-[var(--md-sys-color-surface)]/80 p-1.5 rounded-2xl border border-neutral-200/60 dark:border-neutral-800 shadow-xs max-w-2xl mx-auto">
         <button
-          onClick={() => setActiveSubTab('players')}
+          onClick={() => handleSubTabClick('players')}
           className={`flex-1 min-w-[120px] flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all m3-ripple ${
             activeSubTab === 'players'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm'
@@ -147,7 +159,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 
         </button>
 
         <button
-          onClick={() => setActiveSubTab('dates')}
+          onClick={() => handleSubTabClick('dates')}
           className={`flex-1 min-w-[120px] flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all m3-ripple ${
             activeSubTab === 'dates'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm'
@@ -162,7 +174,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 
         </button>
 
         <button
-          onClick={() => setActiveSubTab('optimizer')}
+          onClick={() => handleSubTabClick('optimizer')}
           className={`flex-1 min-w-[120px] flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all m3-ripple ${
             activeSubTab === 'optimizer'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm'
@@ -177,7 +189,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialSubTab = 
         </button>
 
         <button
-          onClick={() => setActiveSubTab('settings')}
+          onClick={() => handleSubTabClick('settings')}
           className={`flex-1 min-w-[120px] flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all m3-ripple ${
             activeSubTab === 'settings'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm'

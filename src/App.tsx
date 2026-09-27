@@ -6,7 +6,7 @@ import { WeeklyMatchCenter } from './components/WeeklyMatchCenter';
 import { FullScheduleTable } from './components/FullScheduleTable';
 import { AbsenceManager } from './components/AbsenceManager';
 import { StatsDashboard } from './components/StatsDashboard';
-import { AdminDashboard } from './components/admin/AdminDashboard';
+import { AdminDashboard, AdminSubTab } from './components/admin/AdminDashboard';
 import { DeclineModal } from './components/DeclineModal';
 import { SwapModal } from './components/SwapModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
@@ -20,6 +20,7 @@ import { HelpView } from './components/HelpView';
 import { SlotTime } from './types/tennis';
 import { Calendar, Share2, Sparkles, Eye, ArrowRight } from 'lucide-react';
 import { generateMaterialDynamicPalette } from './utils/materialTheme';
+import { parseCurrentRoute, syncRouteToUrl } from './utils/urlRouting';
 
 const AppContent: React.FC = () => {
   const { 
@@ -32,7 +33,15 @@ const AppContent: React.FC = () => {
     actualAdminPlayer,
     exitImpersonation
   } = useApp();
-  const [activeTab, setActiveTab] = useState<TabKey>('matchcenter');
+  
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    const route = parseCurrentRoute();
+    return route.tab;
+  });
+  const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>(() => {
+    const route = parseCurrentRoute();
+    return route.adminSubTab || 'players';
+  });
 
   // Modals state
   const [declinePlayerId, setDeclinePlayerId] = useState<string | null>(null);
@@ -88,10 +97,63 @@ const AppContent: React.FC = () => {
     }
   }, [theme, isDarkMode]);
 
+  // Listen for browser navigation (Back / Forward / direct URL changes)
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const route = parseCurrentRoute();
+      if (route.showImpressum) {
+        setShowImpressum(true);
+      }
+      setActiveTab(route.tab);
+      if (route.adminSubTab) {
+        setAdminSubTab(route.adminSubTab);
+      }
+      if (route.weekId) {
+        setSelectedWeekId(route.weekId);
+      }
+    };
+
+    handleUrlChange();
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+    };
+  }, [setSelectedWeekId]);
+
+  // Handle user tab change with immediate URL sync
+  const handleTabChange = (newTab: TabKey) => {
+    setActiveTab(newTab);
+    syncRouteToUrl({
+      tab: newTab,
+      adminSubTab: newTab === 'admin' ? adminSubTab : undefined,
+    });
+  };
+
+  const handleAdminSubTabChange = (newSubTab: AdminSubTab) => {
+    setAdminSubTab(newSubTab);
+    syncRouteToUrl({
+      tab: 'admin',
+      adminSubTab: newSubTab,
+    });
+  };
+
   const handleSelectWeekFromTable = (weekId: string) => {
     setSelectedWeekId(weekId);
     setActiveTab('matchcenter');
+    syncRouteToUrl({
+      tab: 'matchcenter',
+      weekId,
+    });
   };
+
+  // If a non-admin is on the admin tab, redirect to matchcenter
+  useEffect(() => {
+    if (activeTab === 'admin' && !currentUser?.isAdmin) {
+      handleTabChange('matchcenter');
+    }
+  }, [activeTab, currentUser?.isAdmin]);
 
   if (!isLoggedIn) {
     return <LoginScreen />;
@@ -174,14 +236,20 @@ const AppContent: React.FC = () => {
         )}
 
         {activeTab === 'admin' && (
-          <AdminDashboard />
+          <AdminDashboard 
+            initialSubTab={adminSubTab}
+            onSubTabChange={handleAdminSubTabChange}
+          />
         )}
 
       
         {/* Impressum Link */}
         <div className="pt-8 pb-4 flex justify-center">
           <button 
-            onClick={() => window.dispatchEvent(new CustomEvent('open-impressum'))} 
+            onClick={() => {
+              setShowImpressum(true);
+              syncRouteToUrl({ tab: activeTab, showImpressum: true });
+            }} 
             className="text-[10px] text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors px-4 py-2"
           >
             Impressum & Datenschutz
@@ -193,7 +261,7 @@ const AppContent: React.FC = () => {
       {/* Docked Bottom Navigation Bar */}
       <NavigationTabs 
         activeTab={activeTab} 
-        onTabChange={setActiveTab} 
+        onTabChange={handleTabChange} 
       />
 
       
@@ -226,7 +294,12 @@ const AppContent: React.FC = () => {
       )}
 
       {showImpressum && (
-        <ImpressumModal onClose={() => setShowImpressum(false)} />
+        <ImpressumModal onClose={() => {
+          setShowImpressum(false);
+          if (window.location.hash.toLowerCase().includes('impressum') || window.location.hash.toLowerCase().includes('datenschutz')) {
+            syncRouteToUrl({ tab: activeTab, adminSubTab }, true);
+          }
+        }} />
       )}
 
       {showUserSwitch && (
