@@ -97,55 +97,7 @@ export async function sendDirectEmail(options: {
 
   const config = options.config || StorageService.getEmailConfig();
 
-  // 1. Website-Endpoint auf tcrw-senne.de (send-mail.php oder Webhook)
-  if (config.endpointUrl && config.endpointUrl.trim()) {
-    try {
-      const res = await fetch(config.endpointUrl.trim(), {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json' 
-        },
-        body: JSON.stringify({
-          to: recipient,
-          email: recipient,
-          _replyto: config.fromEmail || recipient,
-          subject: options.subject,
-          message: options.body,
-          text: options.body,
-          body: options.body,
-          fromName: config.fromName || 'TC Rot-Weiß Senne',
-          fromEmail: config.fromEmail || config.smtpUser || 'info@tcrw-senne.de',
-          timestamp: new Date().toISOString(),
-        }),
-      });
-
-      if (res.ok) {
-        return { 
-          success: true, 
-          message: `E-Mail erfolgreich über deinen Server (${config.endpointUrl}) an ${recipient} gesendet!` 
-        };
-      } else {
-        const errText = await res.text().catch(() => '');
-        let detail = '';
-        try {
-          const parsed = JSON.parse(errText);
-          detail = parsed.error || parsed.message || (parsed.errors && parsed.errors.map((e: any) => e.message).join(', ')) || '';
-        } catch {}
-        return {
-          success: false,
-          message: `Server-Antwort (Status ${res.status}): ${detail || res.statusText || 'Versand nicht akzeptiert'}. Bitte prüfe die Skript-URL in den Einstellungen.`
-        };
-      }
-    } catch (err: any) {
-      return {
-        success: false,
-        message: `Verbindungsfehler zu ${config.endpointUrl}: ${err.message || 'Netzwerkfehler'}. Bitte prüfe, ob die Datei auf dem Server erreichbar ist.`
-      };
-    }
-  }
-
-  // 2. Direkter SMTP-Server (z. B. mail.tcrw-senne.de)
+  // 1. Direkter SMTP-Server (z. B. mail.tcrw-senne.de)
   if (config.smtpHost && config.smtpUser && config.smtpPass) {
     try {
       await loadSmtpJs();
@@ -178,12 +130,12 @@ export async function sendDirectEmail(options: {
     } catch (err: any) {
       return {
         success: false,
-        message: `SMTP-Verbindungsfehler: ${err.message || 'Fehler beim Kontaktieren des SMTP-Servers'}`,
+        message: `SMTP-Verbindungsfehler (${config.smtpHost}): ${err.message || 'Fehler beim Kontaktieren des SMTP-Servers'}`,
       };
     }
   }
 
-  // 3. Supabase Edge Function (send-email) if active
+  // 2. Supabase Edge Function (send-email) if active
   const sb = getSupabase();
   if (sb && config.provider === 'supabase') {
     try {
@@ -214,10 +166,10 @@ export async function sendDirectEmail(options: {
     }
   }
 
-  // 4. If no delivery service configured:
+  // 3. If no delivery service configured:
   return {
     success: false,
-    message: 'Kein E-Mail-Server eingerichtet! Bitte trage unter Admin ➔ Einstellungen deine SMTP-Zugangsdaten (oder die URL zu send-mail.php auf tcrw-senne.de) ein, oder nutze den Button "In Mail-App öffnen".'
+    message: 'Kein SMTP-Server eingerichtet! Bitte trage unter Admin ➔ Einstellungen deine SMTP-Zugangsdaten (mail.tcrw-senne.de) ein, oder nutze den Button "In Mail-App öffnen".'
   };
 }
 

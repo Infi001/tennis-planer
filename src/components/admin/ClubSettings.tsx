@@ -21,9 +21,7 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  Server,
-  FileCode,
-  Copy
+  Server
 } from 'lucide-react';
 
 export const ClubSettings: React.FC = () => {
@@ -44,7 +42,6 @@ export const ClubSettings: React.FC = () => {
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   const [testEmailStatus, setTestEmailStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [showSmtpPass, setShowSmtpPass] = useState(false);
-  const [copiedScript, setCopiedScript] = useState(false);
 
   // Admin PIN / Password Change State
   const [currentAdminPin, setCurrentAdminPin] = useState('');
@@ -57,19 +54,6 @@ export const ClubSettings: React.FC = () => {
   const adminPlayers = players.filter(p => p.isAdmin);
   const [targetAdminId, setTargetAdminId] = useState(currentUser.id);
   const targetAdmin = players.find(p => p.id === targetAdminId) || currentUser;
-
-  const handleCopyPhpScript = async () => {
-    try {
-      const res = await fetch('/send-mail.php');
-      const text = await res.text();
-      await navigator.clipboard.writeText(text);
-      setCopiedScript(true);
-      setTimeout(() => setCopiedScript(false), 2500);
-    } catch {
-      setCopiedScript(true);
-      setTimeout(() => setCopiedScript(false), 2500);
-    }
-  };
 
   const handleUpdateAdminPin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,13 +139,12 @@ export const ClubSettings: React.FC = () => {
       });
       return;
     }
-    const hasEndpoint = emailConfig.endpointUrl && emailConfig.endpointUrl.trim();
     const hasSmtp = emailConfig.smtpHost && emailConfig.smtpUser && emailConfig.smtpPass;
 
-    if (!hasEndpoint && !hasSmtp) {
+    if (!hasSmtp) {
       setTestEmailStatus({
         success: false,
-        message: 'Kein E-Mail-Server konfiguriert! Bitte trage unten entweder die Website-Skript-URL (z. B. https://tcrw-senne.de/send-mail.php) oder deine SMTP-Zugangsdaten (mail.tcrw-senne.de) ein und klicke auf Speichern.',
+        message: 'Keine vollständigen SMTP-Zugangsdaten konfiguriert! Bitte trage Host, Benutzername und Passwort ein und klicke auf Speichern.',
       });
       return;
     }
@@ -171,7 +154,7 @@ export const ClubSettings: React.FC = () => {
       const res = await sendDirectEmail({
         to: testEmailAddress.trim(),
         subject: `🎾 Test-Nachricht von ${theme.clubName}`,
-        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer Direktversand über deinen Server funktioniert einwandfrei!`,
+        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer Direktversand über deinen SMTP-Server (${emailConfig.smtpHost}) funktioniert einwandfrei!`,
         config: emailConfig,
       });
       setTestEmailStatus(res);
@@ -445,26 +428,21 @@ export const ClubSettings: React.FC = () => {
         </p>
       </div>
 
-      {/* 3. E-Mail-Direktversand */}
+      {/* 3. E-Mail-Direktversand via SMTP */}
       <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
             <Mail className="w-4 h-4 text-blue-500" />
-            E-Mail-Benachrichtigungen (TCRW-Senne & SMTP)
+            E-Mail-Benachrichtigungen (SMTP-Server)
           </h3>
-          {emailConfig.endpointUrl && emailConfig.endpointUrl.trim() ? (
+          {emailConfig.smtpHost && emailConfig.smtpPass ? (
             <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
               <Check className="w-3 h-3" />
-              Website-Skript aktiv
-            </span>
-          ) : emailConfig.smtpHost && emailConfig.smtpPass ? (
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 flex items-center gap-1">
-              <Server className="w-3 h-3" />
               SMTP aktiv ({emailConfig.smtpHost})
             </span>
           ) : (
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-              Standard: Mail-App (Kein Server)
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+              SMTP nicht eingerichtet
             </span>
           )}
         </div>
@@ -473,105 +451,34 @@ export const ClubSettings: React.FC = () => {
         </p>
 
         {/* Explanation card */}
-        <div className="max-w-2xl p-4 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-200/80 dark:border-blue-800/80 text-xs text-blue-950 dark:text-blue-100 space-y-2.5">
+        <div className="max-w-2xl p-4 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-200/80 dark:border-blue-800/80 text-xs text-blue-950 dark:text-blue-100 space-y-1.5">
           <div className="font-bold flex items-center gap-1.5 text-blue-950 dark:text-blue-100 text-sm">
-            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span>Versand über tcrw-senne.de einrichten</span>
+            <Server className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>Direkter SMTP-Versand über deinen Mailserver ({emailConfig.smtpHost || 'mail.tcrw-senne.de'})</span>
           </div>
           <p className="text-[11px] text-blue-900/90 dark:text-blue-200 leading-relaxed">
-            Du kannst E-Mails direkt über deine Club-Domain <strong>tcrw-senne.de</strong> versenden, ohne externe Anbieter wie Formspree nutzen zu müssen:
+            E-Mails werden direkt über deine Club-Mailbox versendet. Trage unten einfach Host, Port, Benutzername und Passwort deines Mailkontos ein.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1 text-[11px]">
-            <div className="p-3 bg-white/80 dark:bg-neutral-800/70 rounded-xl border border-blue-100 dark:border-neutral-700/60 space-y-1">
-              <div className="font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                <FileCode className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Methode A: PHP-Skript (Empfohlen)</span>
-              </div>
-              <p className="text-neutral-600 dark:text-neutral-300">
-                Lade die fertige <code className="bg-neutral-100 dark:bg-neutral-900 px-1 py-0.5 rounded font-mono text-[10px]">send-mail.php</code> auf deinen Webspace bei tcrw-senne.de hoch und trage die URL unten ein.
-              </p>
-            </div>
-            <div className="p-3 bg-white/80 dark:bg-neutral-800/70 rounded-xl border border-blue-100 dark:border-neutral-700/60 space-y-1">
-              <div className="font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                <Server className="w-3.5 h-3.5 text-blue-600" />
-                <span>Methode B: Eigener SMTP-Server</span>
-              </div>
-              <p className="text-neutral-600 dark:text-neutral-300">
-                Trage deine SMTP-Zugangsdaten (z. B. <code className="bg-neutral-100 dark:bg-neutral-900 px-1 py-0.5 rounded font-mono text-[10px]">mail.tcrw-senne.de</code>) unten ein.
-              </p>
-            </div>
-          </div>
         </div>
 
         <form onSubmit={handleSaveEmailConfig} className="space-y-4 max-w-2xl bg-neutral-50 dark:bg-neutral-800/50 p-4 sm:p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-700/80">
-          {/* Option 1: TCRW-Senne Website Skript */}
-          <div className="space-y-2.5 pb-4 border-b border-neutral-200/60 dark:border-neutral-700/60">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-                <FileCode className="w-4 h-4 text-emerald-600" />
-                <span>Methode A: Website-Skript URL (tcrw-senne.de)</span>
-              </label>
-            </div>
-            <input
-              type="url"
-              value={emailConfig.endpointUrl || ''}
-              onChange={(e) => setEmailConfig({ ...emailConfig, endpointUrl: e.target.value })}
-              placeholder="https://tcrw-senne.de/send-mail.php"
-              className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <a
-                href="/send-mail.php"
-                download="send-mail.php"
-                className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>send-mail.php herunterladen</span>
-              </a>
-              <button
-                type="button"
-                onClick={handleCopyPhpScript}
-                className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5 transition-colors"
-              >
-                {copiedScript ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>PHP-Code kopiert!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>PHP-Code in Zwischenablage kopieren</span>
-                  </>
-                )}
-              </button>
-            </div>
-            <p className="text-[10px] text-neutral-500 dark:text-neutral-400">
-              Lade die Datei einfach per FTP in das Hauptverzeichnis deiner Website hoch. Wenn hier eine URL hinterlegt ist, wird diese bevorzugt genutzt.
-            </p>
-          </div>
-
-          {/* Option 2: Direkter SMTP-Server */}
-          <div className="space-y-2.5 pb-4 border-b border-neutral-200/60 dark:border-neutral-700/60">
-            <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-              <Server className="w-4 h-4 text-blue-600" />
-              <span>Methode B: Direkter SMTP-Server (mail.tcrw-senne.de)</span>
-            </label>
+          {/* SMTP Server Credentials */}
+          <div className="space-y-2.5">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div className="sm:col-span-2">
-                <label className="block text-[11px] font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                  SMTP Host
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                  SMTP Server / Host
                 </label>
                 <input
                   type="text"
                   value={emailConfig.smtpHost || ''}
                   onChange={(e) => setEmailConfig({ ...emailConfig, smtpHost: e.target.value })}
                   placeholder="mail.tcrw-senne.de"
-                  className="w-full text-xs font-mono p-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
                   Port
                 </label>
                 <input
@@ -579,14 +486,14 @@ export const ClubSettings: React.FC = () => {
                   value={emailConfig.smtpPort || 465}
                   onChange={(e) => setEmailConfig({ ...emailConfig, smtpPort: parseInt(e.target.value) || 465 })}
                   placeholder="465"
-                  className="w-full text-xs font-mono p-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-[11px] font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
                   SMTP Benutzername
                 </label>
                 <input
@@ -594,11 +501,11 @@ export const ClubSettings: React.FC = () => {
                   value={emailConfig.smtpUser || ''}
                   onChange={(e) => setEmailConfig({ ...emailConfig, smtpUser: e.target.value })}
                   placeholder="info@tcrw-senne.de"
-                  className="w-full text-xs font-mono p-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
                   SMTP Passwort
                 </label>
                 <div className="relative">
@@ -607,14 +514,14 @@ export const ClubSettings: React.FC = () => {
                     value={emailConfig.smtpPass || ''}
                     onChange={(e) => setEmailConfig({ ...emailConfig, smtpPass: e.target.value })}
                     placeholder="Passwort des Mail-Kontos"
-                    className="w-full text-xs font-mono p-2 pr-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full text-xs font-mono p-2.5 pr-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowSmtpPass(!showSmtpPass)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
                   >
-                    {showSmtpPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -622,7 +529,7 @@ export const ClubSettings: React.FC = () => {
           </div>
 
           {/* Absender Information */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
             <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 block">
               Absender-Informationen
             </label>
@@ -662,10 +569,10 @@ export const ClubSettings: React.FC = () => {
               {savedEmailConfigSuccess ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>E-Mail-Einstellungen gespeichert!</span>
+                  <span>SMTP-Einstellungen gespeichert!</span>
                 </>
               ) : (
-                <span>E-Mail-Einstellungen speichern</span>
+                <span>SMTP-Einstellungen speichern</span>
               )}
             </button>
           </div>
@@ -674,7 +581,7 @@ export const ClubSettings: React.FC = () => {
         {/* Test Email Box */}
         <div className="max-w-2xl bg-neutral-50 dark:bg-neutral-800/40 p-4 rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 space-y-2.5">
           <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300">
-            E-Mail-Versand testen
+            SMTP-Versand testen
           </label>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <input
@@ -693,7 +600,7 @@ export const ClubSettings: React.FC = () => {
               {isSendingTestEmail ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Sendet Test-Mail...</span>
+                  <span>Sendet über SMTP...</span>
                 </>
               ) : (
                 <>
