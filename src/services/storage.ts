@@ -352,15 +352,9 @@ export class StorageService {
   static getEmailConfig(): EmailConfig {
     const raw = localStorage.getItem(STORAGE_KEYS.EMAIL_CONFIG);
     const defaults: EmailConfig = {
-      provider: 'smtp',
+      apiKey: '',
       fromName: 'TC Rot-Weiß Senne',
-      fromEmail: 'info@tcrw-senne.de',
-      endpointUrl: '',
-      smtpHost: 'mail.tcrw-senne.de',
-      smtpPort: 465,
-      smtpUser: '',
-      smtpPass: '',
-      smtpSecure: true,
+      fromEmail: '',
     };
     if (!raw) return defaults;
     try {

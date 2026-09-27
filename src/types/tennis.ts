@@ -104,17 +104,9 @@ export interface ClubTheme {
 }
 
 export interface EmailConfig {
-  provider: 'smtp' | 'webhook' | 'supabase';
-  endpointUrl?: string; // Website-Relay auf tcrw-senne.de (z. B. https://tcrw-senne.de/send-mail.php)
-  fromName?: string;   // z. B. "TC Rot-Weiß Senne"
-  fromEmail?: string;  // z. B. "info@tcrw-senne.de"
-  // Eigener SMTP Server Konfiguration (z. B. mail.tcrw-senne.de)
-  smtpHost?: string;   // z. B. "mail.tcrw-senne.de"
-  smtpPort?: number;   // z. B. 465 (SSL) oder 587 (TLS)
-  smtpUser?: string;   // z. B. "training@tcrw-senne.de"
-  smtpPass?: string;   // Passwort für das Postfach
-  smtpSecure?: boolean;// SSL/TLS aktiv
-  apiKey?: string;
+  apiKey?: string;     // Brevo API-Schlüssel (xkeysib-...)
+  fromName?: string;   // z. B. "TCRW Montagsgruppe"
+  fromEmail?: string;  // Registrierte Brevo-Absender-E-Mail
 }
 
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { THEME_PRESETS } from '../../constants/initialData';
 import { StorageService } from '../../services/storage';
-import { sendDirectEmail, checkBridgeHealth } from '../../services/emailService';
+import { sendDirectEmail } from '../../services/emailService';
 import { EmailConfig } from '../../types/tennis';
 import { 
   Palette, 
@@ -20,8 +20,7 @@ import {
   Lock,
   KeyRound,
   Eye,
-  EyeOff,
-  Server
+  EyeOff
 } from 'lucide-react';
 
 export const ClubSettings: React.FC = () => {
@@ -35,15 +34,13 @@ export const ClubSettings: React.FC = () => {
   const [customSecondary, setCustomSecondary] = useState(theme.secondary);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Email Direct Send State
+  // Email Direct Send State (Brevo API)
   const [emailConfig, setEmailConfig] = useState<EmailConfig>(() => StorageService.getEmailConfig());
   const [savedEmailConfigSuccess, setSavedEmailConfigSuccess] = useState(false);
   const [testEmailAddress, setTestEmailAddress] = useState(currentUser?.email || '');
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   const [testEmailStatus, setTestEmailStatus] = useState<{ success: boolean; message: string } | null>(null);
-  const [showSmtpPass, setShowSmtpPass] = useState(false);
-  const [isCheckingBridge, setIsCheckingBridge] = useState(false);
-  const [bridgeStatus, setBridgeStatus] = useState<{ ok: boolean; message: string } | null>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Admin PIN / Password Change State
   const [currentAdminPin, setCurrentAdminPin] = useState('');
@@ -133,17 +130,6 @@ export const ClubSettings: React.FC = () => {
     setTimeout(() => setSavedEmailConfigSuccess(false), 2500);
   };
 
-  const handleCheckBridge = async () => {
-    setIsCheckingBridge(true);
-    setBridgeStatus(null);
-    try {
-      const res = await checkBridgeHealth(emailConfig.endpointUrl);
-      setBridgeStatus(res);
-    } finally {
-      setIsCheckingBridge(false);
-    }
-  };
-
   const handleSendTestEmail = async () => {
     if (!testEmailAddress.trim()) {
       setTestEmailStatus({
@@ -152,9 +138,8 @@ export const ClubSettings: React.FC = () => {
       });
       return;
     }
-    const hasConfig = (emailConfig.apiKey && emailConfig.apiKey.trim()) || (emailConfig.endpointUrl && emailConfig.endpointUrl.trim());
 
-    if (!hasConfig) {
+    if (!emailConfig.apiKey || !emailConfig.apiKey.trim()) {
       setTestEmailStatus({
         success: false,
         message: 'Bitte trage zuerst deinen Brevo-API-Schlüssel ein und klicke auf Speichern.',
@@ -167,7 +152,7 @@ export const ClubSettings: React.FC = () => {
       const res = await sendDirectEmail({
         to: testEmailAddress.trim(),
         subject: `🎾 Test-Nachricht von ${theme.clubName}`,
-        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer E-Mail-Versand per API funktioniert einwandfrei!`,
+        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer E-Mail-Versand per Brevo-API funktioniert einwandfrei!`,
         config: emailConfig,
       });
       setTestEmailStatus(res);
@@ -441,21 +426,21 @@ export const ClubSettings: React.FC = () => {
         </p>
       </div>
 
-      {/* 3. E-Mail-Direktversand via SMTP */}
+      {/* 3. E-Mail-Direktversand via Brevo API */}
       <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
             <Mail className="w-4 h-4 text-blue-500" />
-            E-Mail-Benachrichtigungen (SMTP-Server)
+            E-Mail-Benachrichtigungen (Brevo API)
           </h3>
-          {emailConfig.smtpHost && emailConfig.smtpPass ? (
+          {emailConfig.apiKey ? (
             <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
               <Check className="w-3 h-3" />
-              SMTP aktiv ({emailConfig.smtpHost})
+              Brevo API aktiv
             </span>
           ) : (
             <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
-              SMTP nicht eingerichtet
+              API nicht eingerichtet
             </span>
           )}
         </div>
@@ -505,7 +490,7 @@ export const ClubSettings: React.FC = () => {
             </div>
             <div className="relative">
               <input
-                type={showSmtpPass ? 'text' : 'password'}
+                type={showApiKey ? 'text' : 'password'}
                 value={emailConfig.apiKey || ''}
                 onChange={(e) => setEmailConfig({ ...emailConfig, apiKey: e.target.value })}
                 placeholder="xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -513,10 +498,10 @@ export const ClubSettings: React.FC = () => {
               />
               <button
                 type="button"
-                onClick={() => setShowSmtpPass(!showSmtpPass)}
+                onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
               >
-                {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
@@ -554,65 +539,6 @@ export const ClubSettings: React.FC = () => {
             </div>
           </div>
 
-          {/* Optional: Alternative Webserver Bridge */}
-          <details className="pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60 text-neutral-600 dark:text-neutral-400">
-            <summary className="text-xs font-bold cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-200 select-none">
-              Erweitert: Eigene Webserver-Bridge (send-mail.php)
-            </summary>
-            <div className="space-y-2 mt-2 pt-2 border-t border-neutral-200/40 dark:border-neutral-700/40">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                  Webserver Bridge-URL
-                </label>
-                <a
-                  href="/send-mail.php"
-                  download="send-mail.php"
-                  className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 shrink-0"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>send-mail.php herunterladen</span>
-                </a>
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <input
-                  type="url"
-                  value={emailConfig.endpointUrl || ''}
-                  onChange={(e) => setEmailConfig({ ...emailConfig, endpointUrl: e.target.value })}
-                  placeholder="https://tcrw-senne.de/send-mail.php"
-                  className="flex-1 text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleCheckBridge}
-                  disabled={isCheckingBridge}
-                  className="py-2.5 px-3 rounded-xl text-xs font-bold bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 flex items-center justify-center gap-1.5 transition-all shrink-0"
-                >
-                  {isCheckingBridge ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Prüfe...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Server className="w-3.5 h-3.5" />
-                      <span>Bridge prüfen</span>
-                    </>
-                  )}
-                </button>
-              </div>
-              {bridgeStatus && (
-                <div className={`text-xs p-2.5 rounded-xl font-semibold flex items-center gap-2 ${
-                  bridgeStatus.ok 
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
-                    : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800'
-                }`}>
-                  {bridgeStatus.ok ? <Check className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />}
-                  <span>{bridgeStatus.message}</span>
-                </div>
-              )}
-            </div>
-          </details>
-
           <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
             <button
               type="submit"
@@ -624,7 +550,7 @@ export const ClubSettings: React.FC = () => {
                   <span>API-Einstellungen gespeichert!</span>
                 </>
               ) : (
-                <span>E-Mail-Einstellungen speichern</span>
+                <span>API-Einstellungen speichern</span>
               )}
             </button>
           </div>
@@ -633,7 +559,7 @@ export const ClubSettings: React.FC = () => {
         {/* Test Email Box */}
         <div className="max-w-2xl bg-neutral-50 dark:bg-neutral-800/40 p-4 rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 space-y-2.5">
           <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300">
-            SMTP-Versand testen
+            E-Mail-Versand testen
           </label>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <input
@@ -652,7 +578,7 @@ export const ClubSettings: React.FC = () => {
               {isSendingTestEmail ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Sendet über SMTP...</span>
+                  <span>Sendet über Brevo API...</span>
                 </>
               ) : (
                 <>

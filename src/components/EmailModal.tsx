@@ -22,7 +22,7 @@ export const EmailModal: React.FC<EmailModalProps> = ({
 }) => {
   const { theme, updatePlayer } = useApp();
   const emailConfig = StorageService.getEmailConfig();
-  const hasWebhook = Boolean(emailConfig.endpointUrl && emailConfig.endpointUrl.trim());
+  const hasDirectApi = Boolean(emailConfig.apiKey && emailConfig.apiKey.trim());
 
   const [emailInput, setEmailInput] = useState(springer.email || '');
   const [copied, setCopied] = useState(false);
@@ -147,8 +147,8 @@ export const EmailModal: React.FC<EmailModalProps> = ({
           </div>
         )}
 
-        {/* Tip banner if no webhook is configured */}
-        {!hasWebhook && (
+        {/* Tip banner if no direct API is configured */}
+        {!hasDirectApi && (
           <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-100 flex items-start space-x-2">
             <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
@@ -259,7 +259,7 @@ export const EmailModal: React.FC<EmailModalProps> = ({
               onClick={handleOpenClientFallback}
               disabled={isSending}
               className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all m3-ripple ${
-                !hasWebhook 
+                !hasDirectApi 
                   ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20' 
                   : 'bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700'
               }`}
@@ -269,7 +269,7 @@ export const EmailModal: React.FC<EmailModalProps> = ({
               <span>In Mail-App öffnen</span>
             </button>
 
-            {hasWebhook && (
+            {hasDirectApi && (
               <button
                 type="button"
                 onClick={handleDirectSend}
@@ -290,7 +290,7 @@ export const EmailModal: React.FC<EmailModalProps> = ({
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Via Webhook senden</span>
+                    <span>Direkt per API senden</span>
                   </>
                 )}
               </button>
