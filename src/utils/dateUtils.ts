@@ -105,3 +105,19 @@ export function parseDateToTime(dateStr?: string | null): number {
   const parsed = new Date(trimmed).getTime();
   return isNaN(parsed) ? 0 : parsed;
 }
+
+/**
+ * Sorts an array of training weeks chronologically by calendar date.
+ */
+export function sortWeeksByDate<T extends { date?: string; id?: string; dateString?: string }>(weeks: T[]): T[] {
+  if (!weeks || !Array.isArray(weeks)) return [];
+  return [...weeks].sort((a, b) => {
+    const timeA = parseDateToTime(a.date || a.id || a.dateString);
+    const timeB = parseDateToTime(b.date || b.id || b.dateString);
+    if (timeA !== timeB) {
+      return timeA - timeB;
+    }
+    return (a.date || a.id || '').localeCompare(b.date || b.id || '');
+  });
+}
+

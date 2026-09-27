@@ -7,7 +7,7 @@ import { DoppelGeneratorModal } from './DoppelGeneratorModal';
 import { AdminAssignModal } from './AdminAssignModal';
 import { getWeekSlotKeys } from '../utils/slotTimeUtils';
 import { calculateStandbyCascade } from '../utils/standbyCascade';
-import { formatWeekDate } from '../utils/dateUtils';
+import { formatWeekDate, sortWeeksByDate } from '../utils/dateUtils';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -71,9 +71,10 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   const [adminAssignSlot, setAdminAssignSlot] = useState<{slotTime: SlotTime, targetPlayerIdToReplace?: string} | null>(null);
   const [assignPlayerTarget, setAssignPlayerTarget] = useState<Player | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
-  const currentIndex = weeks.findIndex(w => w.id === selectedWeekId);
-  const prevWeek = currentIndex > 0 ? weeks[currentIndex - 1] : null;
-  const nextWeek = currentIndex < weeks.length - 1 ? weeks[currentIndex + 1] : null;
+  const sortedWeeks = React.useMemo(() => sortWeeksByDate(weeks), [weeks]);
+  const currentIndex = sortedWeeks.findIndex(w => w.id === selectedWeekId);
+  const prevWeek = currentIndex > 0 ? sortedWeeks[currentIndex - 1] : null;
+  const nextWeek = currentIndex < sortedWeeks.length - 1 ? sortedWeeks[currentIndex + 1] : null;
 
   if (!selectedWeek) {
     return (
@@ -256,7 +257,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           <div className="text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start space-x-2">
               <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Woche {currentIndex + 1} von {weeks.length}
+                Woche {currentIndex >= 0 ? currentIndex + 1 : 1} von {sortedWeeks.length}
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
               <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">

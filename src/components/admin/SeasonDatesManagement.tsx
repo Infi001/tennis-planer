@@ -20,7 +20,7 @@ import {
   Square
 } from 'lucide-react';
 import { getWeekSlotKeys, canReduceWeekSlots, generateSlotTimes, getWeekSlotConfig } from '../../utils/slotTimeUtils';
-import { formatWeekDate, getWeekdayName, generateRecurringSeasonDates } from '../../utils/dateUtils';
+import { formatWeekDate, getWeekdayName, generateRecurringSeasonDates, sortWeeksByDate } from '../../utils/dateUtils';
 import { generateBaselineCyclicSchedule } from '../../utils/scheduleGenerator';
 import { TrainingWeek } from '../../types/tennis';
 
@@ -48,6 +48,8 @@ export const SeasonDatesManagement: React.FC = () => {
     applySlotConfigToAllWeeks,
     replaceEntireSchedule
   } = useApp();
+
+  const sortedWeeks = React.useMemo(() => sortWeeksByDate(weeks), [weeks]);
 
   const [isAddingDate, setIsAddingDate] = useState(false);
   const [newIsoDate, setNewIsoDate] = useState('');
@@ -415,7 +417,7 @@ export const SeasonDatesManagement: React.FC = () => {
 
         {/* List of Weeks */}
         <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
-          {weeks.map((week, idx) => {
+          {sortedWeeks.map((week, idx) => {
             const slotKeys = getWeekSlotKeys(week);
             const isCancelled = week.isCancelled;
             const isSelected = selectedWeekIds.includes(week.id);

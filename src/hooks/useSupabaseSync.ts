@@ -3,6 +3,7 @@ import { getSupabase } from '../services/supabase';
 import { StorageService } from '../services/storage';
 import { Player, TrainingWeek, Absence, SwapRequest, ClubTheme } from '../types/tennis';
 import { THEME_PRESETS } from '../constants/initialData';
+import { sortWeeksByDate } from '../utils/dateUtils';
 
 interface UseSupabaseSyncProps {
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
@@ -50,8 +51,9 @@ export function useSupabaseSync({
           const wData = weeksRes.data.map(w => ({
             id: w.id, date: w.id, dateString: w.date_string, isCancelled: w.is_cancelled, cancelReason: w.cancel_reason, slots: w.slots, springer1: w.springer1, springer2: w.springer2, frei: w.frei, notes: w.notes,
           }));
-          StorageService.setServerData('weeks', JSON.stringify(wData));
-          setWeeks(wData);
+          const sorted = sortWeeksByDate(wData);
+          StorageService.setServerData('weeks', JSON.stringify(sorted));
+          setWeeks(sorted);
         }
 
         if (absencesRes.data && absencesRes.data.length > 0) {
@@ -111,8 +113,9 @@ export function useSupabaseSync({
             if (idx >= 0) updated[idx] = mapped;
             else updated.push(mapped);
             
-            StorageService.setServerData('weeks', JSON.stringify(updated));
-            return updated;
+            const sorted = sortWeeksByDate(updated);
+            StorageService.setServerData('weeks', JSON.stringify(sorted));
+            return sorted;
           });
         }
       })

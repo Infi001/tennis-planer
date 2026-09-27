@@ -5,6 +5,7 @@ import { THEME_PRESETS } from '../constants/initialData';
 import { getWeekSlotKeys, generateSlotTimes, canReduceWeekSlots } from '../utils/slotTimeUtils';
 import { calculateStandbyCascade, StandbyCascadeResult } from '../utils/standbyCascade';
 import { useSupabaseSync } from '../hooks/useSupabaseSync';
+import { sortWeeksByDate } from '../utils/dateUtils';
 import confetti from 'canvas-confetti';
 
 interface AppContextType {
@@ -85,7 +86,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [players, setPlayers] = useState<Player[]>(() => StorageService.getPlayers());
-  const [weeks, setWeeks] = useState<TrainingWeek[]>(() => StorageService.getWeeks());
+  const [weeks, setWeeks] = useState<TrainingWeek[]>(() => sortWeeksByDate(StorageService.getWeeks()));
   const [absences, setAbsences] = useState<Absence[]>(() => StorageService.getAbsences());
   const [swaps, setSwaps] = useState<SwapRequest[]>(() => StorageService.getSwaps());
   const [theme, setThemeState] = useState<ClubTheme>(() => StorageService.getTheme());
@@ -142,7 +143,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const day = String(todayObj.getDate()).padStart(2, '0');
     const localToday = `${year}-${month}-${day}`;
     
-    const initialWeeks = StorageService.getWeeks().sort((a, b) => a.date.localeCompare(b.date));
+    const initialWeeks = sortWeeksByDate(StorageService.getWeeks());
     const upcoming = initialWeeks.find(w => w.date >= localToday);
     return upcoming ? upcoming.id : (initialWeeks[0]?.id || '2026-10-05');
   });
@@ -1223,7 +1224,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateWeekDate = (weekId: string, newDateStr: string, newIsoDate: string) => {
     setWeeks(prev => {
-      const updated = prev.map(w => {
+      const updated = sortWeeksByDate(prev.map(w => {
         if (w.id !== weekId) return w;
         return {
           ...w,
@@ -1231,7 +1232,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           date: newIsoDate,
           dateString: newDateStr,
         };
-      }).sort((a, b) => a.date.localeCompare(b.date));
+      }));
       StorageService.saveWeeks(updated);
       return updated;
     });
@@ -1296,8 +1297,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
     } catch {}
-    setWeeks(newWeeks);
-    StorageService.saveWeeks(newWeeks);
+    const sorted = sortWeeksByDate(newWeeks);
+    setWeeks(sorted);
+    StorageService.saveWeeks(sorted);
   };
 
   // --- Dynamic Trainingseinheiten & Slot Configuration ---

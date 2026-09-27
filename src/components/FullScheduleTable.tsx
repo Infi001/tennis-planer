@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Player, SlotTime } from '../types/tennis';
 import { Search, Filter, Calendar, ExternalLink } from 'lucide-react';
+import { sortWeeksByDate } from '../utils/dateUtils';
 
 interface FullScheduleTableProps {
   onSelectWeek: (weekId: string) => void;
@@ -9,6 +10,7 @@ interface FullScheduleTableProps {
 
 export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWeek }) => {
   const { players, weeks, currentUser, theme, springerCount } = useApp();
+  const sortedWeeks = React.useMemo(() => sortWeeksByDate(weeks), [weeks]);
   const [selectedPlayerFilter, setSelectedPlayerFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -137,7 +139,7 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
                 <th className="sticky left-0 z-30 bg-neutral-200 dark:bg-neutral-800/90 backdrop-blur-sm px-4 py-3 text-left font-extrabold text-neutral-800 dark:text-neutral-200 border-r border-neutral-300 dark:border-neutral-700 min-w-[130px]">
                   Spieler
                 </th>
-                {weeks.map((week) => (
+                {sortedWeeks.map((week) => (
                   <th 
                     key={week.id}
                     onClick={() => onSelectWeek(week.id)}
@@ -190,7 +192,7 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
                     </td>
 
                     {/* Date Cells */}
-                    {weeks.map((week) => {
+                    {sortedWeeks.map((week) => {
                       const info = getPlayerCellInfo(week, player);
 
                       let cellBg = '';

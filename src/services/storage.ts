@@ -1,6 +1,7 @@
 import { Player, TrainingWeek, Absence, SwapRequest, ClubTheme, SlotAssignment, EmailConfig } from '../types/tennis';
 import { INITIAL_PLAYERS, THEME_PRESETS, generateInitialSchedule } from '../constants/initialData';
 import { getSupabase } from './supabase';
+import { sortWeeksByDate } from '../utils/dateUtils';
 
 const STORAGE_KEYS = {
   PLAYERS: 'tennis_players_v1',
@@ -87,7 +88,7 @@ export class StorageService {
   static getWeeks(): TrainingWeek[] {
     const raw = localStorage.getItem(STORAGE_KEYS.WEEKS);
     if (!raw) {
-      const initial = generateInitialSchedule();
+      const initial = sortWeeksByDate(generateInitialSchedule());
       this.saveWeeks(initial);
       return initial;
     }
@@ -131,19 +132,21 @@ export class StorageService {
           changed = true;
         }
       });
+      const sorted = sortWeeksByDate(parsed);
       if (changed) {
-        this.saveWeeks(parsed);
+        this.saveWeeks(sorted);
       }
-      return parsed;
+      return sorted;
     } catch {
-      const initial = generateInitialSchedule();
+      const initial = sortWeeksByDate(generateInitialSchedule());
       return initial;
     }
   }
 
   static lastSavedWeeksJSON = '';
   static saveWeeks(weeks: TrainingWeek[]) {
-    const json = JSON.stringify(weeks);
+    const sorted = sortWeeksByDate(weeks);
+    const json = JSON.stringify(sorted);
     if (json === this.lastSavedWeeksJSON) return;
     this.lastSavedWeeksJSON = json;
     localStorage.setItem(STORAGE_KEYS.WEEKS, json);
