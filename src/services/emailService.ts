@@ -8,6 +8,7 @@ export interface SpringerEmailParams {
   week: TrainingWeek;
   slotKey?: string;
   decliningPlayer?: Player | { name: string };
+  reasonNote?: string;
   clubName: string;
   groupName?: string;
 }
@@ -17,13 +18,18 @@ export function generateSpringerEmailContent({
   week,
   slotKey,
   decliningPlayer,
+  reasonNote,
   clubName,
   groupName,
 }: SpringerEmailParams): { subject: string; body: string; to: string } {
   const dateFormatted = formatWeekDate(week);
   const slotText = slotKey ? `${slotKey} Uhr` : 'Trainingsslot';
   const groupText = groupName ? ` (${groupName})` : '';
-  const reasonText = decliningPlayer ? `${decliningPlayer.name} hat abgesagt` : 'ein Platz ist frei geworden';
+  const reasonText = reasonNote
+    ? reasonNote
+    : decliningPlayer
+      ? `${decliningPlayer.name} hat abgesagt`
+      : 'ein Platz ist frei geworden';
 
   const appUrl = typeof window !== 'undefined'
     ? (springer.accessToken

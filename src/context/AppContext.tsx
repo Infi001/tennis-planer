@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Player, TrainingWeek, Absence, SwapRequest, ClubTheme, SlotTime, PlayerStatus, SlotAssignment } from '../types/tennis';
 import { StorageService } from '../services/storage';
+import { sendDirectSpringerEmail } from '../services/emailService';
 import { THEME_PRESETS } from '../constants/initialData';
 import { getWeekSlotKeys, generateSlotTimes, canReduceWeekSlots } from '../utils/slotTimeUtils';
 import { calculateStandbyCascade, StandbyCascadeResult } from '../utils/standbyCascade';
@@ -673,64 +674,127 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  // Helper: Automatically notify next standby candidate via Brevo API
+  const notifyNextStandbyCandidate = (
+    updatedWeek: TrainingWeek,
+    declinedPlayerId: string,
+    cascade: StandbyCascadeResult,
+    customReasonNote?: string
+  ) => {
+    let nextCandidateId: string | null = null;
+    if (cascade.springer2.status === 'offered' && cascade.springer2.playerId && cascade.springer2.playerId !== declinedPlayerId) {
+      nextCandidateId = cascade.springer2.playerId;
+    } else if (cascade.frei.status === 'offered' && cascade.frei.playerId && cascade.frei.playerId !== declinedPlayerId) {
+      nextCandidateId = cascade.frei.playerId;
+    }
+
+    if (!nextCandidateId) return;
+
+    const nextCandidate = players.find(p => p.id === nextCandidateId);
+    if (!nextCandidate || !nextCandidate.email || nextCandidate.emailNotifications === false) return;
+
+    const emailConfig = StorageService.getEmailConfig();
+    if (!emailConfig.apiKey || !emailConfig.apiKey.trim()) return;
+
+    const decliningPlayer = players.find(p => p.id === declinedPlayerId);
+    const reasonNote = customReasonNote || (decliningPlayer
+      ? `${decliningPlayer.name} (Springer) hat abgesagt – du rückst nach und bist nun an der Reihe!`
+      : 'Der vorherige Springer hat abgesagt – du rückst nach und bist nun an der Reihe!');
+
+    sendDirectSpringerEmail({
+      springer: nextCandidate,
+      week: updatedWeek,
+      slotKey: cascade.openSlots[0],
+      decliningPlayer,
+      reasonNote,
+      clubName: theme.clubName,
+      groupName: theme.groupName,
+    }).catch(err => {
+      console.error('Fehler beim automatischen E-Mail-Versand an nächsten Springer:', err);
+    });
+  };
+
   // --- Decline Substitute Offer (Springer oder Frei lehnt das Einspringen ab -> Kaskade zur nächsten Stufe) ---
   const declineSubstituteOffer = (weekId: string, playerId: string) => {
-    setWeeks(prevWeeks => prevWeeks.map(w => {
-      if (w.id !== weekId) return w;
-      let newSp1 = { ...w.springer1 };
-      let newSp2 = { ...w.springer2 };
-      let newFrei = { ...w.frei };
+    const targetWeek = weeks.find(w => w.id === weekId);
+    if (!targetWeek) return;
 
-      if (newSp1.playerId === playerId) {
-        newSp1.status = 'declined';
-      } else if (newSp2.playerId === playerId) {
-        newSp2.status = 'declined';
-      } else if (newFrei.playerId === playerId) {
-        newFrei.status = 'declined';
-      }
+    let newSp1 = { ...targetWeek.springer1 };
+    let newSp2 = { ...targetWeek.springer2 };
+    let newFrei = { ...targetWeek.frei };
 
-      const cascade = calculateStandbyCascade({
-        ...w,
-        springer1: newSp1,
-        springer2: newSp2,
-        frei: newFrei,
-      }, springerCount);
+    if (newSp1.playerId === playerId) {
+      newSp1.status = 'declined';
+    } else if (newSp2.playerId === playerId) {
+      newSp2.status = 'declined';
+    } else if (newFrei.playerId === playerId) {
+      newFrei.status = 'declined';
+    }
 
-      return { 
-        ...w, 
-        springer1: cascade.springer1, 
-        springer2: cascade.springer2,
-        frei: cascade.frei
-      };
-    }));
+    const cascade = calculateStandbyCascade({
+      ...targetWeek,
+      springer1: newSp1,
+      springer2: newSp2,
+      frei: newFrei,
+    }, springerCount);
+
+    const updatedWeek: TrainingWeek = { 
+      ...targetWeek, 
+      springer1: cascade.springer1, 
+      springer2: cascade.springer2, 
+      frei: cascade.frei 
+    };
+
+    setWeeks(prevWeeks => prevWeeks.map(w => w.id === weekId ? updatedWeek : w));
+
+    notifyNextStandbyCandidate(updatedWeek, playerId, cascade);
   };
 
   // --- Skip Priority to next candidate (Admin or Fast-Forward) ---
   const skipStandbyPriorityToNext = (weekId: string, prioLevel: number) => {
-    setWeeks(prevWeeks => prevWeeks.map(w => {
-      if (w.id !== weekId) return w;
-      let newSp1 = { ...w.springer1 };
-      let newSp2 = { ...w.springer2 };
-      let newFrei = w.frei ? { ...w.frei } : { playerId: '', status: 'idle' as const };
+    const targetWeek = weeks.find(w => w.id === weekId);
+    if (!targetWeek) return;
 
-      if (prioLevel === 1) newSp1.status = 'declined';
-      if (prioLevel === 2) newSp2.status = 'declined';
-      if (prioLevel === 3) newFrei.status = 'declined';
+    let newSp1 = { ...targetWeek.springer1 };
+    let newSp2 = { ...targetWeek.springer2 };
+    let newFrei = targetWeek.frei ? { ...targetWeek.frei } : { playerId: '', status: 'idle' as const };
+    let skippedPlayerId = '';
 
-      const cascade = calculateStandbyCascade({
-        ...w,
-        springer1: newSp1,
-        springer2: newSp2,
-        frei: newFrei,
-      }, springerCount);
+    if (prioLevel === 1) {
+      newSp1.status = 'declined';
+      skippedPlayerId = newSp1.playerId;
+    }
+    if (prioLevel === 2) {
+      newSp2.status = 'declined';
+      skippedPlayerId = newSp2.playerId;
+    }
+    if (prioLevel === 3) {
+      newFrei.status = 'declined';
+      skippedPlayerId = newFrei.playerId;
+    }
 
-      return { 
-        ...w, 
-        springer1: cascade.springer1, 
-        springer2: cascade.springer2,
-        frei: cascade.frei,
-      };
-    }));
+    const cascade = calculateStandbyCascade({
+      ...targetWeek,
+      springer1: newSp1,
+      springer2: newSp2,
+      frei: newFrei,
+    }, springerCount);
+
+    const updatedWeek: TrainingWeek = { 
+      ...targetWeek, 
+      springer1: cascade.springer1, 
+      springer2: cascade.springer2, 
+      frei: cascade.frei 
+    };
+
+    setWeeks(prevWeeks => prevWeeks.map(w => w.id === weekId ? updatedWeek : w));
+
+    notifyNextStandbyCandidate(
+      updatedWeek,
+      skippedPlayerId,
+      cascade,
+      'Der vorherige Springer wurde übersprungen – du rückst nach und bist nun an der Reihe!'
+    );
   };
 
   // --- Release Open Slots immediately to ALL club members ---
