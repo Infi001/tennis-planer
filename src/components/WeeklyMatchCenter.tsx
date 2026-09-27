@@ -84,7 +84,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
     );
   }
 
-  // Handle cancelled week (e.g. Ostermontag)
+  // Handle cancelled week (e.g. holiday or admin-paused week)
   if (selectedWeek.isCancelled) {
     return (
       <div className="space-y-6">
@@ -117,11 +117,11 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
         </div>
 
         <div className="p-12 rounded-3xl bg-neutral-100/50 dark:bg-[var(--md-sys-color-surface)] text-center border border-dashed border-neutral-300 dark:border-neutral-800">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl font-bold">
-            🐣
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <CalendarIcon className="w-8 h-8" />
           </div>
           <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-            {selectedWeek.cancelReason || 'Spielfreier Feiertag'}
+            {selectedWeek.cancelReason || 'Pausierter Spieltag'}
           </h3>
           <p className="text-sm text-neutral-500 max-w-md mx-auto">
             An diesem Spieltag findet kein reguläres Vereinstraining statt. Die Hallenplätze sind für dieses Datum pausiert.

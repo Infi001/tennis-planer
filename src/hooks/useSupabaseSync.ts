@@ -51,9 +51,13 @@ export function useSupabaseSync({
           const wData = weeksRes.data.map(w => ({
             id: w.id, date: w.id, dateString: w.date_string, isCancelled: w.is_cancelled, cancelReason: w.cancel_reason, slots: w.slots, springer1: w.springer1, springer2: w.springer2, frei: w.frei, notes: w.notes,
           }));
-          const sorted = sortWeeksByDate(wData);
-          StorageService.setServerData('weeks', JSON.stringify(sorted));
-          setWeeks(sorted);
+          const { weeks: migrated, changed } = StorageService.migrateAndDeduplicateWeeks(wData);
+          if (changed) {
+            StorageService.saveWeeks(migrated);
+          } else {
+            StorageService.setServerData('weeks', JSON.stringify(migrated));
+          }
+          setWeeks(migrated);
         }
 
         if (absencesRes.data && absencesRes.data.length > 0) {
@@ -113,9 +117,13 @@ export function useSupabaseSync({
             if (idx >= 0) updated[idx] = mapped;
             else updated.push(mapped);
             
-            const sorted = sortWeeksByDate(updated);
-            StorageService.setServerData('weeks', JSON.stringify(sorted));
-            return sorted;
+            const { weeks: migrated, changed } = StorageService.migrateAndDeduplicateWeeks(updated);
+            if (changed) {
+              StorageService.saveWeeks(migrated);
+            } else {
+              StorageService.setServerData('weeks', JSON.stringify(migrated));
+            }
+            return migrated;
           });
         }
       })

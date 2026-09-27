@@ -137,7 +137,7 @@ export const SEASON_MONDAYS: Array<{ dateStr: string; iso: string; cancelled?: b
   { dateStr: '08.03.27', iso: '2027-03-08' },
   { dateStr: '15.03.27', iso: '2027-03-15' },
   { dateStr: '22.03.27', iso: '2027-03-22' },
-  { dateStr: '29.03.27', iso: '2027-03-29', cancelled: true, cancelReason: 'Kein Training (Ostermontag)' },
+  { dateStr: '29.03.27', iso: '2027-03-29' },
   { dateStr: '05.04.27', iso: '2027-04-05' },
   { dateStr: '12.04.27', iso: '2027-04-12' },
   { dateStr: '19.04.27', iso: '2027-04-19' },

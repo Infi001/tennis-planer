@@ -84,6 +84,76 @@ export class StorageService {
     }
   }
 
+  static migrateAndDeduplicateWeeks(weeks: TrainingWeek[]): { weeks: TrainingWeek[]; changed: boolean } {
+    let changed = false;
+    let initialSchedule: TrainingWeek[] | null = null;
+
+    weeks.forEach(w => {
+      // Migrate Ostermontag: should be a normal regular training day
+      if (w.id === '2027-03-29' || w.cancelReason?.toLowerCase().includes('ostern')) {
+        if (w.isCancelled || w.cancelReason) {
+          w.isCancelled = false;
+          delete w.cancelReason;
+          changed = true;
+        }
+        // If slots are completely empty, populate with standard rotation
+        const totalAssigned = Object.values(w.slots || {}).reduce((acc, arr) => acc + (arr?.length || 0), 0);
+        if (totalAssigned === 0) {
+          if (!initialSchedule) {
+            initialSchedule = generateInitialSchedule();
+          }
+          const fresh = initialSchedule.find(fw => fw.id === '2027-03-29') || initialSchedule.find(fw => fw.id === w.id);
+          if (fresh) {
+            w.slots = JSON.parse(JSON.stringify(fresh.slots));
+            w.springer1 = { ...fresh.springer1 };
+            w.springer2 = { ...fresh.springer2 };
+            w.frei = { ...fresh.frei };
+            changed = true;
+          }
+        }
+      }
+
+      if (w.isCancelled) return;
+
+      const seenPlayerIds = new Set<string>();
+      const slotKeys = Object.keys(w.slots || {});
+      slotKeys.forEach(slotKey => {
+        const uniqueSlotAssignments: SlotAssignment[] = [];
+        (w.slots[slotKey] || []).forEach(a => {
+          if (a.status === 'pending') {
+            a.status = 'confirmed';
+            changed = true;
+          }
+          if (a.isGuest) {
+            uniqueSlotAssignments.push(a);
+          } else if (!seenPlayerIds.has(a.playerId)) {
+            seenPlayerIds.add(a.playerId);
+            uniqueSlotAssignments.push(a);
+          } else {
+            // Duplicate found! Skip to eliminate duplicate
+            changed = true;
+          }
+        });
+        w.slots[slotKey] = uniqueSlotAssignments;
+      });
+      if (!w.frei?.status) {
+        w.frei = { playerId: w.frei?.playerId || '', status: 'idle' };
+        changed = true;
+      }
+      if (!w.springer1?.status) {
+        w.springer1 = { playerId: w.springer1?.playerId || '', status: 'idle' };
+        changed = true;
+      }
+      if (!w.springer2?.status) {
+        w.springer2 = { playerId: w.springer2?.playerId || '', status: 'idle' };
+        changed = true;
+      }
+    });
+
+    const sorted = sortWeeksByDate(weeks);
+    return { weeks: sorted, changed };
+  }
+
   // --- Weeks ---
   static getWeeks(): TrainingWeek[] {
     const raw = localStorage.getItem(STORAGE_KEYS.WEEKS);
@@ -94,49 +164,11 @@ export class StorageService {
     }
     try {
       const parsed: TrainingWeek[] = JSON.parse(raw);
-      // Migrate any legacy 'pending' status to 'confirmed' and strictly deduplicate
-      let changed = false;
-      parsed.forEach(w => {
-        if (w.isCancelled) return;
-        const seenPlayerIds = new Set<string>();
-        const slotKeys = Object.keys(w.slots || {});
-        slotKeys.forEach(slotKey => {
-          const uniqueSlotAssignments: SlotAssignment[] = [];
-          (w.slots[slotKey] || []).forEach(a => {
-            if (a.status === 'pending') {
-              a.status = 'confirmed';
-              changed = true;
-            }
-            if (a.isGuest) {
-              uniqueSlotAssignments.push(a);
-            } else if (!seenPlayerIds.has(a.playerId)) {
-              seenPlayerIds.add(a.playerId);
-              uniqueSlotAssignments.push(a);
-            } else {
-              // Duplicate found! Skip to eliminate duplicate
-              changed = true;
-            }
-          });
-          w.slots[slotKey] = uniqueSlotAssignments;
-        });
-        if (!w.frei?.status) {
-          w.frei = { playerId: w.frei?.playerId || '', status: 'idle' };
-          changed = true;
-        }
-        if (!w.springer1?.status) {
-          w.springer1 = { playerId: w.springer1?.playerId || '', status: 'idle' };
-          changed = true;
-        }
-        if (!w.springer2?.status) {
-          w.springer2 = { playerId: w.springer2?.playerId || '', status: 'idle' };
-          changed = true;
-        }
-      });
-      const sorted = sortWeeksByDate(parsed);
+      const { weeks: migrated, changed } = this.migrateAndDeduplicateWeeks(parsed);
       if (changed) {
-        this.saveWeeks(sorted);
+        this.saveWeeks(migrated);
       }
-      return sorted;
+      return migrated;
     } catch {
       const initial = sortWeeksByDate(generateInitialSchedule());
       return initial;
