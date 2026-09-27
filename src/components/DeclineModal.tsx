@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, AlertTriangle, ShieldCheck, Share2, Mail } from 'lucide-react';
+import { X, AlertTriangle, ShieldCheck, Mail, Loader2 } from 'lucide-react';
 import { formatWeekDate } from '../utils/dateUtils';
-import { EmailModal } from './EmailModal';
+import { sendDirectSpringerEmail } from '../services/emailService';
 
 interface DeclineModalProps {
   playerId: string;
@@ -10,13 +10,14 @@ interface DeclineModalProps {
   onOpenWhatsApp: () => void;
 }
 
-export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, onOpenWhatsApp }) => {
-  const { players, selectedWeek, declineAttendance, theme, springerCount, getPlayerCurrentSlotInWeek } = useApp();
+export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose }) => {
+  const { players, selectedWeek, declineAttendance, theme, springerCount, getPlayerCurrentSlotInWeek, updatePlayer } = useApp();
   const player = players.find(p => p.id === playerId);
   const [reason, setReason] = useState<string>('Krank / Verletzung');
   const [customNote, setCustomNote] = useState<string>('');
   const [notifySpringerViaEmail, setNotifySpringerViaEmail] = useState(true);
-  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [springerEmailInput, setSpringerEmailInput] = useState('');
 
   if (!selectedWeek || !player) return null;
 
@@ -33,14 +34,38 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
         ? freiPlayer
         : null;
 
-  const handleConfirmDecline = () => {
+  const handleConfirmDecline = async () => {
     const finalReason = customNote ? `${reason} (${customNote})` : reason;
     declineAttendance(selectedWeek.id, playerId, finalReason);
+
     if (notifySpringerViaEmail && nextSpringer) {
-      setShowEmailModal(true);
-    } else {
-      onClose();
+      const emailToSend = (nextSpringer.email || springerEmailInput).trim();
+      if (emailToSend) {
+        if (!nextSpringer.email || nextSpringer.email !== emailToSend) {
+          updatePlayer({
+            ...nextSpringer,
+            email: emailToSend,
+          });
+        }
+        setIsSubmitting(true);
+        try {
+          await sendDirectSpringerEmail({
+            springer: { ...nextSpringer, email: emailToSend },
+            week: selectedWeek,
+            slotKey: playerSlot,
+            decliningPlayer: player,
+            clubName: theme.clubName,
+            groupName: theme.groupName,
+          });
+        } catch (err) {
+          console.error('Fehler beim automatischen E-Mail-Versand an Springer:', err);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
     }
+
+    onClose();
   };
 
   return (
@@ -120,18 +145,36 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
 
         {/* Optional Email Notification to Springer */}
         {nextSpringer && (
-          <label className="flex items-center space-x-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none px-1">
-            <input
-              type="checkbox"
-              checked={notifySpringerViaEmail}
-              onChange={(e) => setNotifySpringerViaEmail(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
-            />
-            <span className="flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>Springer <strong>{nextSpringer.name}</strong> per E-Mail benachrichtigen</span>
-            </span>
-          </label>
+          <div className="space-y-1.5">
+            <label className="flex items-center space-x-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none px-1">
+              <input
+                type="checkbox"
+                checked={notifySpringerViaEmail}
+                onChange={(e) => setNotifySpringerViaEmail(e.target.checked)}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
+              />
+              <span className="flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>
+                  Springer <strong>{nextSpringer.name}</strong> per E-Mail benachrichtigen
+                  {nextSpringer.email && (
+                    <span className="text-neutral-400 font-normal"> ({nextSpringer.email})</span>
+                  )}
+                </span>
+              </span>
+            </label>
+            {!nextSpringer.email && notifySpringerViaEmail && (
+              <div className="pl-6">
+                <input
+                  type="email"
+                  placeholder={`E-Mail-Adresse für ${nextSpringer.name} eingeben...`}
+                  value={springerEmailInput}
+                  onChange={(e) => setSpringerEmailInput(e.target.value)}
+                  className="w-full text-xs p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {/* Action Buttons */}
@@ -139,6 +182,7 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
           <button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
             Abbrechen
@@ -146,24 +190,21 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose, o
           <button
             type="button"
             onClick={handleConfirmDecline}
-            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md m3-ripple"
+            disabled={isSubmitting}
+            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md m3-ripple flex items-center justify-center space-x-1.5 disabled:opacity-60"
           >
-            Absage bestätigen
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Wird gesendet...</span>
+              </>
+            ) : (
+              <span>Absage bestätigen</span>
+            )}
           </button>
         </div>
 
       </div>
-
-      {/* Email Notification Modal */}
-      {showEmailModal && nextSpringer && (
-        <EmailModal
-          springer={nextSpringer}
-          week={selectedWeek}
-          slotKey={playerSlot}
-          decliningPlayer={player}
-          onClose={onClose}
-        />
-      )}
     </div>
   );
 };
