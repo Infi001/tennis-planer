@@ -123,9 +123,10 @@ export async function sendDirectEmail(options: {
       const data = await res.json().catch(() => null);
 
       if (res.ok) {
+        const msgId = data?.messageId ? ` (ID: ${data.messageId})` : '';
         return {
           success: true,
-          message: `E-Mail erfolgreich via Brevo-API an ${recipient} gesendet!`,
+          message: `E-Mail erfolgreich an Brevo übergeben${msgId}! Bitte prüfe auch deinen Spam-Ordner in Gmail.`,
         };
       } else {
         const errMsg = data?.message || data?.error || `HTTP ${res.status}`;
