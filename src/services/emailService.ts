@@ -56,29 +56,30 @@ ${clubName}`;
   };
 }
 
-// Helper to dynamically load SMTPJS for direct browser-to-SMTP dispatch
-let smtpJsPromise: Promise<void> | null = null;
-function loadSmtpJs(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.reject(new Error('Nur im Browser verfügbar'));
-  if ((window as any).Email) return Promise.resolve();
-  if (smtpJsPromise) return smtpJsPromise;
-
-  smtpJsPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[src*="smtpjs"]');
-    if (existing) {
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('Konnte SMTP.js nicht laden')));
-      return;
+export async function checkBridgeHealth(url?: string): Promise<{ ok: boolean; message: string }> {
+  const bridgeUrl = (url || 'https://tcrw-senne.de/send-mail.php').trim();
+  try {
+    const res = await fetch(bridgeUrl, { 
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      const data = await res.json().catch(() => null);
+      return { 
+        ok: true, 
+        message: data?.message || 'Server-Bridge erreichbar!' 
+      };
     }
-    const script = document.createElement('script');
-    script.src = 'https://smtpjs.com/v3/smtp.js';
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Konnte SMTP-Client (smtpjs.com) nicht laden. Bitte Internetverbindung prüfen.'));
-    document.head.appendChild(script);
-  });
-
-  return smtpJsPromise;
+    return { 
+      ok: false, 
+      message: `Server antwortete mit Status ${res.status} (${res.statusText || 'Nicht gefunden'}). Bitte prüfe, ob send-mail.php auf dem Webspace liegt.` 
+    };
+  } catch (err: any) {
+    return { 
+      ok: false, 
+      message: `Verbindung zu ${bridgeUrl} fehlgeschlagen: ${err.message || 'Server nicht erreichbar'}` 
+    };
+  }
 }
 
 export async function sendDirectEmail(options: {
@@ -96,81 +97,52 @@ export async function sendDirectEmail(options: {
   }
 
   const config = options.config || StorageService.getEmailConfig();
+  const bridgeUrl = (config.endpointUrl && config.endpointUrl.trim()) 
+    ? config.endpointUrl.trim() 
+    : 'https://tcrw-senne.de/send-mail.php';
 
-  // 1. Direkter SMTP-Server (z. B. mail.tcrw-senne.de)
-  if (config.smtpHost && config.smtpUser && config.smtpPass) {
-    try {
-      await loadSmtpJs();
-      if (!(window as any).Email || typeof (window as any).Email.send !== 'function') {
-        throw new Error('SMTP-Dienst konnte nicht initialisiert werden.');
-      }
+  try {
+    const payload = {
+      to: recipient,
+      subject: options.subject,
+      body: options.body,
+      fromName: config.fromName || 'TCRW Montagsgruppe',
+      fromEmail: config.fromEmail || config.smtpUser || 'no-reply@rw-senne.de',
+      smtpHost: config.smtpHost || 'smtp.strato.de',
+      smtpPort: config.smtpPort || 465,
+      smtpUser: config.smtpUser || '',
+      smtpPass: config.smtpPass || '',
+    };
 
-      const senderEmail = config.fromEmail?.trim() || config.smtpUser.trim();
-      const sendResult = await (window as any).Email.send({
-        Host: config.smtpHost.trim(),
-        Username: config.smtpUser.trim(),
-        Password: config.smtpPass.trim(),
-        To: recipient,
-        From: senderEmail,
-        Subject: options.subject,
-        Body: options.body.replace(/\n/g, '<br/>'),
-      });
+    const res = await fetch(bridgeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-      if (sendResult === 'OK') {
-        return {
-          success: true,
-          message: `E-Mail erfolgreich via SMTP (${config.smtpHost}) an ${recipient} gesendet!`,
-        };
-      } else {
-        return {
-          success: false,
-          message: `SMTP-Fehler von ${config.smtpHost}: ${sendResult}`,
-        };
-      }
-    } catch (err: any) {
+    const data = await res.json().catch(() => null);
+
+    if (res.ok && data?.success) {
+      return {
+        success: true,
+        message: data.message || `E-Mail erfolgreich via Server (${bridgeUrl}) an ${recipient} versendet!`,
+      };
+    } else {
+      const errDetail = data?.error || data?.message || `Server meldete HTTP ${res.status}`;
       return {
         success: false,
-        message: `SMTP-Verbindungsfehler (${config.smtpHost}): ${err.message || 'Fehler beim Kontaktieren des SMTP-Servers'}`,
+        message: `Versandfehler (${bridgeUrl}): ${errDetail}`,
       };
     }
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Server-Bridge nicht erreichbar (${bridgeUrl}): ${err.message || 'Netzwerkfehler'}. Bitte stelle sicher, dass 'send-mail.php' auf deinen Strato-Webspace hochgeladen wurde.`,
+    };
   }
-
-  // 2. Supabase Edge Function (send-email) if active
-  const sb = getSupabase();
-  if (sb && config.provider === 'supabase') {
-    try {
-      const { data, error } = await sb.functions.invoke('send-email', {
-        body: {
-          to: recipient,
-          subject: options.subject,
-          text: options.body,
-          fromName: config.fromName,
-        },
-      });
-      if (!error) {
-        return { 
-          success: true, 
-          message: `E-Mail direkt über Supabase an ${recipient} gesendet!` 
-        };
-      } else {
-        return {
-          success: false,
-          message: `Supabase Edge Function Fehler: ${error.message || 'Fehler beim Senden'}`
-        };
-      }
-    } catch (err: any) {
-      return {
-        success: false,
-        message: `Supabase Verbindungsfehler: ${err.message}`
-      };
-    }
-  }
-
-  // 3. If no delivery service configured:
-  return {
-    success: false,
-    message: 'Kein SMTP-Server eingerichtet! Bitte trage unter Admin ➔ Einstellungen deine SMTP-Zugangsdaten (mail.tcrw-senne.de) ein, oder nutze den Button "In Mail-App öffnen".'
-  };
 }
 
 export async function sendDirectSpringerEmail(params: SpringerEmailParams): Promise<{ success: boolean; message: string }> {

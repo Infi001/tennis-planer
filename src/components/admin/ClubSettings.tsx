@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { THEME_PRESETS } from '../../constants/initialData';
 import { StorageService } from '../../services/storage';
-import { sendDirectEmail } from '../../services/emailService';
+import { sendDirectEmail, checkBridgeHealth } from '../../services/emailService';
 import { EmailConfig } from '../../types/tennis';
 import { 
   Palette, 
@@ -42,6 +42,8 @@ export const ClubSettings: React.FC = () => {
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   const [testEmailStatus, setTestEmailStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [showSmtpPass, setShowSmtpPass] = useState(false);
+  const [isCheckingBridge, setIsCheckingBridge] = useState(false);
+  const [bridgeStatus, setBridgeStatus] = useState<{ ok: boolean; message: string } | null>(null);
 
   // Admin PIN / Password Change State
   const [currentAdminPin, setCurrentAdminPin] = useState('');
@@ -129,6 +131,17 @@ export const ClubSettings: React.FC = () => {
     StorageService.saveEmailConfig(emailConfig);
     setSavedEmailConfigSuccess(true);
     setTimeout(() => setSavedEmailConfigSuccess(false), 2500);
+  };
+
+  const handleCheckBridge = async () => {
+    setIsCheckingBridge(true);
+    setBridgeStatus(null);
+    try {
+      const res = await checkBridgeHealth(emailConfig.endpointUrl);
+      setBridgeStatus(res);
+    } finally {
+      setIsCheckingBridge(false);
+    }
   };
 
   const handleSendTestEmail = async () => {
@@ -559,6 +572,64 @@ export const ClubSettings: React.FC = () => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Webserver Bridge URL */}
+          <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                Webserver Bridge-URL (send-mail.php auf deiner Website)
+              </label>
+              <a
+                href="/send-mail.php"
+                download="send-mail.php"
+                className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 shrink-0"
+                title="Lade die Datei herunter und lade sie per FTP/Dateimanager auf deinen Strato-Webspace hoch"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>send-mail.php herunterladen</span>
+              </a>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input
+                type="url"
+                value={emailConfig.endpointUrl || ''}
+                onChange={(e) => setEmailConfig({ ...emailConfig, endpointUrl: e.target.value })}
+                placeholder="https://tcrw-senne.de/send-mail.php"
+                className="flex-1 text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleCheckBridge}
+                disabled={isCheckingBridge}
+                className="py-2.5 px-3 rounded-xl text-xs font-bold bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 flex items-center justify-center gap-1.5 transition-all shrink-0"
+              >
+                {isCheckingBridge ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Prüfe...</span>
+                  </>
+                ) : (
+                  <>
+                    <Server className="w-3.5 h-3.5" />
+                    <span>Bridge prüfen</span>
+                  </>
+                )}
+              </button>
+            </div>
+            {bridgeStatus && (
+              <div className={`text-xs p-2.5 rounded-xl font-semibold flex items-center gap-2 ${
+                bridgeStatus.ok 
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
+                  : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800'
+              }`}>
+                {bridgeStatus.ok ? <Check className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />}
+                <span>{bridgeStatus.message}</span>
+              </div>
+            )}
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              💡 <strong>Warum ist das nötig?</strong> Web-Browser dürfen aus Sicherheitsgründen keine direkten Verbindungen zu Mail-Ports (465) aufbauen. Lade einfach <code>send-mail.php</code> einmalig auf deine Website hoch – der Trainingsplaner sendet die E-Mails dann zuverlässig über deinen Strato-Server.
+            </p>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
