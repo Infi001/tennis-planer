@@ -15,7 +15,10 @@ import {
   Sparkles,
   Share,
   PlusSquare,
-  PhoneCall
+  PhoneCall,
+  Lock,
+  Mail,
+  SunMoon
 } from 'lucide-react';
 
 export const HelpView: React.FC = () => {
@@ -107,7 +110,7 @@ export const HelpView: React.FC = () => {
               Du bist krank, verletzt oder hast einen wichtigen Termin? Klicke auf <strong>"Absagen"</strong>.
             </p>
             <p>
-              <strong>Keine Sorge:</strong> Niemand ist böse! Sobald du absagst, gibt das System deinen Platz frei und schlägt automatisch den nächsten Springer aus der Gruppe vor.
+              <strong>Keine Sorge:</strong> Niemand ist böse! Sobald du absagst, gibt das System deinen Platz frei und aktiviert automatisch den nächsten Nachrücker aus der Gruppe.
             </p>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 p-2.5 rounded-xl">
               💡 <em>Umentschieden?</em> Solange dein Platz noch von keinem Springer angenommen wurde, kannst du jederzeit mit <strong>"Doch dabei!"</strong> wieder zusagen.
@@ -123,21 +126,23 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                4. Wer rückt nach? (Die Springer-Reihenfolge)
+                4. Wer rückt nach? (Das flexible Springer-System)
               </h2>
               <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">Feste und faire Reihenfolge</span>
             </div>
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2.5 leading-relaxed">
             <p>
-              Wenn jemand absagt, läuft automatisch folgende Reihenfolge ab:
+              Wenn jemand absagt, läuft automatisch folgende Kaskade ab (flexibel einstellbar von 0 bis 10 Springern pro Spieltag):
             </p>
             <ol className="space-y-1.5 list-decimal list-inside bg-amber-50/50 dark:bg-amber-950/20 p-3.5 rounded-2xl border border-amber-200/60 dark:border-amber-900/60">
-              <li><strong>1. Springer:</strong> Hat das allererste Vorrecht, den freien Platz anzunehmen.</li>
-              <li><strong>2. Springer:</strong> Ist an der Reihe, wenn Springer 1 absagt oder keine Zeit hat.</li>
+              <li><strong>1. Springer:</strong> Hat das Vorrecht, den frei gewordenen Platz sofort zu übernehmen.</li>
+              <li><strong>2. Springer:</strong> Rückt nach, sobald der 1. Springer absagt oder keine Zeit hat.</li>
+              <li><strong>Weitere Springer (z. B. 3. Springer):</strong> Werden schrittweise nacheinander aktiviert.</li>
+              <li><strong>Offener Pool:</strong> Sagen alle Springer ab, wird der Platz für alle weiteren Vereinsmitglieder freigegeben.</li>
             </ol>
             <p>
-              Wenn du als Springer an der Reihe bist, siehst du ganz oben im Wochenplan direkt den Button <strong>"Platz annehmen 🎾"</strong>.
+              <strong>E-Mail-Direktversand:</strong> Springer können direkt aus der App per E-Mail benachrichtigt werden, sobald ein Platz frei wird – inklusive Klick-Link zum sofortigen Annehmen!
             </p>
           </div>
         </div>
@@ -157,15 +162,15 @@ export const HelpView: React.FC = () => {
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
             <p>
-              Du bist um 18:00 Uhr eingeteilt, kannst aber an diesem Tag erst um 19:00 oder 20:00 Uhr?
+              Du bist beispielsweise um 18:00 Uhr eingeteilt, kannst aber an diesem Tag erst um 19:00 oder 20:00 Uhr spielen?
             </p>
             <p>
-              Klicke auf <strong>"Tauschen"</strong> und wähle deine Wunsch-Uhrzeit. Ein Mitspieler aus der anderen Stunde kann deinen Tauschvorschlag mit einem Klick annehmen. Eure Plätze werden dann automatisch getauscht.
+              Klicke auf <strong>"Tauschen"</strong> und wähle deine Wunsch-Uhrzeit. Ein Mitspieler aus der anderen Stunde kann deinen Tauschvorschlag mit einem Klick annehmen. Eure Plätze werden dann vollautomatisch getauscht.
             </p>
           </div>
         </div>
 
-        {/* 6. Urlaub */}
+        {/* 6. Abwesenheiten */}
         <div className="bg-white dark:bg-[var(--md-sys-color-surface)] p-5 sm:p-6 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs space-y-3">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold shrink-0">
@@ -173,21 +178,23 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                6. Urlaub & geplante Abwesenheiten
+                6. Abwesenheiten melden (Urlaub, Beruf, Krankheit)
               </h2>
-              <span className="text-xs text-sky-600 dark:text-sky-400 font-semibold">Menü-Reiter "Urlaub"</span>
+              <span className="text-xs text-sky-600 dark:text-sky-400 font-semibold">Menü-Reiter "Abwesenheiten"</span>
             </div>
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
             <p>
-              Wenn du schon Wochen vorher weißt, dass du im Urlaub oder auf Dienstreise bist:
+              Wenn du schon Wochen vorher weißt, dass du im Urlaub, auf Dienstreise oder verhindert bist:
             </p>
             <p>
-              Klicke unten im Menü auf <strong>"Urlaub"</strong>, wähle den betreffenden Spieltag aus und klicke auf <em>"Abwesenheit speichern"</em>.
+              Klicke unten im Menü auf <strong>"Abwesenheiten"</strong>, wähle den betreffenden Spieltag aus und klicke auf <em>"Abwesenheit eintragen"</em>.
             </p>
-            <p>
-              Der Trainingsplan weiß dann frühzeitig Bescheid und teilt automatisch einen Springer für dich ein.
-            </p>
+            <ul className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1 bg-sky-50/50 dark:bg-sky-950/20 p-3 rounded-2xl border border-sky-200/60 dark:border-sky-900/60">
+              <li>• Die Termine im Auswahlfeld sind <strong>strikt nach Kalenderdatum</strong> sortiert.</li>
+              <li>• Bei Auswahl von <strong>"Sonstiges"</strong> musst du keinen Grund zwingend angeben (Eingabe ist rein optional).</li>
+              <li>• Der Trainingsplan weiß rechtzeitig Bescheid und teilt automatisch einen Springer für dich ein.</li>
+            </ul>
           </div>
         </div>
 
@@ -209,12 +216,44 @@ export const HelpView: React.FC = () => {
               Du möchtest alle deine Trainings-Termine im Handy-Kalender (iPhone, Android oder Outlook) sehen?
             </p>
             <p>
-              Klicke unten im Menü auf <strong>"Kalender"</strong> und tippe auf den großen Button <strong>"Gesamte Saison abonnieren (.ics)"</strong>. Dein Smartphone trägt alle deine Spiele automatisch mit Erinnerung ein.
+              Klicke unten im Menü auf <strong>"Kalender"</strong> und tippe auf <strong>"Gesamte Saison abonnieren (.ics)"</strong>. Dein Smartphone trägt alle deine Spiele automatisch mit Erinnerung ein.
             </p>
           </div>
         </div>
 
-        {/* 8. App Icon auf dem Startbildschirm */}
+        {/* 8. Login, Datenschutz & Sicherheit */}
+        <div className="bg-white dark:bg-[var(--md-sys-color-surface)] p-5 sm:p-6 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs space-y-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                8. Login & Sicherheit: Wie bin ich geschützt?
+              </h2>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Persönlicher Direktzugang & Rechteschutz</span>
+            </div>
+          </div>
+          <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
+            <p>
+              <strong>Wie logge ich mich ein?</strong>
+              <br />
+              Über deinen <em>persönlichen Zugangslink (Magic Link)</em>, den du per WhatsApp oder E-Mail erhalten hast. Ein einfacher Klick reicht – du musst dir kein Passwort merken und bist sofort auf deinem Gerät eingeloggt.
+            </p>
+            <p>
+              <strong>Kann jemand anderes aus Versehen meine Termine ändern?</strong>
+              <br />
+              <strong>Nein.</strong> Die App ist so abgesichert, dass jeder Spieler nur seine <em>eigenen</em> Termine absagen, annehmen oder tauschen kann. Der frühere "Benutzer wechseln"-Button wurde für normale Spieler komplett entfernt.
+            </p>
+            <p>
+              <strong>Wie sind Administratoren geschützt?</strong>
+              <br />
+              Der Zugriff auf die Admin-Verwaltung ist durch eine persönliche PIN / ein Passwort geschützt. Wenn ein Administrator aus Supportgründen die Ansicht eines Spielers testet, wird oben permanent ein gut sichtbarer orangefarbener Hinweisbalken mit einem "Vorschau beenden"-Button eingeblendet.
+            </p>
+          </div>
+        </div>
+
+        {/* 9. Als App speichern */}
         <div className="bg-white dark:bg-[var(--md-sys-color-surface)] p-5 sm:p-6 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs space-y-3">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold shrink-0">
@@ -222,14 +261,14 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                8. Als App auf dem Startbildschirm speichern
+                9. Als App auf dem Startbildschirm ablegen
               </h2>
               <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">Direkt neben WhatsApp ablegen</span>
             </div>
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
             <p>
-              Damit du die Webseite nicht jedes Mal im Browser suchen musst, lege sie wie eine normale App auf deinem Bildschirm ab:
+              Damit du die Webseite nicht jedes Mal im Browser suchen musst, lege sie wie eine normale App auf deinem Startbildschirm ab:
             </p>
             <ul className="space-y-2 bg-neutral-50 dark:bg-neutral-800 p-3.5 rounded-2xl text-xs sm:text-sm">
               <li className="flex items-start gap-2">
@@ -244,7 +283,30 @@ export const HelpView: React.FC = () => {
           </div>
         </div>
 
-        {/* 9. Ansprechpartner */}
+        {/* 10. Design & Systemeinstellung */}
+        <div className="bg-white dark:bg-[var(--md-sys-color-surface)] p-5 sm:p-6 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs space-y-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+              <SunMoon className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                10. Hell- & Dunkel-Design (Systemeinstellung)
+              </h2>
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">Automatische Anpassung</span>
+            </div>
+          </div>
+          <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2 leading-relaxed">
+            <p>
+              Die App passt sich standardmäßig automatisch dem Erscheinungsbild deines Smartphones oder Computers an (Hellmodus bei Tag, Dunkelmodus bei Nacht oder Systemeinstellung).
+            </p>
+            <p>
+              Oben in der Kopfzeile kannst du mit dem Sonnen-/Mond-Symbol jederzeit mit einem Klick zwischen Hell- und Dunkelmodus wechseln.
+            </p>
+          </div>
+        </div>
+
+        {/* 11. Ansprechpartner */}
         <div className="bg-white dark:bg-[var(--md-sys-color-surface)] p-5 sm:p-6 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs space-y-3">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
@@ -252,7 +314,7 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                9. Du hast Fragen oder kommst nicht weiter?
+                11. Du hast Fragen oder kommst nicht weiter?
               </h2>
               <span className="text-xs text-neutral-500">Deine Ansprechpartner</span>
             </div>

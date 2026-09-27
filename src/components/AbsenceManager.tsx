@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Plane, Calendar, Plus, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
-import { formatWeekDate } from '../utils/dateUtils';
+import { formatWeekDate, parseDateToTime } from '../utils/dateUtils';
 
 export const AbsenceManager: React.FC = () => {
   const { 
@@ -14,19 +14,29 @@ export const AbsenceManager: React.FC = () => {
     weeks 
   } = useApp();
 
-  const activeWeeks = weeks.filter(w => !w.isCancelled);
+  const activeWeeks = useMemo(() => {
+    return [...weeks]
+      .filter(w => !w.isCancelled)
+      .sort((a, b) => parseDateToTime(a.date || a.dateString) - parseDateToTime(b.date || b.dateString));
+  }, [weeks]);
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(currentUser.id);
   const [selectedDate, setSelectedDate] = useState<string>(
-    activeWeeks[0]?.date || ''
+    () => activeWeeks[0]?.date || ''
   );
   const [reason, setReason] = useState<string>('Urlaub');
   const [customReason, setCustomReason] = useState<string>('');
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!selectedDate && activeWeeks.length > 0) {
+      setSelectedDate(activeWeeks[0].date);
+    }
+  }, [activeWeeks, selectedDate]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalReason = reason === 'Sonstiges' ? (customReason || 'Verhindert') : reason;
+    const finalReason = reason === 'Sonstiges' ? (customReason.trim() || 'Sonstiges') : reason;
     
     addAbsence(selectedPlayerId, selectedDate, finalReason);
 
@@ -34,11 +44,15 @@ export const AbsenceManager: React.FC = () => {
     const weekObj = weeks.find(w => w.date === selectedDate);
     const dateFormatted = weekObj ? formatWeekDate(weekObj) : selectedDate;
     
-    setSuccessNotice(`Abwesenheit für ${playerName} am ${dateFormatted} eingetragen. Springer wird automatisch informiert!`);
+    setSuccessNotice(`Abwesenheit für ${playerName} am ${dateFormatted} eingetragen.`);
     setTimeout(() => setSuccessNotice(null), 4000);
 
     setCustomReason('');
   };
+
+  const sortedAbsences = useMemo(() => {
+    return [...absences].sort((a, b) => parseDateToTime(a.date) - parseDateToTime(b.date));
+  }, [absences]);
 
   return (
     <div className="space-y-6">
@@ -54,10 +68,10 @@ export const AbsenceManager: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              Abwesenheiten & Urlaub
+              Abwesenheiten
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Verhinderungen eintragen
+              Urlaub, Verletzungen & Verhinderungen eintragen
             </p>
           </div>
         </div>
@@ -138,7 +152,7 @@ export const AbsenceManager: React.FC = () => {
               {reason === 'Sonstiges' && (
                 <input
                   type="text"
-                  placeholder="Genauer Grund..."
+                  placeholder="Genauer Grund (optional)..."
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
                   className="mt-2 w-full text-sm p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -174,7 +188,7 @@ export const AbsenceManager: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-2.5">
-              {absences.map((abs) => {
+              {sortedAbsences.map((abs) => {
                 const player = players.find(p => p.id === abs.playerId);
                 const weekObj = weeks.find(w => w.date === abs.date);
 

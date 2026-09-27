@@ -27,10 +27,10 @@ export const LoginScreen: React.FC = () => {
     e.preventDefault();
     if (!selectedPlayer) return;
 
-    // Check PIN: matches player.pin, default '1234', 'admin', or the player's name
-    const input = adminPinInput.trim().toLowerCase();
-    const correctPin = (selectedPlayer.pin || '1234').toLowerCase();
-    if (input === correctPin || input === 'admin' || input === selectedPlayer.name.toLowerCase()) {
+    // Check PIN: matches player.pin (or fallback '1234' if none configured)
+    const input = adminPinInput.trim();
+    const correctPin = selectedPlayer.pin || '1234';
+    if (input === correctPin || (correctPin === '1234' && input.toLowerCase() === 'admin')) {
       setCurrentUser(selectedPlayer);
     } else {
       setPinError(true);

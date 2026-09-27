@@ -30,7 +30,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
     },
     {
       id: 'absences',
-      label: 'Urlaub',
+      label: 'Abwesenheiten',
       icon: <Plane className="w-5 h-5" />,
       badge: absences.length > 0 ? absences.length : undefined,
     },

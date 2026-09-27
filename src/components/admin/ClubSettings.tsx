@@ -16,11 +16,15 @@ import {
   Mail,
   Send,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Lock,
+  KeyRound,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export const ClubSettings: React.FC = () => {
-  const { theme, setTheme, resetAll, weeks, players, springerCount, setSpringerCount, currentUser } = useApp();
+  const { theme, setTheme, resetAll, weeks, players, springerCount, setSpringerCount, currentUser, updatePlayer } = useApp();
   
   // Theme state
   const [clubName, setClubName] = useState(theme.clubName);
@@ -36,6 +40,72 @@ export const ClubSettings: React.FC = () => {
   const [testEmailAddress, setTestEmailAddress] = useState(currentUser?.email || '');
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   const [testEmailStatus, setTestEmailStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Admin PIN / Password Change State
+  const [currentAdminPin, setCurrentAdminPin] = useState('');
+  const [newAdminPin, setNewAdminPin] = useState('');
+  const [confirmAdminPin, setConfirmAdminPin] = useState('');
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [pinChangeStatus, setPinChangeStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Selected Admin for change (defaults to currentUser, but can select other admins if multiple)
+  const adminPlayers = players.filter(p => p.isAdmin);
+  const [targetAdminId, setTargetAdminId] = useState(currentUser.id);
+  const targetAdmin = players.find(p => p.id === targetAdminId) || currentUser;
+
+  const handleUpdateAdminPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinChangeStatus(null);
+
+    // If changing own PIN, verify current PIN if one was already set
+    if (targetAdmin.id === currentUser.id && currentUser.pin) {
+      if (currentAdminPin.trim() !== currentUser.pin) {
+        setPinChangeStatus({
+          success: false,
+          message: 'Die aktuelle PIN ist nicht korrekt.',
+        });
+        return;
+      }
+    }
+
+    if (!newAdminPin.trim()) {
+      setPinChangeStatus({
+        success: false,
+        message: 'Bitte eine neue PIN oder ein Passwort eingeben.',
+      });
+      return;
+    }
+
+    if (newAdminPin.trim().length < 4) {
+      setPinChangeStatus({
+        success: false,
+        message: 'Die PIN / das Passwort muss mindestens 4 Zeichen lang sein.',
+      });
+      return;
+    }
+
+    if (newAdminPin.trim() !== confirmAdminPin.trim()) {
+      setPinChangeStatus({
+        success: false,
+        message: 'Die Passwörter / PINs stimmen nicht überein.',
+      });
+      return;
+    }
+
+    updatePlayer({
+      ...targetAdmin,
+      pin: newAdminPin.trim(),
+    });
+
+    setPinChangeStatus({
+      success: true,
+      message: `Admin-PIN für ${targetAdmin.name} erfolgreich aktualisiert!`,
+    });
+    setCurrentAdminPin('');
+    setNewAdminPin('');
+    setConfirmAdminPin('');
+    setTimeout(() => setPinChangeStatus(null), 4000);
+  };
 
   const handleSaveTheme = () => {
     setTheme({
@@ -469,7 +539,121 @@ export const ClubSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Datensicherung */}
+      {/* 4. Admin-Passwort / PIN ändern */}
+      <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-500" />
+            Admin-Passwort / PIN ändern
+          </h3>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+            Sicherheit
+          </span>
+        </div>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          Hier kannst du deine persönliche Admin-PIN bzw. dein Passwort für den Login und Zugriff auf das Admin-Panel ändern.
+        </p>
+
+        <form onSubmit={handleUpdateAdminPin} className="space-y-3.5 max-w-2xl bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl border border-neutral-200/80 dark:border-neutral-700/80">
+          {adminPlayers.length > 1 && (
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                Admin-Konto auswählen
+              </label>
+              <select
+                value={targetAdminId}
+                onChange={(e) => {
+                  setTargetAdminId(e.target.value);
+                  setPinChangeStatus(null);
+                }}
+                className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                {adminPlayers.map((adm) => (
+                  <option key={adm.id} value={adm.id}>
+                    {adm.name} {adm.id === currentUser.id ? '(Du)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {targetAdmin.id === currentUser.id && currentUser.pin && (
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                Bisherige Admin-PIN
+              </label>
+              <input
+                type="password"
+                value={currentAdminPin}
+                onChange={(e) => setCurrentAdminPin(e.target.value)}
+                placeholder="Aktuelle PIN eingeben..."
+                className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                Neue PIN / Neues Passwort
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPin ? 'text' : 'password'}
+                  value={newAdminPin}
+                  onChange={(e) => setNewAdminPin(e.target.value)}
+                  placeholder="Mind. 4 Zeichen / Ziffern"
+                  className="w-full text-xs font-semibold p-2.5 pr-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPin(!showNewPin)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                  title={showNewPin ? 'Verbergen' : 'Anzeigen'}
+                >
+                  {showNewPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                Neue PIN wiederholen
+              </label>
+              <input
+                type={showNewPin ? 'text' : 'password'}
+                value={confirmAdminPin}
+                onChange={(e) => setConfirmAdminPin(e.target.value)}
+                placeholder="Wiederholung bestätigen..."
+                className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+          </div>
+
+          {pinChangeStatus && (
+            <div className={`text-xs p-2.5 rounded-xl font-bold flex items-center gap-2 ${
+              pinChangeStatus.success 
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
+                : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-800'
+            }`}>
+              {pinChangeStatus.success ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
+              <span>{pinChangeStatus.message}</span>
+            </div>
+          )}
+
+          <div className="pt-1">
+            <button
+              type="submit"
+              className="py-2 px-3.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-all flex items-center gap-1.5 shadow-xs"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Admin-PIN speichern</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* 5. Datensicherung */}
       <div className="space-y-3 pt-4 border-t border-neutral-100 dark:border-neutral-800">
         <h3 className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider flex items-center gap-2">
           <Download className="w-4 h-4 text-emerald-500" />

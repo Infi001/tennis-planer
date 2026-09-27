@@ -80,3 +80,28 @@ export function generateRecurringSeasonDates(
 
   return results;
 }
+
+/**
+ * Safely parses an ISO date (YYYY-MM-DD) or German date string (DD.MM.YY / DD.MM.YYYY) into a timestamp.
+ * Useful for sorting calendar dates strictly chronologically.
+ */
+export function parseDateToTime(dateStr?: string | null): number {
+  if (!dateStr) return 0;
+  const trimmed = dateStr.trim();
+  // If ISO format YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+    const parts = trimmed.slice(0, 10).split('-');
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime() || 0;
+  }
+  // If German format DD.MM.YY or DD.MM.YYYY
+  const parts = trimmed.split('.');
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    let year = parseInt(parts[2], 10);
+    if (year < 100) year += 2000;
+    return new Date(year, month, day).getTime() || 0;
+  }
+  const parsed = new Date(trimmed).getTime();
+  return isNaN(parsed) ? 0 : parsed;
+}
