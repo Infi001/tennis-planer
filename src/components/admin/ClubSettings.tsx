@@ -152,12 +152,12 @@ export const ClubSettings: React.FC = () => {
       });
       return;
     }
-    const hasSmtp = emailConfig.smtpHost && emailConfig.smtpUser && emailConfig.smtpPass;
+    const hasConfig = (emailConfig.apiKey && emailConfig.apiKey.trim()) || (emailConfig.endpointUrl && emailConfig.endpointUrl.trim());
 
-    if (!hasSmtp) {
+    if (!hasConfig) {
       setTestEmailStatus({
         success: false,
-        message: 'Keine vollständigen SMTP-Zugangsdaten konfiguriert! Bitte trage Host, Benutzername und Passwort ein und klicke auf Speichern.',
+        message: 'Bitte trage zuerst deinen Brevo-API-Schlüssel ein und klicke auf Speichern.',
       });
       return;
     }
@@ -167,7 +167,7 @@ export const ClubSettings: React.FC = () => {
       const res = await sendDirectEmail({
         to: testEmailAddress.trim(),
         subject: `🎾 Test-Nachricht von ${theme.clubName}`,
-        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer Direktversand über deinen SMTP-Server (${emailConfig.smtpHost}) funktioniert einwandfrei!`,
+        body: `Hallo!\n\nDies ist eine direkte Test-E-Mail aus deinem Tennis-Trainingsplaner (${theme.clubName}).\nDer E-Mail-Versand per API funktioniert einwandfrei!`,
         config: emailConfig,
       });
       setTestEmailStatus(res);
@@ -464,80 +464,60 @@ export const ClubSettings: React.FC = () => {
         </p>
 
         {/* Explanation card */}
-        <div className="max-w-2xl p-4 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-200/80 dark:border-blue-800/80 text-xs text-blue-950 dark:text-blue-100 space-y-1.5">
-          <div className="font-bold flex items-center gap-1.5 text-blue-950 dark:text-blue-100 text-sm">
-            <Server className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span>Direkter SMTP-Versand über deinen Mailserver ({emailConfig.smtpHost || 'mail.tcrw-senne.de'})</span>
+        <div className="max-w-2xl p-4 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/80 text-xs text-emerald-950 dark:text-emerald-100 space-y-2">
+          <div className="font-bold flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-sm text-emerald-900 dark:text-emerald-100">
+              <Mail className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Direkter E-Mail-Versand per Brevo API</span>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200">
+              300 Mails / Tag kostenlos
+            </span>
           </div>
-          <p className="text-[11px] text-blue-900/90 dark:text-blue-200 leading-relaxed">
-            E-Mails werden direkt über deine Club-Mailbox versendet. Trage unten einfach Host, Port, Benutzername und Passwort deines Mailkontos ein.
+          <p className="text-[11px] text-emerald-900/90 dark:text-emerald-200 leading-relaxed">
+            E-Mails werden direkt und zuverlässig über die offizielle <strong>Brevo-API</strong> versendet – <strong>ohne PHP, ohne Server-Konfiguration und ohne Dateiuploads</strong>. 100% DSGVO-konform (europäischer Dienst).
           </p>
+          <div className="text-[11px] text-emerald-900/80 dark:text-emerald-300/90 pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60 space-y-1">
+            <div className="font-semibold">So richtest du es in 2 Minuten ein:</div>
+            <ol className="list-decimal list-inside space-y-0.5 pl-1">
+              <li>Kostenlos registrieren auf <a href="https://www.brevo.com" target="_blank" rel="noreferrer" className="underline font-bold hover:text-emerald-700">brevo.com</a></li>
+              <li>Im Menü auf <strong>SMTP & API</strong> gehen ➔ <strong>API-Schlüssel generieren</strong></li>
+              <li>Den Schlüssel unten einfügen und speichern – fertig!</li>
+            </ol>
+          </div>
         </div>
 
         <form onSubmit={handleSaveEmailConfig} className="space-y-4 max-w-2xl bg-neutral-50 dark:bg-neutral-800/50 p-4 sm:p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-700/80">
-          {/* SMTP Server Credentials */}
-          <div className="space-y-2.5">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                  SMTP Server / Host
-                </label>
-                <input
-                  type="text"
-                  value={emailConfig.smtpHost || ''}
-                  onChange={(e) => setEmailConfig({ ...emailConfig, smtpHost: e.target.value })}
-                  placeholder="mail.tcrw-senne.de"
-                  className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Port
-                </label>
-                <input
-                  type="number"
-                  value={emailConfig.smtpPort || 465}
-                  onChange={(e) => setEmailConfig({ ...emailConfig, smtpPort: parseInt(e.target.value) || 465 })}
-                  placeholder="465"
-                  className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+          {/* API Key Input */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                Brevo API-Schlüssel
+              </label>
+              <a
+                href="https://app.brevo.com/settings/keys/api"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+              >
+                Schlüssel auf brevo.com abrufen ↗
+              </a>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                  SMTP Benutzername
-                </label>
-                <input
-                  type="text"
-                  value={emailConfig.smtpUser || ''}
-                  onChange={(e) => setEmailConfig({ ...emailConfig, smtpUser: e.target.value })}
-                  placeholder="info@tcrw-senne.de"
-                  className="w-full text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                  SMTP Passwort
-                </label>
-                <div className="relative">
-                  <input
-                    type={showSmtpPass ? 'text' : 'password'}
-                    value={emailConfig.smtpPass || ''}
-                    onChange={(e) => setEmailConfig({ ...emailConfig, smtpPass: e.target.value })}
-                    placeholder="Passwort des Mail-Kontos"
-                    className="w-full text-xs font-mono p-2.5 pr-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowSmtpPass(!showSmtpPass)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
-                  >
-                    {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+            <div className="relative">
+              <input
+                type={showSmtpPass ? 'text' : 'password'}
+                value={emailConfig.apiKey || ''}
+                onChange={(e) => setEmailConfig({ ...emailConfig, apiKey: e.target.value })}
+                placeholder="xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                className="w-full text-xs font-mono p-2.5 pr-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSmtpPass(!showSmtpPass)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+              >
+                {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
@@ -555,8 +535,8 @@ export const ClubSettings: React.FC = () => {
                   type="text"
                   value={emailConfig.fromName || ''}
                   onChange={(e) => setEmailConfig({ ...emailConfig, fromName: e.target.value })}
-                  placeholder="z. B. TC Rot-Weiß Senne"
-                  className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="TCRW Montagsgruppe"
+                  className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
               <div>
@@ -567,83 +547,84 @@ export const ClubSettings: React.FC = () => {
                   type="email"
                   value={emailConfig.fromEmail || ''}
                   onChange={(e) => setEmailConfig({ ...emailConfig, fromEmail: e.target.value })}
-                  placeholder="info@tcrw-senne.de"
-                  className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="z. B. deine Brevo-E-Mail oder Vereinsadresse"
+                  className="w-full text-xs font-semibold p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
           </div>
 
-          {/* Webserver Bridge URL */}
-          <div className="space-y-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-              <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                Webserver Bridge-URL (send-mail.php auf deiner Website)
-              </label>
-              <a
-                href="/send-mail.php"
-                download="send-mail.php"
-                className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 shrink-0"
-                title="Lade die Datei herunter und lade sie per FTP/Dateimanager auf deinen Strato-Webspace hoch"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>send-mail.php herunterladen</span>
-              </a>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <input
-                type="url"
-                value={emailConfig.endpointUrl || ''}
-                onChange={(e) => setEmailConfig({ ...emailConfig, endpointUrl: e.target.value })}
-                placeholder="https://tcrw-senne.de/send-mail.php"
-                className="flex-1 text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={handleCheckBridge}
-                disabled={isCheckingBridge}
-                className="py-2.5 px-3 rounded-xl text-xs font-bold bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 flex items-center justify-center gap-1.5 transition-all shrink-0"
-              >
-                {isCheckingBridge ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Prüfe...</span>
-                  </>
-                ) : (
-                  <>
-                    <Server className="w-3.5 h-3.5" />
-                    <span>Bridge prüfen</span>
-                  </>
-                )}
-              </button>
-            </div>
-            {bridgeStatus && (
-              <div className={`text-xs p-2.5 rounded-xl font-semibold flex items-center gap-2 ${
-                bridgeStatus.ok 
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
-                  : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800'
-              }`}>
-                {bridgeStatus.ok ? <Check className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />}
-                <span>{bridgeStatus.message}</span>
+          {/* Optional: Alternative Webserver Bridge */}
+          <details className="pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60 text-neutral-600 dark:text-neutral-400">
+            <summary className="text-xs font-bold cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-200 select-none">
+              Erweitert: Eigene Webserver-Bridge (send-mail.php)
+            </summary>
+            <div className="space-y-2 mt-2 pt-2 border-t border-neutral-200/40 dark:border-neutral-700/40">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                  Webserver Bridge-URL
+                </label>
+                <a
+                  href="/send-mail.php"
+                  download="send-mail.php"
+                  className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 shrink-0"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>send-mail.php herunterladen</span>
+                </a>
               </div>
-            )}
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
-              💡 <strong>Warum ist das nötig?</strong> Web-Browser dürfen aus Sicherheitsgründen keine direkten Verbindungen zu Mail-Ports (465) aufbauen. Lade einfach <code>send-mail.php</code> einmalig auf deine Website hoch – der Trainingsplaner sendet die E-Mails dann zuverlässig über deinen Strato-Server.
-            </p>
-          </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  type="url"
+                  value={emailConfig.endpointUrl || ''}
+                  onChange={(e) => setEmailConfig({ ...emailConfig, endpointUrl: e.target.value })}
+                  placeholder="https://tcrw-senne.de/send-mail.php"
+                  className="flex-1 text-xs font-mono p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleCheckBridge}
+                  disabled={isCheckingBridge}
+                  className="py-2.5 px-3 rounded-xl text-xs font-bold bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 flex items-center justify-center gap-1.5 transition-all shrink-0"
+                >
+                  {isCheckingBridge ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Prüfe...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Server className="w-3.5 h-3.5" />
+                      <span>Bridge prüfen</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              {bridgeStatus && (
+                <div className={`text-xs p-2.5 rounded-xl font-semibold flex items-center gap-2 ${
+                  bridgeStatus.ok 
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
+                    : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800'
+                }`}>
+                  {bridgeStatus.ok ? <Check className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />}
+                  <span>{bridgeStatus.message}</span>
+                </div>
+              )}
+            </div>
+          </details>
 
           <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
             <button
               type="submit"
-              className="py-2.5 px-4 rounded-xl text-xs font-bold bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:opacity-90 transition-all flex items-center gap-1.5 shadow-xs"
+              className="py-2.5 px-4 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex items-center gap-1.5 shadow-xs"
             >
               {savedEmailConfigSuccess ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>SMTP-Einstellungen gespeichert!</span>
+                  <Check className="w-3.5 h-3.5 text-white" />
+                  <span>API-Einstellungen gespeichert!</span>
                 </>
               ) : (
-                <span>SMTP-Einstellungen speichern</span>
+                <span>E-Mail-Einstellungen speichern</span>
               )}
             </button>
           </div>

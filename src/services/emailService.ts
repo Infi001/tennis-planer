@@ -97,52 +97,103 @@ export async function sendDirectEmail(options: {
   }
 
   const config = options.config || StorageService.getEmailConfig();
-  const bridgeUrl = (config.endpointUrl && config.endpointUrl.trim()) 
-    ? config.endpointUrl.trim() 
-    : 'https://tcrw-senne.de/send-mail.php';
 
-  try {
-    const payload = {
-      to: recipient,
-      subject: options.subject,
-      body: options.body,
-      fromName: config.fromName || 'TCRW Montagsgruppe',
-      fromEmail: config.fromEmail || config.smtpUser || 'no-reply@rw-senne.de',
-      smtpHost: config.smtpHost || 'smtp.strato.de',
-      smtpPort: config.smtpPort || 465,
-      smtpUser: config.smtpUser || '',
-      smtpPass: config.smtpPass || '',
-    };
+  // 1. Primär: Direkter Brevo-API Versand (kein PHP / kein Webserver nötig)
+  if (config.apiKey && config.apiKey.trim()) {
+    try {
+      const fromName = config.fromName?.trim() || 'TCRW Montagsgruppe';
+      const fromEmail = config.fromEmail?.trim() || config.smtpUser?.trim() || 'no-reply@rw-senne.de';
 
-    const res = await fetch(bridgeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': config.apiKey.trim(),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: fromName, email: fromEmail },
+          to: [{ email: recipient }],
+          subject: options.subject,
+          textContent: options.body,
+          htmlContent: options.body.replace(/\n/g, '<br/>'),
+        }),
+      });
 
-    const data = await res.json().catch(() => null);
+      const data = await res.json().catch(() => null);
 
-    if (res.ok && data?.success) {
-      return {
-        success: true,
-        message: data.message || `E-Mail erfolgreich via Server (${bridgeUrl}) an ${recipient} versendet!`,
-      };
-    } else {
-      const errDetail = data?.error || data?.message || `Server meldete HTTP ${res.status}`;
+      if (res.ok) {
+        return {
+          success: true,
+          message: `E-Mail erfolgreich via Brevo-API an ${recipient} gesendet!`,
+        };
+      } else {
+        const errMsg = data?.message || data?.error || `HTTP ${res.status}`;
+        return {
+          success: false,
+          message: `Brevo-API Fehler (${res.status}): ${errMsg}`,
+        };
+      }
+    } catch (err: any) {
       return {
         success: false,
-        message: `Versandfehler (${bridgeUrl}): ${errDetail}`,
+        message: `Verbindungsfehler zur Brevo-API: ${err.message || 'Netzwerkfehler'}`,
       };
     }
-  } catch (err: any) {
-    return {
-      success: false,
-      message: `Server-Bridge nicht erreichbar (${bridgeUrl}): ${err.message || 'Netzwerkfehler'}. Bitte stelle sicher, dass 'send-mail.php' auf deinen Strato-Webspace hochgeladen wurde.`,
-    };
   }
+
+  // 2. Sekundär: Falls Webserver-Bridge konfiguriert ist
+  if (config.endpointUrl && config.endpointUrl.trim()) {
+    const bridgeUrl = config.endpointUrl.trim();
+    try {
+      const payload = {
+        to: recipient,
+        subject: options.subject,
+        body: options.body,
+        fromName: config.fromName || 'TCRW Montagsgruppe',
+        fromEmail: config.fromEmail || config.smtpUser || 'no-reply@rw-senne.de',
+        smtpHost: config.smtpHost || 'smtp.strato.de',
+        smtpPort: config.smtpPort || 465,
+        smtpUser: config.smtpUser || '',
+        smtpPass: config.smtpPass || '',
+      };
+
+      const res = await fetch(bridgeUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.success) {
+        return {
+          success: true,
+          message: data.message || `E-Mail erfolgreich via Server (${bridgeUrl}) an ${recipient} versendet!`,
+        };
+      } else {
+        const errDetail = data?.error || data?.message || `Server meldete HTTP ${res.status}`;
+        return {
+          success: false,
+          message: `Versandfehler (${bridgeUrl}): ${errDetail}`,
+        };
+      }
+    } catch (err: any) {
+      return {
+        success: false,
+        message: `Server-Bridge nicht erreichbar (${bridgeUrl}): ${err.message || 'Netzwerkfehler'}.`,
+      };
+    }
+  }
+
+  // 3. Weder API noch Bridge eingerichtet
+  return {
+    success: false,
+    message: 'Bitte trage unter Admin ➔ Einstellungen deinen Brevo-API-Schlüssel ein, um E-Mails direkt per API zu versenden.',
+  };
 }
 
 export async function sendDirectSpringerEmail(params: SpringerEmailParams): Promise<{ success: boolean; message: string }> {
