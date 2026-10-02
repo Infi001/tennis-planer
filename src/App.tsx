@@ -26,6 +26,7 @@ const AppContent: React.FC = () => {
   const { 
     theme, 
     isDarkMode, 
+    selectedWeekId,
     setSelectedWeekId, 
     isLoggedIn,
     currentUser,
@@ -122,12 +123,23 @@ const AppContent: React.FC = () => {
     };
   }, [setSelectedWeekId]);
 
+  // Keep URL in sync when active tab or selected week in matchcenter changes
+  useEffect(() => {
+    if (activeTab === 'matchcenter' && selectedWeekId) {
+      syncRouteToUrl({
+        tab: 'matchcenter',
+        weekId: selectedWeekId,
+      });
+    }
+  }, [activeTab, selectedWeekId]);
+
   // Handle user tab change with immediate URL sync
   const handleTabChange = (newTab: TabKey) => {
     setActiveTab(newTab);
     syncRouteToUrl({
       tab: newTab,
       adminSubTab: newTab === 'admin' ? adminSubTab : undefined,
+      weekId: newTab === 'matchcenter' ? selectedWeekId : undefined,
     });
   };
 
@@ -294,7 +306,11 @@ const AppContent: React.FC = () => {
         <ImpressumModal onClose={() => {
           setShowImpressum(false);
           if (window.location.hash.toLowerCase().includes('impressum') || window.location.hash.toLowerCase().includes('datenschutz')) {
-            syncRouteToUrl({ tab: activeTab, adminSubTab }, true);
+            syncRouteToUrl({ 
+              tab: activeTab, 
+              adminSubTab,
+              weekId: activeTab === 'matchcenter' ? selectedWeekId : undefined
+            }, true);
           }
         }} />
       )}

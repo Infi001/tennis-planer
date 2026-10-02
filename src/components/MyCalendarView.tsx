@@ -67,7 +67,7 @@ export const MyCalendarView: React.FC = () => {
 
   const handleJumpToWeek = (weekId: string) => {
     setSelectedWeekId(weekId);
-    window.location.hash = '#/wochenplan';
+    window.location.hash = `#/wochenplan/${encodeURIComponent(weekId)}`;
   };
 
   return (

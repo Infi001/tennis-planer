@@ -11,7 +11,7 @@ interface NavigationTabsProps {
 }
 
 export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTabChange, onOpenImpressum }) => {
-  const { theme, absences, currentUser } = useApp();
+  const { theme, absences, currentUser, selectedWeekId } = useApp();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   // All tabs definition
@@ -20,7 +20,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onTab
       id: 'matchcenter',
       label: 'Wochenplan',
       icon: <Calendar className="w-5 h-5" />,
-      hash: '#/wochenplan',
+      hash: selectedWeekId ? `#/wochenplan/${selectedWeekId}` : '#/wochenplan',
     },
     {
       id: 'schedule',

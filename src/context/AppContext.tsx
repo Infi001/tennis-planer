@@ -7,6 +7,7 @@ import { getWeekSlotKeys, generateSlotTimes, canReduceWeekSlots } from '../utils
 import { calculateStandbyCascade, StandbyCascadeResult } from '../utils/standbyCascade';
 import { useSupabaseSync } from '../hooks/useSupabaseSync';
 import { sortWeeksByDate } from '../utils/dateUtils';
+import { parseCurrentRoute } from '../utils/urlRouting';
 import confetti from 'canvas-confetti';
 
 interface AppContextType {
@@ -137,18 +138,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return null;
   });
   
-  // Default selected week: Find the first upcoming Monday or week 0
-  const [selectedWeekId, setSelectedWeekId] = useState<string>(() => {
+  // Default selected week: Find the week from URL route, or sessionStorage, or upcoming Monday, or week 0
+  const [selectedWeekId, setSelectedWeekIdState] = useState<string>(() => {
+    const initialWeeks = sortWeeksByDate(StorageService.getWeeks());
+
+    // 1. Check URL first (e.g. #/wochenplan/2026-10-12 or ?week=2026-10-12)
+    const route = parseCurrentRoute();
+    if (route.weekId && initialWeeks.some(w => w.id === route.weekId)) {
+      return route.weekId;
+    }
+    if (route.weekId) {
+      return route.weekId;
+    }
+
+    // 2. Check session storage (preserves selected week across tab reloads/views)
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const savedWeekId = sessionStorage.getItem('tennis_selected_week_id');
+      if (savedWeekId && initialWeeks.some(w => w.id === savedWeekId)) {
+        return savedWeekId;
+      }
+    }
+
+    // 3. Fallback to upcoming week
     const todayObj = new Date();
     const year = todayObj.getFullYear();
     const month = String(todayObj.getMonth() + 1).padStart(2, '0');
     const day = String(todayObj.getDate()).padStart(2, '0');
     const localToday = `${year}-${month}-${day}`;
     
-    const initialWeeks = sortWeeksByDate(StorageService.getWeeks());
     const upcoming = initialWeeks.find(w => w.date >= localToday);
     return upcoming ? upcoming.id : (initialWeeks[0]?.id || '2026-10-05');
   });
+
+  const setSelectedWeekId = (id: string) => {
+    setSelectedWeekIdState(id);
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.setItem('tennis_selected_week_id', id);
+    }
+  };
 
   const activePlayer = players.find(p => p.id === currentUserId) || null;
   const isLoggedIn = activePlayer !== null;

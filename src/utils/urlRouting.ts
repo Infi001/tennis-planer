@@ -121,30 +121,44 @@ export function parseCurrentRoute(): AppRoute {
     hashQuery = hash.slice(hashQuestionIdx + 1);
   }
 
-  const hashSegments = hashPath.split('/').filter(Boolean).map(s => s.toLowerCase());
+  const hashSegments = hashPath.split('/').filter(Boolean);
   const searchParams = new URLSearchParams(window.location.search);
   const hashSearchParams = new URLSearchParams(hashQuery);
 
-  const weekId = hashSearchParams.get('week') || 
-                 hashSearchParams.get('woche') || 
-                 searchParams.get('week') || 
-                 searchParams.get('woche') || 
-                 undefined;
+  let weekId: string | undefined = 
+    hashSearchParams.get('week') || 
+    hashSearchParams.get('woche') || 
+    searchParams.get('week') || 
+    searchParams.get('woche') || 
+    undefined;
 
   // 1. Try parsing primary tab from hash
   let tab: TabKey | undefined;
   let adminSubTab: AdminSubTab | undefined;
 
   if (hashSegments.length > 0) {
-    const firstSegment = hashSegments[0];
+    const firstSegment = hashSegments[0].toLowerCase();
     if (SLUG_TO_TAB[firstSegment]) {
       tab = SLUG_TO_TAB[firstSegment];
     }
 
-    if (hashSegments.length > 1 && tab === 'admin') {
+    if (hashSegments.length > 1) {
       const secondSegment = hashSegments[1];
-      if (SUBTAB_SLUGS[secondSegment]) {
-        adminSubTab = SUBTAB_SLUGS[secondSegment];
+      if (tab === 'admin') {
+        if (SUBTAB_SLUGS[secondSegment.toLowerCase()]) {
+          adminSubTab = SUBTAB_SLUGS[secondSegment.toLowerCase()];
+        }
+      } else {
+        // For matchcenter or other tabs, the 2nd segment is the weekId (e.g. #/wochenplan/2026-10-12)
+        if (!weekId && secondSegment) {
+          weekId = decodeURIComponent(secondSegment);
+        }
+      }
+    } else if (!tab) {
+      // First segment is not a recognized tab name. Check if it's a date or week ID (e.g. #/2026-10-12)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(hashSegments[0]) || hashSegments[0].startsWith('week-')) {
+        tab = 'matchcenter';
+        weekId = decodeURIComponent(hashSegments[0]);
       }
     }
   }
@@ -163,11 +177,13 @@ export function parseCurrentRoute(): AppRoute {
 
   // 3. Try parsing from pathname (e.g. /admin or /gesamtplan)
   if (!tab) {
-    const pathSegments = window.location.pathname.split('/').filter(Boolean).map(s => s.toLowerCase());
-    if (pathSegments.length > 0 && SLUG_TO_TAB[pathSegments[0]]) {
-      tab = SLUG_TO_TAB[pathSegments[0]];
-      if (pathSegments.length > 1 && tab === 'admin' && SUBTAB_SLUGS[pathSegments[1]]) {
-        adminSubTab = SUBTAB_SLUGS[pathSegments[1]];
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    if (pathSegments.length > 0 && SLUG_TO_TAB[pathSegments[0].toLowerCase()]) {
+      tab = SLUG_TO_TAB[pathSegments[0].toLowerCase()];
+      if (pathSegments.length > 1 && tab === 'admin' && SUBTAB_SLUGS[pathSegments[1].toLowerCase()]) {
+        adminSubTab = SUBTAB_SLUGS[pathSegments[1].toLowerCase()];
+      } else if (pathSegments.length > 1 && !weekId) {
+        weekId = decodeURIComponent(pathSegments[1]);
       }
     }
   }
@@ -181,7 +197,7 @@ export function parseCurrentRoute(): AppRoute {
 
 /**
  * Constructs the canonical hash string for a given route.
- * Example: "#/admin/settings" or "#/gesamtplan"
+ * Example: "#/admin/settings" or "#/gesamtplan" or "#/wochenplan/2026-10-12"
  */
 export function buildRouteHash(route: AppRoute): string {
   const slug = TAB_SLUG_MAP[route.tab] || 'wochenplan';
@@ -192,7 +208,7 @@ export function buildRouteHash(route: AppRoute): string {
   }
 
   if (route.weekId && route.tab === 'matchcenter') {
-    hash += `?week=${encodeURIComponent(route.weekId)}`;
+    hash += `/${encodeURIComponent(route.weekId)}`;
   }
 
   return hash;
@@ -211,7 +227,10 @@ export function syncRouteToUrl(route: AppRoute, replace = false): void {
   const currentUrl = new URL(window.location.href);
   currentUrl.hash = newHash;
 
-  if (replace) {
+  // If there was no hash previously, always replace to avoid polluting history on first visit
+  const shouldReplace = replace || !window.location.hash || window.location.hash === '#';
+
+  if (shouldReplace) {
     window.history.replaceState({ route }, '', currentUrl.toString());
   } else {
     window.history.pushState({ route }, '', currentUrl.toString());

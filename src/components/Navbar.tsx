@@ -12,14 +12,14 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ 
   onOpenUserSwitch, 
 }) => {
-  const { theme, currentUser, isDarkMode, setIsDarkMode, isImpersonating } = useApp();
+  const { theme, currentUser, isDarkMode, setIsDarkMode, isImpersonating, selectedWeekId } = useApp();
 
   return (
     <header className="sticky top-0 z-40 bg-[var(--club-primary)] dark:bg-neutral-900/95 backdrop-blur-md border-b border-transparent dark:border-neutral-800 transition-colors shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Club Logo & Brand */}
-        <a href="#/wochenplan" className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 group no-underline">
+        <a href={selectedWeekId ? `#/wochenplan/${selectedWeekId}` : '#/wochenplan'} className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 group no-underline">
           <div 
             className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[var(--club-primary)] shadow-sm transition-transform duration-200 group-hover:scale-105 bg-white shrink-0"
           >
