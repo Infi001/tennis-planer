@@ -85,6 +85,7 @@ export function calculateStandbyCascade(week: TrainingWeek, maxSpringers: number
   if (totalOpenSpots === 0) {
     if (sp1.status === 'offered') sp1.status = 'idle';
     if (sp2.status === 'offered') sp2.status = 'idle';
+    if (frei.status === 'offered') frei.status = 'idle';
 
     return {
       totalOpenSpots: 0,

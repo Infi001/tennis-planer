@@ -11,7 +11,7 @@ interface DeclineModalProps {
 }
 
 export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose }) => {
-  const { players, selectedWeek, declineAttendance, theme, springerCount, getPlayerCurrentSlotInWeek, updatePlayer } = useApp();
+  const { players, selectedWeek, declineAttendance, declineSubstituteOffer, theme, springerCount, getPlayerCurrentSlotInWeek, updatePlayer } = useApp();
   const player = players.find(p => p.id === playerId);
   const [reason, setReason] = useState<string>('Krank / Verletzung');
   const [customNote, setCustomNote] = useState<string>('');
@@ -21,11 +21,22 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
 
   if (!selectedWeek || !player) return null;
 
+  const playerSlot = getPlayerCurrentSlotInWeek(selectedWeek.id, playerId) || undefined;
+  const isSpringerRole = !playerSlot && (
+    selectedWeek.springer1.playerId === playerId ||
+    selectedWeek.springer2.playerId === playerId ||
+    selectedWeek.frei?.playerId === playerId
+  );
+  const springerRoleLabel = selectedWeek.springer1.playerId === playerId
+    ? '1. Springer'
+    : selectedWeek.springer2.playerId === playerId
+      ? '2. Springer'
+      : '3. Springer';
+
   const sp1Player = players.find(p => p.id === selectedWeek.springer1.playerId);
   const sp2Player = players.find(p => p.id === selectedWeek.springer2.playerId);
   const freiPlayer = players.find(p => p.id === selectedWeek.frei?.playerId);
 
-  const playerSlot = getPlayerCurrentSlotInWeek(selectedWeek.id, playerId) || undefined;
   const nextSpringer = (selectedWeek.springer1.playerId && selectedWeek.springer1.status !== 'declined' && selectedWeek.springer1.playerId !== playerId)
     ? sp1Player
     : (springerCount >= 2 && selectedWeek.springer2.playerId && selectedWeek.springer2.status !== 'declined' && selectedWeek.springer2.playerId !== playerId)
@@ -36,9 +47,14 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
 
   const handleConfirmDecline = async () => {
     const finalReason = customNote ? `${reason} (${customNote})` : reason;
-    declineAttendance(selectedWeek.id, playerId, finalReason);
+    
+    if (isSpringerRole) {
+      declineSubstituteOffer(selectedWeek.id, playerId, finalReason);
+    } else {
+      declineAttendance(selectedWeek.id, playerId, finalReason);
+    }
 
-    if (notifySpringerViaEmail && nextSpringer) {
+    if (!isSpringerRole && notifySpringerViaEmail && nextSpringer) {
       const emailToSend = (nextSpringer.email || springerEmailInput).trim();
       if (emailToSend) {
         if (!nextSpringer.email || nextSpringer.email !== emailToSend) {
@@ -82,7 +98,7 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
             </div>
             <div>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                Absage für {player.name}
+                {isSpringerRole ? `Als ${springerRoleLabel} absagen` : `Absage für ${player.name}`}
               </h3>
               <p className="text-xs text-neutral-500">
                 {formatWeekDate(selectedWeek)}
@@ -135,16 +151,24 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
             <span>Nachrücker-Regelung:</span>
           </div>
           <p className="text-amber-800 dark:text-amber-200 leading-relaxed text-xs">
-            {nextSpringer ? (
-              <>Der freie Platz geht vorrangig an <strong>{nextSpringer.name}</strong> (Springer).</>
+            {isSpringerRole ? (
+              nextSpringer ? (
+                <>Du stehst für diesen Spieltag nicht als Springer zur Verfügung. Bei freien Plätzen rückt vorrangig <strong>{nextSpringer.name}</strong> nach.</>
+              ) : (
+                <>Du stehst für diesen Spieltag nicht als Springer zur Verfügung. Bei freien Plätzen wird direkt die gesamte Gruppe informiert.</>
+              )
             ) : (
-              <>Der freie Platz wird für nachrückende Gruppenmitglieder freigegeben.</>
+              nextSpringer ? (
+                <>Der freie Platz geht vorrangig an <strong>{nextSpringer.name}</strong> (Springer).</>
+              ) : (
+                <>Der freie Platz wird für nachrückende Gruppenmitglieder freigegeben.</>
+              )
             )}
           </p>
         </div>
 
         {/* Optional Email Notification to Springer */}
-        {nextSpringer && (
+        {!isSpringerRole && nextSpringer && (
           <div className="space-y-1.5">
             <label className="flex items-center space-x-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none px-1">
               <input
@@ -199,7 +223,7 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
                 <span>Wird gesendet...</span>
               </>
             ) : (
-              <span>Absage bestätigen</span>
+              <span>{isSpringerRole ? 'Als Springer absagen' : 'Absage bestätigen'}</span>
             )}
           </button>
         </div>

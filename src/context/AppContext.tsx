@@ -47,7 +47,8 @@ interface AppContextType {
   reclaimSlot: (weekId: string, slot: SlotTime, playerId: string) => void;
   acceptSubstitute: (weekId: string, slot: SlotTime, candidatePlayerId: string) => boolean;
   cancelSubstitute: (weekId: string, slot: SlotTime, substitutePlayerId: string, reason?: string) => void;
-  declineSubstituteOffer: (weekId: string, springerPlayerId: string) => void;
+  declineSubstituteOffer: (weekId: string, springerPlayerId: string, reason?: string) => void;
+  reclaimStandbySlot: (weekId: string, playerId: string) => void;
   claimOpenSlot: (weekId: string, slot: SlotTime, candidatePlayerId: string) => boolean;
   skipStandbyPriorityToNext: (weekId: string, prioLevel: number) => void;
   releaseOpenSlotsToAll: (weekId: string) => void;
@@ -364,6 +365,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let newSp1 = { ...weekItem.springer1 };
       let newSp2 = { ...weekItem.springer2 };
       let newFrei = weekItem.frei ? { ...weekItem.frei } : { playerId: '', status: 'idle' as const };
+
+      // If the declining player is an assigned Springer, mark them as declined
+      if (newSp1.playerId === playerId) {
+        newSp1.status = 'declined';
+      }
+      if (newSp2.playerId === playerId) {
+        newSp2.status = 'declined';
+      }
+      if (newFrei.playerId === playerId) {
+        newFrei.status = 'declined';
+      }
 
       const isActivelyPlaying = (pId: string) => {
         if (!pId) return true;
@@ -715,13 +727,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // --- Decline Substitute Offer (Springer oder Frei lehnt das Einspringen ab -> Kaskade zur nächsten Stufe) ---
-  const declineSubstituteOffer = (weekId: string, playerId: string) => {
+  const declineSubstituteOffer = (weekId: string, playerId: string, reason?: string) => {
     const targetWeek = weeks.find(w => w.id === weekId);
     if (!targetWeek) return;
 
     let newSp1 = { ...targetWeek.springer1 };
     let newSp2 = { ...targetWeek.springer2 };
-    let newFrei = { ...targetWeek.frei };
+    let newFrei = targetWeek.frei ? { ...targetWeek.frei } : { playerId: '', status: 'idle' as const };
 
     if (newSp1.playerId === playerId) {
       newSp1.status = 'declined';
@@ -747,7 +759,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setWeeks(prevWeeks => prevWeeks.map(w => w.id === weekId ? updatedWeek : w));
 
-    notifyNextStandbyCandidate(updatedWeek, playerId, cascade);
+    notifyNextStandbyCandidate(updatedWeek, playerId, cascade, reason);
+  };
+
+  // --- Reclaim Standby Slot (Springer meldet sich wieder als verfügbar zurück) ---
+  const reclaimStandbySlot = (weekId: string, playerId: string) => {
+    const targetWeek = weeks.find(w => w.id === weekId);
+    if (!targetWeek) return;
+
+    let newSp1 = { ...targetWeek.springer1 };
+    let newSp2 = { ...targetWeek.springer2 };
+    let newFrei = targetWeek.frei ? { ...targetWeek.frei } : { playerId: '', status: 'idle' as const };
+
+    if (newSp1.playerId === playerId) {
+      newSp1.status = 'idle';
+    } else if (newSp2.playerId === playerId) {
+      newSp2.status = 'idle';
+    } else if (newFrei.playerId === playerId) {
+      newFrei.status = 'idle';
+    }
+
+    const cascade = calculateStandbyCascade({
+      ...targetWeek,
+      springer1: newSp1,
+      springer2: newSp2,
+      frei: newFrei,
+    }, springerCount);
+
+    const updatedWeek: TrainingWeek = {
+      ...targetWeek,
+      springer1: cascade.springer1,
+      springer2: cascade.springer2,
+      frei: cascade.frei,
+    };
+
+    setWeeks(prevWeeks => prevWeeks.map(w => w.id === weekId ? updatedWeek : w));
   };
 
   // --- Skip Priority to next candidate (Admin or Fast-Forward) ---
@@ -1553,6 +1599,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         acceptSubstitute,
         cancelSubstitute,
         declineSubstituteOffer,
+        reclaimStandbySlot,
         claimOpenSlot,
         skipStandbyPriorityToNext,
         releaseOpenSlotsToAll,

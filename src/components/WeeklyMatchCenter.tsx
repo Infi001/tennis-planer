@@ -49,6 +49,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
     theme,
     confirmAttendance,
     reclaimSlot,
+    reclaimStandbySlot,
     cancelSubstitute,
     acceptSubstitute,
     declineSubstituteOffer,
@@ -171,6 +172,10 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   const isCurrentUserSp2Turn = isCurrentUserSp2 && cascade.activeOfferedPrios.includes(2) && springerCount >= 2;
   const isCurrentUserSp3Turn = isCurrentUserSp3 && cascade.activeOfferedPrios.includes(3) && springerCount >= 3;
   const isCurrentUserStandbyTurn = isCurrentUserSp1Turn || isCurrentUserSp2Turn || isCurrentUserSp3Turn;
+  const isCurrentUserSpringer = (isCurrentUserSp1 && springerCount >= 1) || (isCurrentUserSp2 && springerCount >= 2) || (isCurrentUserSp3 && springerCount >= 3);
+  const isMyStandbyDeclined = (isCurrentUserSp1 && cascade.springer1.status === 'declined')
+    || (isCurrentUserSp2 && cascade.springer2.status === 'declined')
+    || (isCurrentUserSp3 && cascade.frei?.status === 'declined');
 
   // Swap lookups
   const incomingSwapForMe = swaps.find(s => 
@@ -379,9 +384,13 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
       <div className={`p-4 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs transition-all ${
         isCurrentUserStandbyTurn 
           ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 ring-2 ring-amber-400/30'
-          : cascade.openForAnyoneCount > 0 && !isCurrentlyPlaying
-            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
-            : 'bg-white dark:bg-[var(--md-sys-color-surface)] border-neutral-200/80 dark:border-neutral-800'
+          : isMyStandbyDeclined
+            ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900'
+            : isCurrentUserSpringer
+              ? 'bg-amber-50/30 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/40'
+              : cascade.openForAnyoneCount > 0 && !isCurrentlyPlaying
+                ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
+                : 'bg-white dark:bg-[var(--md-sys-color-surface)] border-neutral-200/80 dark:border-neutral-800'
       }`}>
         
         <div className="flex items-center space-x-3 w-full md:w-auto">
@@ -421,21 +430,25 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
                 ❌ Du hast für {myDeclinedSlot} Uhr abgesagt (Platz ist noch frei)
               </p>
+            ) : isMyStandbyDeclined ? (
+              <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                ❌ Du hast als {isCurrentUserSp1 ? '1. Springer' : isCurrentUserSp2 ? '2. Springer' : '3. Springer'} für diesen Spieltag abgesagt
+              </p>
             ) : isCurrentUserStandbyTurn ? (
               <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
                 🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer' : isCurrentUserSp2Turn ? '2. Springer' : '3. Springer'} an der Reihe!
               </p>
             ) : isCurrentUserSp1 && springerCount >= 1 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 1. Springer für diesen Spieltag {cascade.springer1.status === 'declined' ? '(Abgelehnt ❌)' : ''}
+                🟡 Du bist 1. Springer für diesen Spieltag (Bereit auf Abruf)
               </p>
             ) : isCurrentUserSp2 && springerCount >= 2 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 2. Springer für diesen Spieltag {cascade.springer2.status === 'declined' ? '(Abgelehnt ❌)' : ''}
+                🟡 Du bist 2. Springer für diesen Spieltag (Nachrücker Stufe 2)
               </p>
             ) : isCurrentUserSp3 ? (
               <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 3. Springer für diesen Spieltag {cascade.frei?.status === 'declined' ? '(Abgelehnt ❌)' : ''}
+                🟡 Du bist 3. Springer für diesen Spieltag (Nachrücker Stufe 3)
               </p>
             ) : isCurrentUserFrei ? (
               <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
@@ -503,6 +516,17 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                 </button>
               )}
 
+              {/* Action 4B: If Springer previously declined, allow reclaiming standby availability */}
+              {isMyStandbyDeclined && (
+                <button
+                  onClick={() => reclaimStandbySlot(selectedWeek.id, currentUser.id)}
+                  className="py-2 px-3.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs m3-ripple flex items-center space-x-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Wieder als Springer bereit 👍</span>
+                </button>
+              )}
+
               {/* Action 5A: Standby Priority Call to Action */}
               {isCurrentUserStandbyTurn && openSlots.length > 0 && (
                 <div className="flex items-center flex-wrap gap-1.5">
@@ -517,12 +541,25 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                     </button>
                   ))}
                   <button
-                    onClick={() => declineSubstituteOffer(selectedWeek.id, currentUser.id)}
-                    className="py-2 px-3 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-rose-600 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 m3-ripple"
+                    onClick={() => onOpenDecline(currentUser.id)}
+                    className="py-2 px-3 rounded-xl text-xs font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
                   >
-                    Ablehnen (Weitergeben ➔)
+                    <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Als Springer absagen</span>
                   </button>
                 </div>
+              )}
+
+              {/* Action 5A2: Springer can decline in advance even when no spots are open yet or not their turn */}
+              {isCurrentUserSpringer && !isMyStandbyDeclined && !isCurrentUserStandbyTurn && !myCurrentSlot && (
+                <button
+                  onClick={() => onOpenDecline(currentUser.id)}
+                  className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
+                  title="Diesen Spieltag als Springer absagen"
+                >
+                  <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Als Springer absagen</span>
+                </button>
               )}
 
               {/* Action 5B: General Claim if not scheduled and open spots exist */}
@@ -996,7 +1033,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
       )}
 
       {/* Springer- & Standby-Hub */}
-      <SpringerHub week={selectedWeek} />
+      <SpringerHub week={selectedWeek} onOpenDecline={onOpenDecline} />
 
       </div> {/* End Main Swipeable Area */}
 

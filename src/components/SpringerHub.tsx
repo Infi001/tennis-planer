@@ -6,7 +6,8 @@ import {
   AlertCircle, 
   Check, 
   RotateCcw,
-  Mail
+  Mail,
+  X
 } from 'lucide-react';
 import { 
   buildStandbyQueueDisplay, 
@@ -16,15 +17,17 @@ import { EmailModal } from './EmailModal';
 
 interface SpringerHubProps {
   week: TrainingWeek;
+  onOpenDecline?: (playerId: string) => void;
 }
 
-export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
+export const SpringerHub: React.FC<SpringerHubProps> = ({ week, onOpenDecline }) => {
   const { 
     players, 
     currentUser, 
     theme, 
     acceptSubstitute, 
     declineSubstituteOffer,
+    reclaimStandbySlot,
     skipStandbyPriorityToNext,
     resetStandbyCascade,
     springerCount,
@@ -196,10 +199,10 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                           </button>
                         ))}
                         <button
-                          onClick={() => declineSubstituteOffer(week.id, p.id)}
-                          className="w-full py-1 mt-1 text-[11px] font-semibold text-neutral-500 hover:text-rose-600 text-center transition-colors"
+                          onClick={() => onOpenDecline ? onOpenDecline(p.id) : declineSubstituteOffer(week.id, p.id)}
+                          className="w-full py-1.5 mt-1 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 dark:bg-rose-950/40 rounded-xl text-center transition-colors m3-ripple"
                         >
-                          Kann an diesem Spieltag nicht
+                          Kann an diesem Spieltag nicht (Als Springer absagen)
                         </button>
                       </div>
                     ) : (
@@ -209,19 +212,44 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week }) => {
                 )}
 
                 {!isTurn && (
-                  <div className="flex items-center justify-between text-[11px] text-neutral-400">
-                    <span>
-                      {item.status === 'accepted' ? 'Einsatz bestätigt ✅' : item.status === 'declined' ? 'Ausgeschieden ❌' : 'Bereit'}
-                    </span>
-                    
-                    {/* Admin skip button for idle items when open spots exist */}
-                    {hasOpenSpots && currentUser.isAdmin && item.status === 'idle' && (
-                      <button
-                        onClick={() => skipStandbyPriorityToNext(week.id, item.prio)}
-                        className="text-[10px] font-semibold text-neutral-500 hover:text-amber-600 underline"
-                      >
-                        Überspringen
-                      </button>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] text-neutral-400">
+                      <span>
+                        {item.status === 'accepted' ? 'Einsatz bestätigt ✅' : item.status === 'declined' ? 'Ausgeschieden ❌' : 'Bereit'}
+                      </span>
+                      
+                      {/* Admin skip button for idle items when open spots exist */}
+                      {hasOpenSpots && currentUser.isAdmin && item.status === 'idle' && (
+                        <button
+                          onClick={() => skipStandbyPriorityToNext(week.id, item.prio)}
+                          className="text-[10px] font-semibold text-neutral-500 hover:text-amber-600 underline"
+                        >
+                          Überspringen
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Allow Springer or Admin to decline in advance or reclaim */}
+                    {p && (currentUser.id === p.id || currentUser.isAdmin) && (
+                      <div className="pt-1">
+                        {item.status === 'declined' ? (
+                          <button
+                            onClick={() => reclaimStandbySlot(week.id, p.id)}
+                            className="w-full py-1.5 px-3 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 flex items-center justify-center gap-1.5 m3-ripple"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Wieder als Springer bereit 👍</span>
+                          </button>
+                        ) : item.status !== 'accepted' && (
+                          <button
+                            onClick={() => onOpenDecline ? onOpenDecline(p.id) : declineSubstituteOffer(week.id, p.id)}
+                            className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center gap-1.5 m3-ripple"
+                          >
+                            <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                            <span>Als Springer absagen</span>
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

@@ -124,4 +124,20 @@ assert(res.totalOpenSpots === 0, 'Total open spots is 0');
 assert(res.springer1.status === 'idle', 'Springer 1 offer reverted to idle');
 assert(res.activeOfferedPrios.length === 0, 'No active offers');
 
+console.log('\n--- TEST 11: Advance Springer 1 decline (declines in advance before any open spot) ---');
+const weekAdvanceDecline: TrainingWeek = JSON.parse(JSON.stringify(baseWeek));
+weekAdvanceDecline.springer1.status = 'declined';
+res = calculateStandbyCascade(weekAdvanceDecline);
+assert(res.totalOpenSpots === 0, 'Total open spots is 0');
+assert(res.springer1.status === 'declined', 'Springer 1 is marked declined');
+assert(res.springer2.status === 'idle', 'Springer 2 is idle');
+
+// Now a spot opens: Springer 1 is already declined, so offer must immediately go to Springer 2
+weekAdvanceDecline.slots['18:00-19:00'][0] = { playerId: 'p1', status: 'declined' };
+res = calculateStandbyCascade(weekAdvanceDecline);
+assert(res.totalOpenSpots === 1, 'Total open spots is 1');
+assert(res.springer1.status === 'declined', 'Springer 1 remains declined');
+assert(res.springer2.status === 'offered', 'Springer 2 immediately offered because Springer 1 already declined in advance');
+assert(res.activeOfferedPrios[0] === 2, 'Active offered prio is 2');
+
 console.log('\n🎉 ALL STANDBY CASCADE UNIT TESTS PASSED PERFECTLY!');
