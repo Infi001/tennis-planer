@@ -121,3 +121,23 @@ export function sortWeeksByDate<T extends { date?: string; id?: string; dateStri
   });
 }
 
+/**
+ * Finds the currently active or next upcoming training week based on today's date.
+ */
+export function findCurrentOrNextWeek<T extends { date?: string; id?: string; dateString?: string; isCancelled?: boolean }>(weeks: T[]): T | undefined {
+  if (!weeks || weeks.length === 0) return undefined;
+  const sorted = sortWeeksByDate(weeks);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const todayTimestamp = now.getTime();
+
+  // Find first week whose date is today or in the future
+  const upcoming = sorted.find(w => {
+    const t = parseDateToTime(w.date || w.id || w.dateString);
+    // Add 24h grace period so game day remains "current" during the entire day
+    return t + 86400000 >= todayTimestamp;
+  });
+
+  return upcoming || sorted[sorted.length - 1];
+}
+

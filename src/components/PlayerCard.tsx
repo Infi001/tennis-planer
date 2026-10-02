@@ -257,15 +257,26 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                   <span className="text-[10px] text-neutral-500">Vorrang: {prioName}</span>
                 ) : null}
               </div>
-              <button
-                onClick={() => claimOpenSlot(weekId, slotTime, currentUser.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs flex items-center gap-1 transition-colors ${
-                  isMeOfferedStandby ? 'bg-amber-600 hover:bg-amber-700' : ''
-                }`}
-                style={!isMeOfferedStandby ? { backgroundColor: theme.primary } : undefined}
-              >
-                {isMeOfferedStandby ? 'Annehmen 🎾' : 'Einspringen 🎾'}
-              </button>
+              {isMeOfferedStandby ? (
+                <button
+                  onClick={() => claimOpenSlot(weekId, slotTime, currentUser.id)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs flex items-center gap-1 transition-colors bg-amber-600 hover:bg-amber-700"
+                >
+                  Annehmen 🎾
+                </button>
+              ) : (cascade?.openForAnyoneCount ?? 0) > 0 || isAdmin ? (
+                <button
+                  onClick={() => claimOpenSlot(weekId, slotTime, currentUser.id)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs flex items-center gap-1 transition-colors"
+                  style={{ backgroundColor: theme.primary }}
+                >
+                  Einspringen 🎾
+                </button>
+              ) : (
+                <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2.5 py-1 rounded-lg">
+                  Vorrang für {prioName || 'Springer'}
+                </span>
+              )}
             </>
           )}
         </div>

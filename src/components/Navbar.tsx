@@ -7,12 +7,10 @@ import {
 
 interface NavbarProps {
   onOpenUserSwitch: () => void;
-  onOpenWhatsApp: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   onOpenUserSwitch, 
-  onOpenWhatsApp,
 }) => {
   const { theme, currentUser, isDarkMode, setIsDarkMode, isImpersonating } = useApp();
 

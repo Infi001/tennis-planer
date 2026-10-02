@@ -7,7 +7,7 @@ import { DoppelGeneratorModal } from './DoppelGeneratorModal';
 import { AdminAssignModal } from './AdminAssignModal';
 import { getWeekSlotKeys } from '../utils/slotTimeUtils';
 import { calculateStandbyCascade } from '../utils/standbyCascade';
-import { formatWeekDate, sortWeeksByDate } from '../utils/dateUtils';
+import { formatWeekDate, sortWeeksByDate, findCurrentOrNextWeek } from '../utils/dateUtils';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -15,7 +15,6 @@ import {
   Calendar as CalendarIcon, 
   UserPlus, 
   AlertTriangle, 
-  CheckCircle2, 
   Sparkles, 
   RotateCcw, 
   Check, 
@@ -40,7 +39,6 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   onOpenSwap,
   onOpenAddGuest,
   onOpenCalendar,
-  onOpenWhatsApp
 }) => {
   const { 
     weeks, 
@@ -75,6 +73,36 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   const currentIndex = sortedWeeks.findIndex(w => w.id === selectedWeekId);
   const prevWeek = currentIndex > 0 ? sortedWeeks[currentIndex - 1] : null;
   const nextWeek = currentIndex < sortedWeeks.length - 1 ? sortedWeeks[currentIndex + 1] : null;
+
+  const currentOrNextWeek = React.useMemo(() => findCurrentOrNextWeek(sortedWeeks), [sortedWeeks]);
+  const isCurrentOrNextWeek = currentOrNextWeek?.id === selectedWeekId;
+  const [shareToast, setShareToast] = useState<string | null>(null);
+
+  const handleShare = async () => {
+    if (!selectedWeek) return;
+    const url = window.location.href;
+    const dateStr = formatWeekDate(selectedWeek);
+    const title = `${theme.clubName} - Spieltag ${dateStr}`;
+    const text = `🎾 Trainingsplan für ${dateStr} (${theme.clubName}):\n${url}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch {
+        // User cancelled or unsupported, fallback to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareToast('Link kopiert! 📋');
+      setTimeout(() => setShareToast(null), 3000);
+    } catch {
+      setShareToast('Kopieren fehlgeschlagen');
+      setTimeout(() => setShareToast(null), 2500);
+    }
+  };
 
   if (!selectedWeek) {
     return (
@@ -209,17 +237,42 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
             <span className="hidden sm:inline">Vorige Woche</span>
           </button>
 
-          <div className="text-center sm:text-left">
-            <div className="flex items-center justify-center sm:justify-start space-x-2">
+          <div className="text-center sm:text-left flex-1 min-w-0">
+            <div className="flex items-center justify-center sm:justify-start space-x-2 flex-wrap gap-y-1">
               <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Woche {currentIndex >= 0 ? currentIndex + 1 : 1} von {sortedWeeks.length}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-700 hidden sm:inline-block" />
+              <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 hidden sm:inline-block">
                 {theme.groupName || 'Trainingsgruppe'}
               </span>
+
+              {/* Direct Week Quick Select Dropdown */}
+              <select
+                value={selectedWeekId}
+                onChange={(e) => setSelectedWeekId(e.target.value)}
+                className="text-[11px] font-semibold py-0.5 px-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 cursor-pointer focus:outline-none"
+                title="Direkt zu einem Spieltag springen"
+              >
+                {sortedWeeks.map((w, idx) => (
+                  <option key={w.id} value={w.id}>
+                    Woche {idx + 1}: {formatWeekDate(w)} {w.isCancelled ? ' (Ausfall)' : ''}
+                  </option>
+                ))}
+              </select>
+
+              {/* Google Calendar-Style "Heute / Nächster" Quick Jump */}
+              {!isCurrentOrNextWeek && currentOrNextWeek && (
+                <button
+                  onClick={() => setSelectedWeekId(currentOrNextWeek.id)}
+                  className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                  title="Zum aktuellen bzw. nächsten anstehenden Spieltag springen"
+                >
+                  Heute / Nächster ➔
+                </button>
+              )}
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center justify-center sm:justify-start gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center justify-center sm:justify-start gap-2 mt-0.5">
               <CalendarIcon className="w-5 h-5 text-neutral-400" />
               <span>{formatWeekDate(selectedWeek)}</span>
               {selectedWeek.isCancelled && (
@@ -272,6 +325,12 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
           {/* Action Buttons for this Week */}
           <div className="flex items-center space-x-2 ml-auto">
+            {shareToast && (
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800 animate-in fade-in">
+                {shareToast}
+              </span>
+            )}
+            
             {onOpenCalendar && (
               <button
                 onClick={onOpenCalendar}
@@ -283,16 +342,14 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               </button>
             )}
             
-            {onOpenWhatsApp && (
-              <button
-                onClick={onOpenWhatsApp}
-                title="Diesen Spieltag via WhatsApp teilen"
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-all m3-ripple"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">WhatsApp</span>
-              </button>
-            )}
+            <button
+              onClick={handleShare}
+              title="Diesen Spieltag teilen oder Link kopieren"
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all m3-ripple"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Teilen</span>
+            </button>
           </div>
         </div>
 
@@ -470,19 +527,25 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
               {/* Action 5B: General Claim if not scheduled and open spots exist */}
               {!isCurrentlyPlaying && !isCurrentUserStandbyTurn && openSlots.length > 0 && !myDeclinedSlot && (
-                <div className="flex items-center space-x-1.5">
-                  {openSlots.map(slot => (
-                    <button
-                      key={slot}
-                      onClick={() => acceptSubstitute(selectedWeek.id, slot, currentUser.id)}
-                      className="py-2 px-3 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1"
-                      style={{ backgroundColor: theme.primary }}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>{slot} Uhr übernehmen 🎾</span>
-                    </button>
-                  ))}
-                </div>
+                cascade.openForAnyoneCount > 0 || currentUser.isAdmin ? (
+                  <div className="flex items-center space-x-1.5">
+                    {openSlots.map(slot => (
+                      <button
+                        key={slot}
+                        onClick={() => acceptSubstitute(selectedWeek.id, slot, currentUser.id)}
+                        className="py-2 px-3 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1"
+                        style={{ backgroundColor: theme.primary }}
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{slot} Uhr übernehmen 🎾</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800/80 px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                    Vorrang für {cascade.activeOfferedPrios.includes(1) ? sp1Player?.name : sp2Player?.name || 'Springer'}
+                  </span>
+                )
               )}
             </>
           )}
@@ -822,19 +885,34 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
                       <div className="flex items-center gap-2">
                         {!isCurrentlyPlaying ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              acceptSubstitute(selectedWeek.id, slotKey, currentUser.id);
-                            }}
-                            className={`py-1.5 px-3 rounded-xl text-[10px] sm:text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1 ${
-                              isMyPrioTurn ? 'bg-amber-600 hover:bg-amber-700' : ''
-                            }`}
-                            style={!isMyPrioTurn ? { backgroundColor: theme.primary } : undefined}
-                          >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>{isMyPrioTurn ? 'Platz annehmen 🎾' : 'Hier einspringen'}</span>
-                          </button>
+                          isMyPrioTurn ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                acceptSubstitute(selectedWeek.id, slotKey, currentUser.id);
+                              }}
+                              className="py-1.5 px-3 rounded-xl text-[10px] sm:text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1 bg-amber-600 hover:bg-amber-700"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Platz annehmen 🎾</span>
+                            </button>
+                          ) : cascade.openForAnyoneCount > 0 || currentUser.isAdmin ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                acceptSubstitute(selectedWeek.id, slotKey, currentUser.id);
+                              }}
+                              className="py-1.5 px-3 rounded-xl text-[10px] sm:text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1"
+                              style={{ backgroundColor: theme.primary }}
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Hier einspringen</span>
+                            </button>
+                          ) : (
+                            <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-lg">
+                              Vorrang für {prioName}
+                            </span>
+                          )
                         ) : (
                           <span className="text-[11px] text-neutral-400 italic hidden sm:block">
                             Du spielst um {myCurrentSlot} Uhr

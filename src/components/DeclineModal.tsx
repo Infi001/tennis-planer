@@ -7,7 +7,7 @@ import { sendDirectSpringerEmail } from '../services/emailService';
 interface DeclineModalProps {
   playerId: string;
   onClose: () => void;
-  onOpenWhatsApp: () => void;
+  onOpenWhatsApp?: () => void;
 }
 
 export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose }) => {

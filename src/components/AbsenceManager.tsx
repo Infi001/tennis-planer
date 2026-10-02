@@ -41,7 +41,7 @@ export const AbsenceManager: React.FC = () => {
     addAbsence(selectedPlayerId, selectedDate, finalReason);
 
     const playerName = players.find(p => p.id === selectedPlayerId)?.name || 'Spieler';
-    const weekObj = weeks.find(w => w.date === selectedDate);
+    const weekObj = weeks.find(w => w.date === selectedDate || w.dateString === selectedDate || w.id === selectedDate);
     const dateFormatted = weekObj ? formatWeekDate(weekObj) : selectedDate;
     
     setSuccessNotice(`Abwesenheit für ${playerName} am ${dateFormatted} eingetragen.`);
@@ -184,13 +184,13 @@ export const AbsenceManager: React.FC = () => {
             <div className="p-8 text-center text-neutral-400 dark:text-neutral-500">
               <Plane className="w-8 h-8 mx-auto mb-2 opacity-40" />
               <p className="text-sm font-medium">Bisher keine Abwesenheiten gemeldet.</p>
-              <p className="text-xs">Alle 15 Spieler sind laut Plan verfügbar.</p>
+              <p className="text-xs">Alle {players.length} Spieler sind laut Plan verfügbar.</p>
             </div>
           ) : (
             <div className="space-y-2.5">
               {sortedAbsences.map((abs) => {
                 const player = players.find(p => p.id === abs.playerId);
-                const weekObj = weeks.find(w => w.date === abs.date);
+                const weekObj = weeks.find(w => w.date === abs.date || w.dateString === abs.date || w.id === abs.date);
 
                 return (
                   <div

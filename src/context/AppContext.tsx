@@ -1018,7 +1018,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setAbsences(prev => [...prev, newAbsence]);
 
-    const targetWeek = weeks.find(w => w.date === date);
+    const targetWeek = weeks.find(w => w.date === date || w.dateString === date || w.id === date);
     if (targetWeek) {
       declineAttendance(targetWeek.id, playerId, reason);
     }

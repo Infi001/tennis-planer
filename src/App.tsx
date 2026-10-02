@@ -191,7 +191,6 @@ const AppContent: React.FC = () => {
       {/* Top Navbar */}
       <Navbar
         onOpenUserSwitch={() => setShowUserSwitch(true)}
-        onOpenWhatsApp={() => setShowWhatsApp(true)}
       />
 
       {/* Main Container */}
@@ -206,8 +205,6 @@ const AppContent: React.FC = () => {
             onOpenDecline={(playerId) => setDeclinePlayerId(playerId)}
             onOpenSwap={(playerId, fromSlot) => setSwapData({ playerId, fromSlot })}
             onOpenAddGuest={(slotTime) => setGuestSlot(slotTime)}
-            
-            onOpenWhatsApp={() => setShowWhatsApp(true)}
           />
         )}
 
@@ -262,6 +259,10 @@ const AppContent: React.FC = () => {
       <NavigationTabs 
         activeTab={activeTab} 
         onTabChange={handleTabChange} 
+        onOpenImpressum={() => {
+          setShowImpressum(true);
+          syncRouteToUrl({ tab: activeTab, showImpressum: true });
+        }}
       />
 
       
@@ -271,10 +272,6 @@ const AppContent: React.FC = () => {
         <DeclineModal
           playerId={declinePlayerId}
           onClose={() => setDeclinePlayerId(null)}
-          onOpenWhatsApp={() => {
-            setDeclinePlayerId(null);
-            setShowWhatsApp(true);
-          }}
         />
       )}
 
