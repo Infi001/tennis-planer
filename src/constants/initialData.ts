@@ -151,6 +151,24 @@ export function generateInitialSchedule(): TrainingWeek[] {
   let activeWeekIndex = 0;
 
   return SEASON_MONDAYS.map((m) => {
+    if (m.cancelled) {
+      return {
+        id: m.iso,
+        dateString: m.dateStr,
+        date: m.iso,
+        isCancelled: true,
+        cancelReason: m.cancelReason || 'Kein Training',
+        slots: {
+          '18:00-19:00': [],
+          '19:00-20:00': [],
+          '20:00-21:00': [],
+        },
+        springer1: { playerId: '', status: 'idle' },
+        springer2: { playerId: '', status: 'idle' },
+        frei: { playerId: '', status: 'idle' },
+      };
+    }
+
     const weekIdx = activeWeekIndex % 15;
     activeWeekIndex++;
 

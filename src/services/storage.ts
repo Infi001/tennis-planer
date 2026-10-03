@@ -86,34 +86,38 @@ export class StorageService {
 
   static migrateAndDeduplicateWeeks(weeks: TrainingWeek[]): { weeks: TrainingWeek[]; changed: boolean } {
     let changed = false;
-    let initialSchedule: TrainingWeek[] | null = null;
 
     weeks.forEach(w => {
-      // Migrate Ostermontag (2027-03-29): marked cancelled, but with full rotation slots!
+      // Migrate Ostermontag (2027-03-29) and any other holiday
       if (w.id === '2027-03-29' || w.cancelReason?.toLowerCase().includes('ostern')) {
         if (!w.isCancelled || w.cancelReason !== 'Kein Training (Ostermontag)') {
           w.isCancelled = true;
           w.cancelReason = 'Kein Training (Ostermontag)';
           changed = true;
         }
-        // If slots are completely empty, populate with standard rotation
-        const totalAssigned = Object.values(w.slots || {}).reduce((acc, arr) => acc + (arr?.length || 0), 0);
-        if (totalAssigned === 0) {
-          if (!initialSchedule) {
-            initialSchedule = generateInitialSchedule();
-          }
-          const fresh = initialSchedule.find(fw => fw.id === '2027-03-29') || initialSchedule.find(fw => fw.id === w.id);
-          if (fresh) {
-            w.slots = JSON.parse(JSON.stringify(fresh.slots));
-            w.springer1 = { ...fresh.springer1 };
-            w.springer2 = { ...fresh.springer2 };
-            w.frei = { ...fresh.frei };
-            changed = true;
-          }
-        }
       }
 
-      if (w.isCancelled) return;
+      if (w.isCancelled) {
+        // Cancelled week must not have active players or springers assigned
+        const slotKeys = Object.keys(w.slots || {});
+        let hadAssignments = false;
+        slotKeys.forEach(k => {
+          if ((w.slots[k] || []).length > 0) {
+            hadAssignments = true;
+            w.slots[k] = [];
+          }
+        });
+        if (w.springer1?.playerId || w.springer2?.playerId || w.frei?.playerId) {
+          hadAssignments = true;
+          w.springer1 = { playerId: '', status: 'idle' };
+          w.springer2 = { playerId: '', status: 'idle' };
+          w.frei = { playerId: '', status: 'idle' };
+        }
+        if (hadAssignments) {
+          changed = true;
+        }
+        return;
+      }
 
       const seenPlayerIds = new Set<string>();
       const slotKeys = Object.keys(w.slots || {});

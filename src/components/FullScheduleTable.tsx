@@ -67,7 +67,7 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
 
     if (week.isCancelled) {
       return { 
-        text: roleText !== '-' ? `${roleText} (Ausfall)` : 'Kein Training', 
+        text: 'Kein Training', 
         type: 'cancelled',
         isSub: false
       };

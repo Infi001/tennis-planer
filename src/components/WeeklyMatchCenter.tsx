@@ -23,7 +23,8 @@ import {
   Shuffle,
   Share2,
   ShieldCheck,
-  Users
+  Users,
+  CalendarOff
 } from 'lucide-react';
 
 interface WeeklyMatchCenterProps {
@@ -64,6 +65,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
     adminDragDropAssign,
     resetWeekToOriginal,
     springerCount,
+    toggleWeekCancellation,
   } = useApp();
 
   const [doppelSlot, setDoppelSlot] = useState<SlotTime | null>(null);
@@ -74,6 +76,12 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   const currentIndex = sortedWeeks.findIndex(w => w.id === selectedWeekId);
   const prevWeek = currentIndex > 0 ? sortedWeeks[currentIndex - 1] : null;
   const nextWeek = currentIndex < sortedWeeks.length - 1 ? sortedWeeks[currentIndex + 1] : null;
+
+  const nextActiveWeek = React.useMemo(() => {
+    if (!selectedWeek) return null;
+    return sortedWeeks.find(w => !w.isCancelled && w.date > selectedWeek.date) || 
+           sortedWeeks.find(w => !w.isCancelled && w.id !== selectedWeek.id) || null;
+  }, [sortedWeeks, selectedWeek]);
 
   const currentOrNextWeek = React.useMemo(() => findCurrentOrNextWeek(sortedWeeks), [sortedWeeks]);
   const isCurrentOrNextWeek = currentOrNextWeek?.id === selectedWeekId;
@@ -360,120 +368,122 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
       </div>
 
-      {/* Week Ausfall Banner */}
-      {selectedWeek.isCancelled && (
-        <div className="p-4 sm:p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-start sm:items-center space-x-3.5 text-amber-900 dark:text-amber-100 shadow-xs">
-          <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400">
-            <CalendarIcon className="w-5 h-5" />
+      {/* If week is cancelled: Show dedicated Cancelled State View with NO match schedule */}
+      {selectedWeek.isCancelled ? (
+        <div className="bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl p-6 sm:p-10 border border-neutral-200/80 dark:border-neutral-800 shadow-sm text-center max-w-2xl mx-auto space-y-6 my-4">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-xs">
+            <CalendarOff className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
-          <div>
-            <div className="font-bold text-sm sm:text-base flex items-center gap-2">
-              <span>Dieser Spieltag fällt aus</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200 font-semibold">
-                {selectedWeek.cancelReason || 'Kein Training'}
-              </span>
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/80 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 text-xs font-bold border border-amber-200 dark:border-amber-800">
+              <span>{selectedWeek.cancelReason || 'Kein Training'}</span>
             </div>
-            <p className="text-xs text-amber-700/90 dark:text-amber-300/90 mt-0.5">
-              An diesem Spieltag findet kein reguläres Vereinstraining statt. Die untenstehenden Plätze und Springer-Einteilungen zeigen die reguläre Rotation für diesen Termin.
+            <h3 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-neutral-100 tracking-tight">
+              Dieser Spieltag fällt aus
+            </h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
+              Für diesen Termin ist kein Vereinstraining angesetzt und es sind keine Plätze reserviert. Es gibt keinen aktiven Spielplan – alle Spieler haben trainingsfrei.
             </p>
           </div>
-        </div>
-      )}
 
-      {/* Prominent Personal Status & Action Banner */}
-      <div className={`p-4 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs transition-all ${
-        isCurrentUserStandbyTurn 
-          ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 ring-2 ring-amber-400/30'
-          : isMyStandbyDeclined
-            ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900'
-            : isCurrentUserSpringer
-              ? 'bg-amber-50/30 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/40'
-              : cascade.openForAnyoneCount > 0 && !isCurrentlyPlaying
-                ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
-                : 'bg-white dark:bg-[var(--md-sys-color-surface)] border-neutral-200/80 dark:border-neutral-800'
-      }`}>
-        
-        <div className="flex items-center space-x-3 w-full md:w-auto">
-          <div 
-            className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs"
-            style={{ backgroundColor: currentUser.avatarColor || theme.primary }}
-          >
-            {currentUser.shortName}
-          </div>
-          <div>
-            <div className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-              Dein persönlicher Status ({currentUser.name})
-            </div>
-            
-            {selectedWeek.isCancelled ? (
-              <p className="text-sm font-extrabold text-amber-800 dark:text-amber-300 leading-snug">
-                {myCurrentSlot ? (
-                  <span>Reguläre Rotation: {myCurrentSlot} Uhr (Spieltag fällt aus)</span>
-                ) : isCurrentUserSp1 ? (
-                  <span>Reguläre Rotation: 1. Springer (Spieltag fällt aus)</span>
-                ) : isCurrentUserSp2 ? (
-                  <span>Reguläre Rotation: 2. Springer (Spieltag fällt aus)</span>
-                ) : isCurrentUserSp3 ? (
-                  <span>Reguläre Rotation: 3. Springer (Spieltag fällt aus)</span>
-                ) : isCurrentUserFrei ? (
-                  <span>Reguläre Rotation: Spielfrei</span>
-                ) : (
-                  <span>Spieltag fällt aus ({selectedWeek.cancelReason || 'Kein Training'})</span>
-                )}
-              </p>
-            ) : myCurrentSlot ? (
-              <p className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 leading-snug">
-                <span>{isMySlotSubstitute ? '🦘 Du bist als Springer eingeteilt um ' : '🎾 Du spielst um '}</span>
-                <span className="text-blue-600 dark:text-blue-400 whitespace-nowrap">{myCurrentSlot} Uhr</span>
-              </p>
-            ) : myDeclinedSlot ? (
-              <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                ❌ Du hast für {myDeclinedSlot} Uhr abgesagt (Platz ist noch frei)
-              </p>
-            ) : isMyStandbyDeclined ? (
-              <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                ❌ Du hast als {isCurrentUserSp1 ? '1. Springer' : isCurrentUserSp2 ? '2. Springer' : '3. Springer'} für diesen Spieltag abgesagt
-              </p>
-            ) : isCurrentUserStandbyTurn ? (
-              <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
-                🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer' : isCurrentUserSp2Turn ? '2. Springer' : '3. Springer'} an der Reihe!
-              </p>
-            ) : isCurrentUserSp1 && springerCount >= 1 ? (
-              <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 1. Springer für diesen Spieltag (Bereit auf Abruf)
-              </p>
-            ) : isCurrentUserSp2 && springerCount >= 2 ? (
-              <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 2. Springer für diesen Spieltag (Nachrücker Stufe 2)
-              </p>
-            ) : isCurrentUserSp3 ? (
-              <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                🟡 Du bist 3. Springer für diesen Spieltag (Nachrücker Stufe 3)
-              </p>
-            ) : isCurrentUserFrei ? (
-              <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                💤 Du hast diese Woche regulär spielfrei
-              </p>
-            ) : totalOpenSpots > 0 ? (
-              <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                🟢 Freier Platz verfügbar!
-              </p>
-            ) : (
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                Nicht aktiv eingeteilt
-              </p>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            {nextActiveWeek && (
+              <button
+                onClick={() => setSelectedWeekId(nextActiveWeek.id)}
+                className="w-full sm:w-auto py-2.5 px-5 rounded-2xl text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs flex items-center justify-center space-x-2 transition-all m3-ripple"
+              >
+                <span>Nächster aktiver Spieltag ({formatWeekDate(nextActiveWeek)})</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+
+            {currentUser.isAdmin && (
+              <button
+                onClick={() => toggleWeekCancellation(selectedWeek.id)}
+                className="w-full sm:w-auto py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-bold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700 transition-all m3-ripple flex items-center justify-center space-x-2"
+                title="Diesen Spieltag wieder als regulären Trainingstag aktivieren"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Spieltag wieder aktivieren</span>
+              </button>
             )}
           </div>
         </div>
+      ) : (
+        <>
+          {/* Prominent Personal Status & Action Banner */}
+          <div className={`p-4 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs transition-all ${
+            isCurrentUserStandbyTurn 
+              ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 ring-2 ring-amber-400/30'
+              : isMyStandbyDeclined
+                ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900'
+                : isCurrentUserSpringer
+                  ? 'bg-amber-50/30 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/40'
+                  : cascade.openForAnyoneCount > 0 && !isCurrentlyPlaying
+                    ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-white dark:bg-[var(--md-sys-color-surface)] border-neutral-200/80 dark:border-neutral-800'
+          }`}>
+            
+            <div className="flex items-center space-x-3 w-full md:w-auto">
+              <div 
+                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs"
+                style={{ backgroundColor: currentUser.avatarColor || theme.primary }}
+              >
+                {currentUser.shortName}
+              </div>
+              <div>
+                <div className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                  Dein persönlicher Status ({currentUser.name})
+                </div>
+                
+                {myCurrentSlot ? (
+                  <p className="text-sm font-extrabold text-neutral-900 dark:text-neutral-100 leading-snug">
+                    <span>{isMySlotSubstitute ? '🦘 Du bist als Springer eingeteilt um ' : '🎾 Du spielst um '}</span>
+                    <span className="text-blue-600 dark:text-blue-400 whitespace-nowrap">{myCurrentSlot} Uhr</span>
+                  </p>
+                ) : myDeclinedSlot ? (
+                  <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                    ❌ Du hast für {myDeclinedSlot} Uhr abgesagt (Platz ist noch frei)
+                  </p>
+                ) : isMyStandbyDeclined ? (
+                  <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                    ❌ Du hast als {isCurrentUserSp1 ? '1. Springer' : isCurrentUserSp2 ? '2. Springer' : '3. Springer'} für diesen Spieltag abgesagt
+                  </p>
+                ) : isCurrentUserStandbyTurn ? (
+                  <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
+                    🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer' : isCurrentUserSp2Turn ? '2. Springer' : '3. Springer'} an der Reihe!
+                  </p>
+                ) : isCurrentUserSp1 && springerCount >= 1 ? (
+                  <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                    🟡 Du bist 1. Springer für diesen Spieltag (Bereit auf Abruf)
+                  </p>
+                ) : isCurrentUserSp2 && springerCount >= 2 ? (
+                  <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                    🟡 Du bist 2. Springer für diesen Spieltag (Nachrücker Stufe 2)
+                  </p>
+                ) : isCurrentUserSp3 ? (
+                  <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                    🟡 Du bist 3. Springer für diesen Spieltag (Nachrücker Stufe 3)
+                  </p>
+                ) : isCurrentUserFrei ? (
+                  <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                    💤 Du hast diese Woche regulär spielfrei
+                  </p>
+                ) : totalOpenSpots > 0 ? (
+                  <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                    🟢 Freier Platz verfügbar!
+                  </p>
+                ) : (
+                  <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                    Nicht aktiv eingeteilt
+                  </p>
+                )}
+              </div>
+            </div>
 
-        {/* Dynamic Personal Action Buttons */}
-        <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-end">
-          {selectedWeek.isCancelled ? (
-            <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-              Spieltag pausiert
-            </span>
-          ) : (
-            <>
+            {/* Dynamic Personal Action Buttons */}
+            <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-end">
               {/* Action: If scheduled, allow swap and decline */}
               {myCurrentSlot && !isMySlotSubstitute && (
                 <>
@@ -584,12 +594,8 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                   </span>
                 )
               )}
-            </>
-          )}
-
-        </div>
-
-      </div>
+            </div>
+          </div>
 
       {/* Incoming swap offer for me (Prominent Full-Width Alert Card) */}
       {incomingSwapForMe && (
@@ -1035,10 +1041,13 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
       {/* Springer- & Standby-Hub */}
       <SpringerHub week={selectedWeek} onOpenDecline={onOpenDecline} />
 
+        </>
+      )}
+
       </div> {/* End Main Swipeable Area */}
 
       {/* Admin Drag & Drop Pool (Sidebar on Desktop) */}
-      {currentUser.isAdmin && (
+      {currentUser.isAdmin && !selectedWeek.isCancelled && (
         <div className="hidden lg:block w-80 shrink-0">
           <div className="sticky top-24 p-5 rounded-3xl bg-neutral-100/50 dark:bg-[var(--md-sys-color-surface)] border border-neutral-200/80 dark:border-neutral-800 flex flex-col justify-between">
             <div>
