@@ -105,16 +105,15 @@ const AppContent: React.FC = () => {
       if (route.showImpressum) {
         setShowImpressum(true);
       }
-      setActiveTab(route.tab);
+      setActiveTab(prev => (prev !== route.tab ? route.tab : prev));
       if (route.adminSubTab) {
-        setAdminSubTab(route.adminSubTab);
+        setAdminSubTab(prev => (prev !== route.adminSubTab ? route.adminSubTab! : prev));
       }
       if (route.weekId) {
         setSelectedWeekId(route.weekId);
       }
     };
 
-    handleUrlChange();
     window.addEventListener('popstate', handleUrlChange);
     window.addEventListener('hashchange', handleUrlChange);
     return () => {

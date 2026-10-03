@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Player, TrainingWeek, Absence, SwapRequest, ClubTheme, SlotTime, PlayerStatus, SlotAssignment } from '../types/tennis';
 import { StorageService } from '../services/storage';
 import { sendDirectSpringerEmail } from '../services/emailService';
@@ -170,12 +170,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return upcoming ? upcoming.id : (initialWeeks[0]?.id || '2026-10-05');
   });
 
-  const setSelectedWeekId = (id: string) => {
-    setSelectedWeekIdState(id);
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      sessionStorage.setItem('tennis_selected_week_id', id);
-    }
-  };
+  const setSelectedWeekId = useCallback((id: string) => {
+    setSelectedWeekIdState(prev => {
+      if (prev === id) return prev;
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('tennis_selected_week_id', id);
+      }
+      return id;
+    });
+  }, []);
 
   const activePlayer = players.find(p => p.id === currentUserId) || null;
   const isLoggedIn = activePlayer !== null;
