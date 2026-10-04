@@ -24,7 +24,8 @@ import {
   Share2,
   ShieldCheck,
   Users,
-  CalendarOff
+  CalendarOff,
+  Lock
 } from 'lucide-react';
 
 interface WeeklyMatchCenterProps {
@@ -66,6 +67,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
     resetWeekToOriginal,
     springerCount,
     toggleWeekCancellation,
+    isScheduleLocked,
   } = useApp();
 
   const [doppelSlot, setDoppelSlot] = useState<SlotTime | null>(null);
@@ -1023,16 +1025,21 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
           <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700/60">
             <button
+              disabled={isScheduleLocked}
               onClick={() => {
                 if (window.confirm('Möchtest du diesen Spieltag wirklich auf den ursprünglich berechneten Basis-Plan zurücksetzen? Alle manuellen Anpassungen, Tausche und Springer werden entfernt!')) {
                   resetWeekToOriginal(selectedWeek.id);
                 }
               }}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center space-x-2 transition-colors m3-ripple"
-              title="Auf den ursprünglichen Plan zurücksetzen"
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold border flex items-center justify-center space-x-2 transition-colors ${
+                isScheduleLocked
+                  ? 'bg-neutral-100 text-neutral-400 dark:bg-neutral-800/50 dark:text-neutral-500 border-neutral-200 dark:border-neutral-700 cursor-not-allowed'
+                  : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border-rose-200 dark:border-rose-900/60 m3-ripple'
+              }`}
+              title={isScheduleLocked ? "Saisonplanung ist fixiert. Bitte im Admin-Bereich entsperren." : "Auf den ursprünglichen Plan zurücksetzen"}
             >
-              <RotateCcw className="w-4 h-4 shrink-0" />
-              <span className="whitespace-nowrap">Spieltag auf Original zurücksetzen</span>
+              {isScheduleLocked ? <Lock className="w-4 h-4 shrink-0 text-neutral-400" /> : <RotateCcw className="w-4 h-4 shrink-0" />}
+              <span className="whitespace-nowrap">Spieltag auf Original zurücksetzen {isScheduleLocked && '(Gesperrt)'}</span>
             </button>
           </div>
         </div>
@@ -1093,16 +1100,21 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
 
             <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700/60 mt-4">
               <button
+                disabled={isScheduleLocked}
                 onClick={() => {
                   if (window.confirm('Möchtest du diesen Spieltag wirklich auf den ursprünglich berechneten Basis-Plan zurücksetzen? Alle manuellen Anpassungen, Tausche und Springer werden entfernt!')) {
                     resetWeekToOriginal(selectedWeek.id);
                   }
                 }}
-                className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center space-x-2 transition-colors m3-ripple whitespace-nowrap"
-                title="Auf den ursprünglichen Plan zurücksetzen"
+                className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center space-x-2 transition-colors whitespace-nowrap ${
+                  isScheduleLocked
+                    ? 'bg-neutral-100 text-neutral-400 dark:bg-neutral-800/50 dark:text-neutral-500 border-neutral-200 dark:border-neutral-700 cursor-not-allowed'
+                    : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border-rose-200 dark:border-rose-900/60 m3-ripple'
+                }`}
+                title={isScheduleLocked ? "Saisonplanung ist fixiert. Bitte im Admin-Bereich entsperren." : "Auf den ursprünglichen Plan zurücksetzen"}
               >
-                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">Spieltag zurücksetzen</span>
+                {isScheduleLocked ? <Lock className="w-3.5 h-3.5 shrink-0 text-neutral-400" /> : <RotateCcw className="w-3.5 h-3.5 shrink-0" />}
+                <span className="whitespace-nowrap">Spieltag zurücksetzen {isScheduleLocked && '(Gesperrt)'}</span>
               </button>
             </div>
           </div>

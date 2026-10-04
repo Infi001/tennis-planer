@@ -22,9 +22,22 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import { ScheduleLockBanner } from './ScheduleLockBanner';
 
 export const ClubSettings: React.FC = () => {
-  const { theme, setTheme, resetAll, weeks, players, springerCount, setSpringerCount, currentUser, updatePlayer } = useApp();
+  const { 
+    theme, 
+    setTheme, 
+    resetAll, 
+    weeks, 
+    players, 
+    springerCount, 
+    setSpringerCount, 
+    currentUser, 
+    updatePlayer,
+    isScheduleLocked,
+    setIsScheduleLocked 
+  } = useApp();
   
   // Theme state
   const [clubName, setClubName] = useState(theme.clubName);
@@ -745,17 +758,28 @@ export const ClubSettings: React.FC = () => {
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
           Setzt alle Spieltage und Zuteilungen unwiderruflich auf die ursprüngliche Vorlage zurück.
         </p>
+
+        {/* Schedule Lock Banner for Reset Section */}
+        <ScheduleLockBanner compact contextTitle="Plan auf Vorlage zurücksetzen" />
+
         <div>
           <button
+            disabled={isScheduleLocked}
             onClick={() => {
               if (window.confirm('Möchtest du wirklich alle Termine auf die ursprüngliche 15-Wochen-Vorlage zurücksetzen? Alle individuellen Zu- und Absagen werden dabei gelöscht.')) {
                 resetAll();
+                setIsScheduleLocked(true);
                 alert('Der Plan wurde erfolgreich auf die ursprüngliche Vorlage zurückgesetzt.');
               }
             }}
-            className="py-2.5 px-4 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 flex items-center space-x-2 m3-ripple border border-rose-200 dark:border-rose-900"
+            title={isScheduleLocked ? "Saisonplanung ist fixiert. Bitte oben entsperren." : undefined}
+            className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center space-x-2 border transition-all ${
+              isScheduleLocked
+                ? 'bg-neutral-100 text-neutral-400 dark:bg-neutral-800/50 dark:text-neutral-500 border-neutral-200 dark:border-neutral-700 cursor-not-allowed'
+                : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 m3-ripple border-rose-200 dark:border-rose-900'
+            }`}
           >
-            <RotateCcw className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            {isScheduleLocked ? <Lock className="w-4 h-4 text-neutral-400" /> : <RotateCcw className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
             <span>Auf Originalplan zurücksetzen</span>
           </button>
         </div>

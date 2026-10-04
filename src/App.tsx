@@ -17,6 +17,7 @@ import { AddGuestModal } from './components/AddGuestModal';
 import { MyCalendarView } from './components/MyCalendarView';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { HelpView } from './components/HelpView';
+import { EmailPromptModal } from './components/EmailPromptModal';
 import { SlotTime } from './types/tennis';
 import { Calendar, Share2, Sparkles, Eye, ArrowRight } from 'lucide-react';
 import { generateMaterialDynamicPalette } from './utils/materialTheme';
@@ -49,9 +50,20 @@ const AppContent: React.FC = () => {
   const [swapData, setSwapData] = useState<{ playerId: string; fromSlot: SlotTime } | null>(null);
   const [guestSlot, setGuestSlot] = useState<SlotTime | null>(null);
   const [showUserSwitch, setShowUserSwitch] = useState(false);
-
   const [showCalendarExport, setShowCalendarExport] = useState(false); // remove later if unused
   const [showImpressum, setShowImpressum] = useState(false);
+  const [dismissedEmailSession, setDismissedEmailSession] = useState(false);
+
+  // Email prompt modal upon login for players without email
+  const shouldShowEmailPrompt = Boolean(
+    isLoggedIn &&
+    currentUser?.id &&
+    !isImpersonating &&
+    (!currentUser.email || currentUser.email.trim() === '') &&
+    currentUser.emailNotifications !== false &&
+    !dismissedEmailSession &&
+    (typeof window !== 'undefined' && sessionStorage.getItem('dismissed_email_prompt_' + currentUser.id) !== 'true')
+  );
 
   useEffect(() => {
     const handleOpenImpressum = () => setShowImpressum(true);
@@ -320,6 +332,17 @@ const AppContent: React.FC = () => {
 
       {showWhatsApp && (
         <WhatsAppModal onClose={() => setShowWhatsApp(false)} />
+      )}
+
+      {shouldShowEmailPrompt && (
+        <EmailPromptModal
+          onClose={() => {
+            setDismissedEmailSession(true);
+            if (typeof window !== 'undefined' && window.sessionStorage && currentUser?.id) {
+              sessionStorage.setItem('dismissed_email_prompt_' + currentUser.id, 'true');
+            }
+          }}
+        />
       )}
 
 

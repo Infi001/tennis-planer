@@ -83,6 +83,8 @@ interface AppContextType {
   setSpringerCount: (count: number) => void;
   resetWeekToOriginal: (weekId: string) => void;
   resetAll: () => void;
+  isScheduleLocked: boolean;
+  setIsScheduleLocked: (locked: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -126,6 +128,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const safe = Math.max(0, Math.min(count, 10));
     setSpringerCountState(safe);
     StorageService.saveSpringerCount(safe);
+  };
+
+  const [isScheduleLocked, setIsScheduleLockedState] = useState<boolean>(() => StorageService.getScheduleLocked());
+  const setIsScheduleLocked = (locked: boolean) => {
+    setIsScheduleLockedState(locked);
+    StorageService.saveScheduleLocked(locked);
   };
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(() => StorageService.getCurrentUserId());
@@ -1659,6 +1667,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateWeekNotes,
         replaceEntireSchedule,
         resetAll,
+        isScheduleLocked,
+        setIsScheduleLocked,
       }}
     >
       {children}

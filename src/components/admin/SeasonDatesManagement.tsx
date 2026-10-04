@@ -17,12 +17,14 @@ import {
   ArrowRight,
   Layers,
   CheckSquare,
-  Square
+  Square,
+  Lock
 } from 'lucide-react';
 import { getWeekSlotKeys, canReduceWeekSlots, generateSlotTimes, getWeekSlotConfig } from '../../utils/slotTimeUtils';
 import { formatWeekDate, getWeekdayName, generateRecurringSeasonDates, sortWeeksByDate } from '../../utils/dateUtils';
 import { generateBaselineCyclicSchedule } from '../../utils/scheduleGenerator';
 import { TrainingWeek } from '../../types/tennis';
+import { ScheduleLockBanner } from './ScheduleLockBanner';
 
 const START_TIMES = ['16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
 const DURATIONS = [
@@ -46,7 +48,9 @@ export const SeasonDatesManagement: React.FC = () => {
     updateWeekNotes,
     updateWeekSlotConfig,
     applySlotConfigToAllWeeks,
-    replaceEntireSchedule
+    replaceEntireSchedule,
+    isScheduleLocked,
+    setIsScheduleLocked
   } = useApp();
 
   const sortedWeeks = React.useMemo(() => sortWeeksByDate(weeks), [weeks]);
@@ -159,6 +163,7 @@ export const SeasonDatesManagement: React.FC = () => {
 
     replaceEntireSchedule(newSchedule);
     setIsGeneratingSeason(false);
+    setIsScheduleLocked(true); // Automatically re-lock after generation!
     setAppliedFeedback(`Neue Saison mit ${genWeeksCount} Spieltagen (${weekday}s) erfolgreich generiert! 🎉`);
     setTimeout(() => setAppliedFeedback(null), 4500);
   };
@@ -211,6 +216,8 @@ export const SeasonDatesManagement: React.FC = () => {
 
   return (
     <div className="space-y-5">
+      {/* Schedule Lock & Protection Banner */}
+      <ScheduleLockBanner contextTitle="Saison-Termine & Saison-Generator" />
       
       {/* Overview & Quick Stats Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
@@ -238,10 +245,16 @@ export const SeasonDatesManagement: React.FC = () => {
 
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <button
+            disabled={isScheduleLocked}
             onClick={() => setIsGeneratingSeason(true)}
-            className="py-2 px-3.5 rounded-xl text-xs font-bold text-amber-900 dark:text-amber-100 bg-amber-100 dark:bg-amber-950/60 hover:bg-amber-200 dark:hover:bg-amber-900/60 border border-amber-300 dark:border-amber-800 shadow-xs m3-ripple flex items-center space-x-1.5 shrink-0"
+            title={isScheduleLocked ? "Saisonplanung ist fixiert. Bitte oben entsperren." : undefined}
+            className={`py-2 px-3.5 rounded-xl text-xs font-bold border transition-all flex items-center space-x-1.5 shrink-0 ${
+              isScheduleLocked
+                ? 'bg-neutral-100 text-neutral-400 dark:bg-neutral-800/50 dark:text-neutral-500 border-neutral-200 dark:border-neutral-700 cursor-not-allowed'
+                : 'text-amber-900 dark:text-amber-100 bg-amber-100 dark:bg-amber-950/60 hover:bg-amber-200 dark:hover:bg-amber-900/60 border-amber-300 dark:border-amber-800 shadow-xs m3-ripple'
+            }`}
           >
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            {isScheduleLocked ? <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" /> : <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
             <span>Saison generieren</span>
           </button>
 

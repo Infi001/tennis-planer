@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   THEME: 'tennis_theme_v1',
   SPRINGER_COUNT: 'tennis_springer_count_v1',
   EMAIL_CONFIG: 'tennis_email_config_v1',
+  SCHEDULE_LOCKED: 'tennis_schedule_locked_v1',
 };
 
 async function safeSupabaseSync(action: () => PromiseLike<any>) {
@@ -370,5 +371,26 @@ export class StorageService {
 
   static saveEmailConfig(config: EmailConfig) {
     localStorage.setItem(STORAGE_KEYS.EMAIL_CONFIG, JSON.stringify(config));
+  }
+
+  // --- Schedule Lock (Fixierung der Saisonplanung) ---
+  static getScheduleLocked(): boolean {
+    const raw = localStorage.getItem(STORAGE_KEYS.SCHEDULE_LOCKED);
+    if (raw === null) return true; // Standardmäßig fixiert (Sicherheitsschwelle)
+    return raw === 'true';
+  }
+
+  static saveScheduleLocked(locked: boolean) {
+    localStorage.setItem(STORAGE_KEYS.SCHEDULE_LOCKED, String(locked));
+    const sb = getSupabase();
+    if (sb) {
+      safeSupabaseSync(async () => {
+        sb.channel('tennis_db_sync').send({ 
+          type: 'broadcast', 
+          event: 'data_changed', 
+          payload: { table: 'schedule_lock', locked } 
+        });
+      });
+    }
   }
 }

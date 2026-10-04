@@ -12,7 +12,8 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   Flame,
-  Info
+  Info,
+  Lock
 } from 'lucide-react';
 import { 
   analyzeScheduleMetrics, 
@@ -21,13 +22,16 @@ import {
   ScheduleMetrics 
 } from '../../utils/scheduleGenerator';
 import { TrainingWeek } from '../../types/tennis';
+import { ScheduleLockBanner } from './ScheduleLockBanner';
 
 export const ScheduleOptimizer: React.FC = () => {
   const { 
     weeks, 
     players, 
     theme, 
-    replaceEntireSchedule 
+    replaceEntireSchedule,
+    isScheduleLocked,
+    setIsScheduleLocked
   } = useApp();
 
   const [algorithmMode, setAlgorithmMode] = useState<'optimized' | 'excel_baseline'>('optimized');
@@ -74,6 +78,7 @@ export const ScheduleOptimizer: React.FC = () => {
       replaceEntireSchedule(candidateSchedule);
       setCandidateSchedule(null);
       setAppliedNotice(true);
+      setIsScheduleLocked(true); // Automatically re-lock so the newly generated schedule is immediately protected!
       setTimeout(() => setAppliedNotice(false), 4000);
     }
   };
@@ -85,6 +90,8 @@ export const ScheduleOptimizer: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {/* Schedule Lock & Protection Banner */}
+      <ScheduleLockBanner contextTitle="Saisonplan-Generator & Paarungs-Optimierer" />
       
       {/* Header & Mode Selector */}
       <div className="p-5 bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -114,31 +121,47 @@ export const ScheduleOptimizer: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex items-center flex-wrap gap-2">
           <button
+            disabled={isScheduleLocked}
             onClick={() => handleRunOptimizer('excel_baseline')}
-            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border m3-ripple ${
-              algorithmMode === 'excel_baseline' && candidateSchedule
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-neutral-900'
-                : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50'
+            title={isScheduleLocked ? "Saisonplanung ist fixiert. Bitte oben entsperren." : undefined}
+            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center space-x-1.5 ${
+              isScheduleLocked
+                ? 'bg-neutral-100 text-neutral-400 dark:bg-neutral-800/50 dark:text-neutral-500 border-neutral-200 dark:border-neutral-700 cursor-not-allowed'
+                : algorithmMode === 'excel_baseline' && candidateSchedule
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-neutral-900 m3-ripple'
+                  : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 m3-ripple'
             }`}
           >
-            Bewährte Excel-Formel
+            {isScheduleLocked && <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />}
+            <span>Bewährte Excel-Formel</span>
           </button>
 
           <button
+            disabled={isScheduleLocked}
             onClick={() => handleRunOptimizer('optimized')}
-            className="py-2 px-3.5 rounded-xl text-xs font-bold text-white shadow-xs m3-ripple flex items-center space-x-1.5"
-            style={{ backgroundColor: theme.primary }}
+            title={isScheduleLocked ? "Saisonplanung ist fixiert. Bitte oben entsperren." : undefined}
+            className={`py-2 px-3.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              isScheduleLocked
+                ? 'bg-neutral-100 text-neutral-400 dark:bg-neutral-800/50 dark:text-neutral-500 border border-neutral-200 dark:border-neutral-700 cursor-not-allowed'
+                : 'text-white shadow-xs m3-ripple'
+            }`}
+            style={!isScheduleLocked ? { backgroundColor: theme.primary } : undefined}
           >
-            <Dna className="w-4 h-4" />
+            {isScheduleLocked ? <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" /> : <Dna className="w-4 h-4 shrink-0" />}
             <span>Paarungs-Optimierer 🎲</span>
           </button>
 
           {candidateSchedule && (
             <button
+              disabled={isScheduleLocked}
               onClick={handleApplyToSeason}
-              className="py-2 px-4 rounded-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-md m3-ripple flex items-center space-x-1.5 animate-bounce"
+              className={`py-2 px-4 rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-1.5 transition-all ${
+                isScheduleLocked
+                  ? 'bg-neutral-400 cursor-not-allowed'
+                  : 'bg-emerald-600 hover:bg-emerald-700 m3-ripple animate-bounce'
+              }`}
             >
-              <Check className="w-4 h-4 stroke-[3]" />
+              {isScheduleLocked ? <Lock className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 stroke-[3] shrink-0" />}
               <span>Diesen Plan auf Saison anwenden! 💾</span>
             </button>
           )}
