@@ -71,10 +71,9 @@ export function calculateWeekOpenSpots(week: TrainingWeek): {
 
 /**
  * Pure calculation of the Standby Priority Cascade:
- * Springer 1 und Springer 2 (max 1 oder 2)
- * Keine Prio 3 oder Prio 4 Logik.
+ * Einfache Nachrücker-Liste: 1. Springer -> 2. Springer -> 3. Springer (Standard: alle 3 Nachrücker)
  */
-export function calculateStandbyCascade(week: TrainingWeek, maxSpringers: number = 2): StandbyCascadeResult {
+export function calculateStandbyCascade(week: TrainingWeek, maxSpringers: number = 3): StandbyCascadeResult {
   const { openSlots, totalOpenSpots, slotOpenCounts } = calculateWeekOpenSpots(week);
 
   let sp1 = { ...week.springer1 };
@@ -169,13 +168,13 @@ export interface StandbyQueueDisplayItem {
 }
 
 /**
- * Builds structured display models for Springer 1 and Springer 2
+ * Builds structured display models for the Nachrücker-Liste (1. Springer, 2. Springer, 3. Springer)
  */
 export function buildStandbyQueueDisplay(
   week: TrainingWeek,
   players: Player[],
   currentUserId: string,
-  maxSpringers: number = 2
+  maxSpringers: number = 3
 ): StandbyQueueDisplayItem[] {
   const cascade = calculateStandbyCascade(week, maxSpringers);
   const { totalOpenSpots, activeOfferedPrios } = cascade;
@@ -189,28 +188,28 @@ export function buildStandbyQueueDisplay(
   const items: StandbyQueueDisplayItem[] = [];
 
   // --- 1. Springer ---
-  if (maxSpringers >= 1) {
+  if (maxSpringers >= 1 && week.springer1?.playerId) {
     const isUserSp1 = currentUserId === week.springer1.playerId;
     let sp1Status: StandbyQueueDisplayItem['status'] = 'idle';
-    let sp1Label = 'Bereit auf Abruf';
-    let sp1Explanation = 'Hat Vorrang bei der ersten Absage';
+    let sp1Label = 'Bereit (1. Nachrücker)';
+    let sp1Explanation = 'Rückt bei der ersten Absage automatisch nach';
 
     if (isSp1Playing) {
       sp1Status = 'playing';
-      sp1Label = 'Spielt aktiv mit ✅';
-      sp1Explanation = 'Bereits für einen Zeitslot eingeteilt';
+      sp1Label = 'Im Einsatz ✅';
+      sp1Explanation = 'Bereits für eine Spielzeit eingeteilt';
     } else if (cascade.springer1.status === 'accepted') {
       sp1Status = 'accepted';
       sp1Label = 'Eingesprungen ✅';
       sp1Explanation = 'Hat einen freien Platz übernommen';
     } else if (cascade.springer1.status === 'declined') {
       sp1Status = 'declined';
-      sp1Label = 'Abgelehnt / Ausgestiegen ❌';
-      sp1Explanation = 'Kann diese Woche nicht einspringen';
+      sp1Label = 'Abgesagt ❌';
+      sp1Explanation = 'Kann an diesem Tag nicht einspringen';
     } else if (cascade.springer1.status === 'offered') {
       sp1Status = 'offered';
-      sp1Label = 'An der Reihe 🔔';
-      sp1Explanation = 'Kann jetzt einen freien Platz übernehmen';
+      sp1Label = 'Jetzt an der Reihe 🔔';
+      sp1Explanation = 'Kann jetzt den freien Platz übernehmen';
     }
 
     items.push({
@@ -228,28 +227,28 @@ export function buildStandbyQueueDisplay(
   }
 
   // --- 2. Springer ---
-  if (maxSpringers >= 2) {
+  if (maxSpringers >= 2 && week.springer2?.playerId) {
     const isUserSp2 = currentUserId === week.springer2.playerId;
     let sp2Status: StandbyQueueDisplayItem['status'] = 'idle';
-    let sp2Label = 'Nachrücker Stufe 2';
-    let sp2Explanation = 'Kommt zum Zug bei Absage von Springer 1 oder ab 2 freien Plätzen';
+    let sp2Label = 'Bereit (2. Nachrücker)';
+    let sp2Explanation = 'Rückt nach, wenn 1. Springer bereits spielt oder absagt';
 
     if (isSp2Playing) {
       sp2Status = 'playing';
-      sp2Label = 'Spielt aktiv mit ✅';
-      sp2Explanation = 'Bereits für einen Zeitslot eingeteilt';
+      sp2Label = 'Im Einsatz ✅';
+      sp2Explanation = 'Bereits für eine Spielzeit eingeteilt';
     } else if (cascade.springer2.status === 'accepted') {
       sp2Status = 'accepted';
       sp2Label = 'Eingesprungen ✅';
       sp2Explanation = 'Hat einen freien Platz übernommen';
     } else if (cascade.springer2.status === 'declined') {
       sp2Status = 'declined';
-      sp2Label = 'Abgelehnt / Ausgestiegen ❌';
-      sp2Explanation = 'Kann diese Woche nicht einspringen';
+      sp2Label = 'Abgesagt ❌';
+      sp2Explanation = 'Kann an diesem Tag nicht einspringen';
     } else if (cascade.springer2.status === 'offered') {
       sp2Status = 'offered';
-      sp2Label = 'An der Reihe 🔔';
-      sp2Explanation = 'Kann jetzt einen freien Platz übernehmen';
+      sp2Label = 'Jetzt an der Reihe 🔔';
+      sp2Explanation = 'Kann jetzt den freien Platz übernehmen';
     } else if (totalOpenSpots > 0 && !activeOfferedPrios.includes(2)) {
       sp2Label = 'Wartet auf 1. Springer ⏳';
     }
@@ -274,27 +273,27 @@ export function buildStandbyQueueDisplay(
     const freiPlayer = players.find(p => p.id === week.frei.playerId);
     const isSp3Playing = isPlayerActivelyPlayingInWeek(week, week.frei.playerId);
     let sp3Status: StandbyQueueDisplayItem['status'] = 'idle';
-    let sp3Label = 'Nachrücker Stufe 3';
-    let sp3Explanation = 'Kommt zum Zug bei Absage von Springer 1 & 2 oder ab 3 freien Plätzen';
+    let sp3Label = 'Bereit (3. Nachrücker)';
+    let sp3Explanation = 'Rückt nach, wenn 1. und 2. Springer bereits spielen oder absagen';
 
     if (isSp3Playing) {
       sp3Status = 'playing';
-      sp3Label = 'Spielt aktiv mit ✅';
-      sp3Explanation = 'Bereits für einen Zeitslot eingeteilt';
+      sp3Label = 'Im Einsatz ✅';
+      sp3Explanation = 'Bereits für eine Spielzeit eingeteilt';
     } else if (cascade.frei?.status === 'accepted') {
       sp3Status = 'accepted';
       sp3Label = 'Eingesprungen ✅';
       sp3Explanation = 'Hat einen freien Platz übernommen';
     } else if (cascade.frei?.status === 'declined') {
       sp3Status = 'declined';
-      sp3Label = 'Abgelehnt / Ausgestiegen ❌';
-      sp3Explanation = 'Kann diese Woche nicht einspringen';
+      sp3Label = 'Abgesagt ❌';
+      sp3Explanation = 'Kann an diesem Tag nicht einspringen';
     } else if (cascade.frei?.status === 'offered') {
       sp3Status = 'offered';
-      sp3Label = 'An der Reihe 🔔';
-      sp3Explanation = 'Kann jetzt einen freien Platz übernehmen';
+      sp3Label = 'Jetzt an der Reihe 🔔';
+      sp3Explanation = 'Kann jetzt den freien Platz übernehmen';
     } else if (totalOpenSpots > 0 && !activeOfferedPrios.includes(3)) {
-      sp3Label = 'Wartet auf vorherige Springer ⏳';
+      sp3Label = 'Wartet auf 1. & 2. Springer ⏳';
     }
 
     items.push({

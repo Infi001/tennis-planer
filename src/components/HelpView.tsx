@@ -64,7 +64,7 @@ export const HelpView: React.FC = () => {
               An jedem Spieltag spielen wir in fest eingeteilten Trainingseinheiten auf dem Platz.
             </p>
             <p>
-              In jeder Einheit spielen genau <strong>4 Spieler</strong>. Ein ausgeklügelter Plan sorgt dafür, dass jeder Spieler über die gesamte Saison gleich oft zu den verschiedenen Uhrzeiten spielt und alle paar Wochen planmäßig spielfrei hat.
+              In jeder Einheit spielen genau <strong>4 Spieler</strong> (bei 3 Einheiten also 12 Spieler pro Spieltag). Die übrigen 3 Spieler stehen für diesen Tag automatisch auf der <strong>Nachrücker-Liste (1., 2. und 3. Springer)</strong>. Der Plan sorgt dafür, dass jeder Spieler über die gesamte Saison gleich oft spielt.
             </p>
           </div>
         </div>
@@ -126,23 +126,22 @@ export const HelpView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                4. Wer rückt nach? (Das flexible Springer-System)
+                4. Wer rückt nach? (Die Nachrücker-Liste: 1., 2., 3. Springer)
               </h2>
-              <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">Feste und faire Reihenfolge</span>
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">Einfache und feste Reihenfolge</span>
             </div>
           </div>
           <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-2.5 leading-relaxed">
             <p>
-              Wenn jemand absagt, läuft automatisch folgende Kaskade ab (flexibel einstellbar von 0 bis 10 Springern pro Spieltag):
+              Alle Spieler, die an einem Spieltag nicht fest in einer Stunde eingeteilt sind, bilden automatisch die <strong>Nachrücker-Liste (1. Springer, 2. Springer, 3. Springer)</strong>:
             </p>
             <ol className="space-y-1.5 list-decimal list-inside bg-amber-50/50 dark:bg-amber-950/20 p-3.5 rounded-2xl border border-amber-200/60 dark:border-amber-900/60">
-              <li><strong>1. Springer:</strong> Hat das Vorrecht, den frei gewordenen Platz sofort zu übernehmen.</li>
-              <li><strong>2. Springer:</strong> Rückt nach, sobald der 1. Springer absagt oder keine Zeit hat.</li>
-              <li><strong>Weitere Springer (z. B. 3. Springer):</strong> Werden schrittweise nacheinander aktiviert.</li>
-              <li><strong>Offener Pool:</strong> Sagen alle Springer ab, wird der Platz für alle weiteren Gruppenmitglieder freigegeben.</li>
+              <li><strong>1. Springer:</strong> Rückt bei der ersten Absage automatisch auf den freien Platz nach.</li>
+              <li><strong>2. Springer:</strong> Rückt automatisch nach, falls der 1. Springer verhindert ist oder ein zweiter Platz frei wird.</li>
+              <li><strong>3. Springer:</strong> Rückt automatisch nach, falls 1. und 2. Springer bereits eingesetzt oder verhindert sind.</li>
             </ol>
             <p>
-              <strong>E-Mail-Direktversand:</strong> Springer können direkt aus der App per E-Mail benachrichtigt werden, sobald ein Platz frei wird – inklusive Klick-Link zum sofortigen Annehmen!
+              <strong>Auch als Springer absagen möglich:</strong> Wenn du schon vorab weißt, dass du an deinem Springer-Tag keine Zeit hast, klicke einfach auf <strong>"Als Springer absagen"</strong> – dann weiß das System sofort Bescheid und überspringt dich bei einer Absage automatisch.
             </p>
           </div>
         </div>

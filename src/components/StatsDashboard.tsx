@@ -7,27 +7,29 @@ export const StatsDashboard: React.FC = () => {
   const { players, weeks, currentUser, theme } = useApp();
 
   // Calculate statistics per player
+  const activeWeeksCount = weeks.filter(w => !w.isCancelled).length;
   const playerStats = players.map(player => {
     let playedCount = 0;
     let confirmedCount = 0;
     let declinedCount = 0;
     let substituteCount = 0;
-    let springerNominationCount = 0;
-    let freiCount = 0;
+    let sp1Count = 0;
+    let sp2Count = 0;
+    let sp3Count = 0;
 
     weeks.forEach(w => {
       if (w.isCancelled) return;
 
-      if (w.frei.playerId === player.id) freiCount++;
-      if (w.springer1.playerId === player.id || w.springer2.playerId === player.id) {
-        springerNominationCount++;
-      }
+      if (w.springer1?.playerId === player.id) sp1Count++;
+      if (w.springer2?.playerId === player.id) sp2Count++;
+      if (w.frei?.playerId === player.id) sp3Count++;
 
       const slotKeys = Object.keys(w.slots || {});
       slotKeys.forEach(slotTime => {
-        const assign = (w.slots[slotTime] || []).find(a => a.playerId === player.id);
+        const slotList = w.slots[slotTime] || [];
+        const assign = slotList.find(a => a.playerId === player.id);
         if (assign) {
-          if (assign.status === 'confirmed') {
+          if (assign.status === 'confirmed' || assign.status === 'swapped') {
             playedCount++;
             confirmedCount++;
           } else if (assign.status === 'substitute') {
@@ -39,8 +41,15 @@ export const StatsDashboard: React.FC = () => {
             playedCount++;
           }
         }
+        // Also count if this player originally owned the slot and declined, and a substitute is now in their spot
+        const subForMe = slotList.find(a => a.originalPlayerId === player.id && a.status === 'substitute' && a.playerId !== player.id);
+        if (subForMe) {
+          declinedCount++;
+        }
       });
     });
+
+    const standbyTotalCount = sp1Count + sp2Count + sp3Count;
 
     return {
       player,
@@ -48,8 +57,10 @@ export const StatsDashboard: React.FC = () => {
       confirmedCount,
       declinedCount,
       substituteCount,
-      springerNominationCount,
-      freiCount,
+      standbyTotalCount,
+      sp1Count,
+      sp2Count,
+      sp3Count,
     };
   });
 
@@ -127,9 +138,9 @@ export const StatsDashboard: React.FC = () => {
       <div className="bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
           <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-            Einsatz-Tabelle aller 15 Spieler
+            Einsatz-Tabelle aller {players.length} Spieler
           </h3>
-          <span className="text-xs text-neutral-500">Live aus allen 30 Trainingswochen</span>
+          <span className="text-xs text-neutral-500">Live aus allen {activeWeeksCount} aktiven Trainingswochen</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -140,11 +151,11 @@ export const StatsDashboard: React.FC = () => {
                 <th className="px-3 py-3 text-center">Spiele (Geplant/Aktiv)</th>
                 <th className="px-3 py-3 text-center">Eingesprungen (Springer)</th>
                 <th className="px-3 py-3 text-center">Absagen</th>
-                <th className="px-3 py-3 text-center">Freie Wochen</th>
+                <th className="px-3 py-3 text-center">Nachrücker-Liste (1.–3. Springer)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-              {sortedStats.map(({ player, playedCount, substituteCount, declinedCount, freiCount }) => {
+              {sortedStats.map(({ player, playedCount, substituteCount, declinedCount, standbyTotalCount, sp1Count, sp2Count, sp3Count }) => {
                 const isMe = player.id === currentUser.id;
 
                 return (
@@ -196,7 +207,10 @@ export const StatsDashboard: React.FC = () => {
                     </td>
 
                     <td className="px-3 py-3 text-center text-neutral-600 dark:text-neutral-400">
-                      {freiCount} Wochen
+                      <span className="font-semibold text-neutral-800 dark:text-neutral-200">{standbyTotalCount}x</span>
+                      <span className="text-[11px] text-neutral-400 ml-1">
+                        ({sp1Count} / {sp2Count} / {sp3Count})
+                      </span>
                     </td>
                   </tr>
                 );

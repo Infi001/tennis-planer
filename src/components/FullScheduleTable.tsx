@@ -22,55 +22,65 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
 
   // Helper to determine role for a player in a week
   const getPlayerCellInfo = (week: typeof weeks[0], player: Player) => {
-    let roleText = '-';
-    let roleType = 'none';
-    let isSub = false;
-
-    if (week.frei && week.frei.playerId === player.id) {
-      if (springerCount >= 3) {
-        roleText = week.frei.status === 'accepted' ? 'Eingesprungen (3. Springer)' : '3. Springer';
-        roleType = 'sp3';
-        isSub = week.frei.status === 'accepted';
-      } else {
-        roleText = week.frei.status === 'accepted' ? 'Eingesprungen (Frei)' : 'Frei';
-        roleType = 'frei';
-        isSub = week.frei.status === 'accepted';
-      }
-    } else if (week.springer1.playerId === player.id) {
-      roleText = '1. Springer';
-      roleType = 'sp1';
-      isSub = week.springer1.status === 'accepted';
-    } else if (week.springer2.playerId === player.id) {
-      roleText = '2. Springer';
-      roleType = 'sp2';
-      isSub = week.springer2.status === 'accepted';
-    } else {
-      // Check slots dynamically
-      const slotTimes = Object.keys(week.slots || {}).sort();
-      for (const time of slotTimes) {
-        const assignment = (week.slots[time] || []).find(a => a.playerId === player.id);
-        if (assignment) {
-          if (assignment.status === 'declined') {
-            roleText = `${time} (Abgesagt)`;
-            roleType = 'declined';
-          } else if (assignment.status === 'substitute') {
-            roleText = `${time} (Springer)`;
-            roleType = 'substitute';
-          } else {
-            roleText = time;
-            roleType = 'slot';
-          }
-          break;
-        }
-      }
-    }
-
     if (week.isCancelled) {
       return { 
         text: 'Kein Training', 
         type: 'cancelled',
         isSub: false
       };
+    }
+
+    let roleText = '-';
+    let roleType = 'none';
+    let isSub = false;
+
+    // 1. Check active or declined slot assignments first (so substitutes who stepped in show their court time!)
+    const slotTimes = Object.keys(week.slots || {}).sort();
+    for (const time of slotTimes) {
+      const activeAssign = (week.slots[time] || []).find(a => a.playerId === player.id && a.status !== 'declined');
+      if (activeAssign) {
+        if (activeAssign.status === 'substitute') {
+          roleText = `${time} (Springer)`;
+          roleType = 'substitute';
+          isSub = true;
+        } else {
+          roleText = time;
+          roleType = 'slot';
+        }
+        return { text: roleText, type: roleType, isSub };
+      }
+
+      const declinedAssign = (week.slots[time] || []).find(
+        a => (a.playerId === player.id && a.status === 'declined') ||
+             (a.originalPlayerId === player.id && a.status === 'substitute')
+      );
+      if (declinedAssign) {
+        roleText = `${time} (Abgesagt)`;
+        roleType = 'declined';
+        return { text: roleText, type: roleType, isSub: false };
+      }
+    }
+
+    // 2. Check Nachrücker-Liste (1. Springer, 2. Springer, 3. Springer)
+    if (week.springer1?.playerId === player.id) {
+      if (week.springer1.status === 'declined') {
+        return { text: '1. Springer (Abgesagt)', type: 'declined', isSub: false };
+      }
+      return { text: '1. Springer', type: 'sp1', isSub: false };
+    }
+
+    if (week.springer2?.playerId === player.id) {
+      if (week.springer2.status === 'declined') {
+        return { text: '2. Springer (Abgesagt)', type: 'declined', isSub: false };
+      }
+      return { text: '2. Springer', type: 'sp2', isSub: false };
+    }
+
+    if (week.frei?.playerId === player.id) {
+      if (week.frei.status === 'declined') {
+        return { text: '3. Springer (Abgesagt)', type: 'declined', isSub: false };
+      }
+      return { text: '3. Springer', type: 'sp3', isSub: false };
     }
 
     return { text: roleText, type: roleType, isSub };
@@ -251,11 +261,11 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-3 h-3 rounded bg-amber-200 dark:bg-amber-900 inline-block" />
-            <span>1. & 2. Springer = Standby-Ersatz</span>
+            <span>1. / 2. / 3. Springer = Nachrücker-Liste bei Absagen</span>
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-3 h-3 rounded bg-rose-200 dark:bg-rose-900 inline-block" />
-            <span>Frei = Spielfreie Woche</span>
+            <span className="w-3 h-3 rounded bg-blue-200 dark:bg-blue-900 inline-block" />
+            <span>(Springer) = Als Nachrücker eingesprungen</span>
           </div>
         </div>
 

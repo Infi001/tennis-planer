@@ -56,14 +56,14 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week, onOpenDecline })
           <div>
             <div className="flex items-center space-x-2">
               <h3 className="text-base font-extrabold text-neutral-900 dark:text-neutral-100 leading-tight">
-                Springer
+                Nachrücker-Liste (Springer)
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
-                {springerCount} {springerCount === 1 ? 'Springer' : 'Springer'} eingeteilt
+                1. – {queueItems.length}. Springer
               </span>
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Feste Nachrücker bei kurzfristigen Absagen
+              Rücken bei einer Absage automatisch in dieser Reihenfolge nach
             </p>
           </div>
         </div>
@@ -229,7 +229,7 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week, onOpenDecline })
                       )}
                     </div>
 
-                    {/* Allow Springer or Admin to decline in advance or reclaim */}
+                    {/* Allow Springer or Admin to decline in advance, cancel active substitute, or reclaim */}
                     {p && (currentUser.id === p.id || currentUser.isAdmin) && (
                       <div className="pt-1">
                         {item.status === 'declined' ? (
@@ -238,15 +238,15 @@ export const SpringerHub: React.FC<SpringerHubProps> = ({ week, onOpenDecline })
                             className="w-full py-1.5 px-3 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 flex items-center justify-center gap-1.5 m3-ripple"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
-                            <span>Wieder als Springer bereit 👍</span>
+                            <span>Doch wieder als Springer bereit 👍</span>
                           </button>
-                        ) : item.status !== 'accepted' && (
+                        ) : (
                           <button
                             onClick={() => onOpenDecline ? onOpenDecline(p.id) : declineSubstituteOffer(week.id, p.id)}
                             className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center gap-1.5 m3-ripple"
                           >
                             <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                            <span>Als Springer absagen</span>
+                            <span>{item.status === 'playing' || item.status === 'accepted' ? 'Einsatz absagen' : 'Als Springer absagen'}</span>
                           </button>
                         )}
                       </div>

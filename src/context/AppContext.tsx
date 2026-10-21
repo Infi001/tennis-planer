@@ -383,12 +383,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (weekItem.id !== weekId) return weekItem;
       const newSlots = { ...weekItem.slots };
       let declinedSlotKey: SlotTime | null = null;
+      let originalSlotOwnerId: string = playerId;
+
       getWeekSlotKeys(weekItem).forEach(slotKey => {
         newSlots[slotKey] = (newSlots[slotKey] || []).map(assign => {
           if (assign.playerId === playerId) {
             declinedSlotKey = slotKey;
+            originalSlotOwnerId = assign.originalPlayerId || assign.playerId;
             return { 
-              ...assign, 
+              ...assign,
+              playerId: originalSlotOwnerId,
+              originalPlayerId: originalSlotOwnerId,
               status: 'declined', 
               declineReason: reason || 'Keine Angabe',
               updatedAt: new Date().toISOString() 
@@ -422,23 +427,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         );
       };
 
-      if (springerCount >= 1 && newSp1.playerId && newSp1.playerId !== playerId && newSp1.status !== 'declined' && !isActivelyPlaying(newSp1.playerId)) {
+      if (springerCount >= 1 && newSp1.playerId && newSp1.playerId !== playerId && newSp1.playerId !== originalSlotOwnerId && newSp1.status !== 'declined' && !isActivelyPlaying(newSp1.playerId)) {
         autoAssignedSpringerId = newSp1.playerId;
         newSp1.status = 'accepted';
-      } else if (springerCount >= 2 && newSp2.playerId && newSp2.playerId !== playerId && newSp2.status !== 'declined' && !isActivelyPlaying(newSp2.playerId)) {
+      } else if (springerCount >= 2 && newSp2.playerId && newSp2.playerId !== playerId && newSp2.playerId !== originalSlotOwnerId && newSp2.status !== 'declined' && !isActivelyPlaying(newSp2.playerId)) {
         autoAssignedSpringerId = newSp2.playerId;
         newSp2.status = 'accepted';
-      } else if (springerCount >= 3 && newFrei.playerId && newFrei.playerId !== playerId && newFrei.status !== 'declined' && !isActivelyPlaying(newFrei.playerId)) {
+      } else if (springerCount >= 3 && newFrei.playerId && newFrei.playerId !== playerId && newFrei.playerId !== originalSlotOwnerId && newFrei.status !== 'declined' && !isActivelyPlaying(newFrei.playerId)) {
         autoAssignedSpringerId = newFrei.playerId;
         newFrei.status = 'accepted';
       }
 
       if (autoAssignedSpringerId && declinedSlotKey) {
+        let replaced = false;
         newSlots[declinedSlotKey] = (newSlots[declinedSlotKey] || []).map(assign => {
-          if (assign.playerId === playerId && assign.status === 'declined') {
+          if (!replaced && assign.playerId === originalSlotOwnerId && assign.status === 'declined') {
+            replaced = true;
             return {
               playerId: autoAssignedSpringerId!,
-              originalPlayerId: playerId,
+              originalPlayerId: originalSlotOwnerId,
               status: 'substitute',
               updatedAt: new Date().toISOString(),
             };
@@ -764,10 +771,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // --- Decline Substitute Offer (Springer oder Frei lehnt das Einspringen ab -> Kaskade zur nächsten Stufe) ---
+  // --- Decline Substitute Offer (Springer 1, 2 oder 3 lehnt das Einspringen ab -> Kaskade zur nächsten Stufe) ---
   const declineSubstituteOffer = (weekId: string, playerId: string, reason?: string) => {
     const targetWeek = weeks.find(w => w.id === weekId);
     if (!targetWeek) return;
+
+    // Check if this Springer is already actively placed in a slot (e.g. as a substitute)
+    const isCurrentlyInSlot = getWeekSlotKeys(targetWeek).some(sk =>
+      (targetWeek.slots[sk] || []).some(a => a.playerId === playerId && a.status !== 'declined')
+    );
+    if (isCurrentlyInSlot) {
+      declineAttendance(weekId, playerId, reason || 'Springer verhindert');
+      return;
+    }
 
     let newSp1 = { ...targetWeek.springer1 };
     let newSp2 = { ...targetWeek.springer2 };
@@ -805,6 +821,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const targetWeek = weeks.find(w => w.id === weekId);
     if (!targetWeek) return;
 
+    const newSlots = { ...targetWeek.slots };
     let newSp1 = { ...targetWeek.springer1 };
     let newSp2 = { ...targetWeek.springer2 };
     let newFrei = targetWeek.frei ? { ...targetWeek.frei } : { playerId: '', status: 'idle' as const };
@@ -817,8 +834,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newFrei.status = 'idle';
     }
 
+    // If there is currently an unfilled declined slot in this week and this player is not playing elsewhere, step in automatically
+    const allSlotKeys = getWeekSlotKeys(targetWeek);
+    const alreadyActive = allSlotKeys.some(sk =>
+      (newSlots[sk] || []).some(a => a.playerId === playerId && a.status !== 'declined')
+    );
+
+    if (!alreadyActive) {
+      for (const sk of allSlotKeys) {
+        const declIdx = (newSlots[sk] || []).findIndex(a => a.status === 'declined');
+        if (declIdx !== -1) {
+          const orig = newSlots[sk][declIdx];
+          newSlots[sk] = [...newSlots[sk]];
+          newSlots[sk][declIdx] = {
+            playerId,
+            originalPlayerId: orig.originalPlayerId || orig.playerId,
+            status: 'substitute',
+            updatedAt: new Date().toISOString(),
+          };
+          if (newSp1.playerId === playerId) newSp1.status = 'accepted';
+          else if (newSp2.playerId === playerId) newSp2.status = 'accepted';
+          else if (newFrei.playerId === playerId) newFrei.status = 'accepted';
+          break;
+        }
+      }
+    }
+
     const cascade = calculateStandbyCascade({
       ...targetWeek,
+      slots: newSlots,
       springer1: newSp1,
       springer2: newSp2,
       frei: newFrei,
@@ -826,6 +870,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const updatedWeek: TrainingWeek = {
       ...targetWeek,
+      slots: newSlots,
       springer1: cascade.springer1,
       springer2: cascade.springer2,
       frei: cascade.frei,

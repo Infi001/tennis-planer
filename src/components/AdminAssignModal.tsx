@@ -39,6 +39,49 @@ export const AdminAssignModal: React.FC<AdminAssignModalProps> = ({
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Determine each player's role in this week so Admin sees 1./2./3. Springer at a glance
+  const getPlayerWeekBadge = (playerId: string): { label: string; colorClass: string; sortOrder: number } => {
+    if (!week) return { label: '', colorClass: '', sortOrder: 10 };
+    for (const [st, list] of Object.entries(week.slots || {})) {
+      const active = (list || []).find(a => a.playerId === playerId && a.status !== 'declined');
+      if (active) {
+        return {
+          label: `Spielt ${st}`,
+          colorClass: 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300',
+          sortOrder: 5,
+        };
+      }
+      const decl = (list || []).find(a => (a.playerId === playerId && a.status === 'declined') || (a.originalPlayerId === playerId && a.status === 'substitute'));
+      if (decl) {
+        return {
+          label: 'Abgesagt',
+          colorClass: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
+          sortOrder: 9,
+        };
+      }
+    }
+    if (week.springer1?.playerId === playerId) {
+      return week.springer1.status === 'declined'
+        ? { label: '1. Springer (Abgesagt)', colorClass: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300', sortOrder: 8 }
+        : { label: '1. Springer', colorClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300', sortOrder: 1 };
+    }
+    if (week.springer2?.playerId === playerId) {
+      return week.springer2.status === 'declined'
+        ? { label: '2. Springer (Abgesagt)', colorClass: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300', sortOrder: 8 }
+        : { label: '2. Springer', colorClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300', sortOrder: 2 };
+    }
+    if (week.frei?.playerId === playerId) {
+      return week.frei.status === 'declined'
+        ? { label: '3. Springer (Abgesagt)', colorClass: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300', sortOrder: 8 }
+        : { label: '3. Springer', colorClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300', sortOrder: 3 };
+    }
+    return { label: 'Verfügbar', colorClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300', sortOrder: 4 };
+  };
+
+  const sortedFilteredPlayers = [...filteredPlayers].sort(
+    (a, b) => getPlayerWeekBadge(a.id).sortOrder - getPlayerWeekBadge(b.id).sortOrder
+  );
+
   const handleAssign = (playerId: string) => {
     adminDragDropAssign(weekId, slotTime, playerId, targetPlayerIdToReplace);
     onClose();
@@ -102,28 +145,36 @@ export const AdminAssignModal: React.FC<AdminAssignModalProps> = ({
                 </button>
               )}
               
-              {filteredPlayers.map(player => (
+              {sortedFilteredPlayers.map(player => {
+                const badge = getPlayerWeekBadge(player.id);
+                return (
                 <button
                   key={player.id}
                   onClick={() => handleAssign(player.id)}
                   className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group"
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 min-w-0">
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
                       style={{ backgroundColor: player.avatarColor }}
                     >
                       {player.shortName}
                     </div>
-                    <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">
+                    <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors truncate">
                       {player.name}
                     </span>
+                    {badge.label && (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${badge.colorClass}`}>
+                        {badge.label}
+                      </span>
+                    )}
                   </div>
-                  <div className="w-6 h-6 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900 dark:group-hover:text-blue-400 transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900 dark:group-hover:text-blue-400 transition-colors shrink-0">
                     <Check className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100" />
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

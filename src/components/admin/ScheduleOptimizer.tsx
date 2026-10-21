@@ -265,7 +265,7 @@ export const ScheduleOptimizer: React.FC = () => {
               {metrics.standbyEquityScore}%
             </div>
             <p className="text-[11px] text-neutral-500 mt-1">
-              Faire Springer 1, 2 & Pause Verteilung
+              Faire Verteilung von 1., 2. & 3. Springer
             </p>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">

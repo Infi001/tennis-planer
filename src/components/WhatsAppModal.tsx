@@ -49,7 +49,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ onClose }) => {
   const springerLines = [
     ...(springerCount >= 1 ? [`🟡 *1. Springer:* ${sp1Name}`] : []),
     ...(springerCount >= 2 ? [`🟡 *2. Springer:* ${sp2Name}`] : []),
-    ...(springerCount >= 3 ? [`🟡 *3. Springer:* ${freiName}`] : [`💤 *Spielfrei:* ${freiName}`]),
+    ...(springerCount >= 3 ? [`🟡 *3. Springer:* ${freiName}`] : []),
   ].join('\n');
 
   const whatsAppText = `🎾 *${theme.clubName}${theme.groupName ? ` • ${theme.groupName}` : ''}*

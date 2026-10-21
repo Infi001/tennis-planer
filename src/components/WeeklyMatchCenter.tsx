@@ -159,18 +159,25 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
     isMySlotSubstitute = myAssignment?.status === 'substitute';
   }
 
-  // Check if current user declined and spot is still open
+  // Check if current user declined (either spot is still open or currently filled by a substitute)
   let myDeclinedSlot: SlotTime | null = null;
+  let mySubstitutePlayerName: string | null = null;
   slotKeys.forEach(sk => {
-    if ((selectedWeek.slots[sk] || []).some(a => (a.playerId === currentUser.id || a.originalPlayerId === currentUser.id) && a.status === 'declined')) {
+    const declOrSub = (selectedWeek.slots[sk] || []).find(a =>
+      ((a.playerId === currentUser.id || a.originalPlayerId === currentUser.id) && a.status === 'declined') ||
+      (a.originalPlayerId === currentUser.id && a.status === 'substitute' && a.playerId !== currentUser.id)
+    );
+    if (declOrSub) {
       myDeclinedSlot = sk;
+      if (declOrSub.status === 'substitute') {
+        mySubstitutePlayerName = players.find(p => p.id === declOrSub.playerId)?.name || 'Springer';
+      }
     }
   });
 
   const isCurrentUserSp1 = selectedWeek.springer1.playerId === currentUser.id;
   const isCurrentUserSp2 = selectedWeek.springer2.playerId === currentUser.id;
-  const isCurrentUserSp3 = springerCount >= 3 && selectedWeek.frei?.playerId === currentUser.id;
-  const isCurrentUserFrei = springerCount < 3 && selectedWeek.frei?.playerId === currentUser.id;
+  const isCurrentUserSp3 = selectedWeek.frei?.playerId === currentUser.id;
 
   // Standby Priority Cascade calculations
   const cascade = calculateStandbyCascade(selectedWeek, springerCount);
@@ -179,10 +186,10 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
   const freiPlayer = players.find(p => p.id === selectedWeek.frei?.playerId);
 
   const isCurrentUserSp1Turn = isCurrentUserSp1 && cascade.activeOfferedPrios.includes(1);
-  const isCurrentUserSp2Turn = isCurrentUserSp2 && cascade.activeOfferedPrios.includes(2) && springerCount >= 2;
-  const isCurrentUserSp3Turn = isCurrentUserSp3 && cascade.activeOfferedPrios.includes(3) && springerCount >= 3;
+  const isCurrentUserSp2Turn = isCurrentUserSp2 && cascade.activeOfferedPrios.includes(2);
+  const isCurrentUserSp3Turn = isCurrentUserSp3 && cascade.activeOfferedPrios.includes(3);
   const isCurrentUserStandbyTurn = isCurrentUserSp1Turn || isCurrentUserSp2Turn || isCurrentUserSp3Turn;
-  const isCurrentUserSpringer = (isCurrentUserSp1 && springerCount >= 1) || (isCurrentUserSp2 && springerCount >= 2) || (isCurrentUserSp3 && springerCount >= 3);
+  const isCurrentUserSpringer = isCurrentUserSp1 || isCurrentUserSp2 || isCurrentUserSp3;
   const isMyStandbyDeclined = (isCurrentUserSp1 && cascade.springer1.status === 'declined')
     || (isCurrentUserSp2 && cascade.springer2.status === 'declined')
     || (isCurrentUserSp3 && cascade.frei?.status === 'declined');
@@ -446,7 +453,7 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                   </p>
                 ) : myDeclinedSlot ? (
                   <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                    ❌ Du hast für {myDeclinedSlot} Uhr abgesagt (Platz ist noch frei)
+                    ❌ Du hast für {myDeclinedSlot} Uhr abgesagt {mySubstitutePlayerName ? `(Ersatz: ${mySubstitutePlayerName})` : '(Platz ist noch frei)'}
                   </p>
                 ) : isMyStandbyDeclined ? (
                   <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
@@ -456,21 +463,17 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                   <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 animate-pulse">
                     🔔 Du bist als {isCurrentUserSp1Turn ? '1. Springer' : isCurrentUserSp2Turn ? '2. Springer' : '3. Springer'} an der Reihe!
                   </p>
-                ) : isCurrentUserSp1 && springerCount >= 1 ? (
+                ) : isCurrentUserSp1 ? (
                   <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                    🟡 Du bist 1. Springer für diesen Spieltag (Bereit auf Abruf)
+                    🟡 Du stehst auf der Nachrücker-Liste: 1. Springer
                   </p>
-                ) : isCurrentUserSp2 && springerCount >= 2 ? (
+                ) : isCurrentUserSp2 ? (
                   <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                    🟡 Du bist 2. Springer für diesen Spieltag (Nachrücker Stufe 2)
+                    🟡 Du stehst auf der Nachrücker-Liste: 2. Springer
                   </p>
                 ) : isCurrentUserSp3 ? (
                   <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                    🟡 Du bist 3. Springer für diesen Spieltag (Nachrücker Stufe 3)
-                  </p>
-                ) : isCurrentUserFrei ? (
-                  <p className="text-sm font-extrabold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                    💤 Du hast diese Woche regulär spielfrei
+                    🟡 Du stehst auf der Nachrücker-Liste: 3. Springer
                   </p>
                 ) : totalOpenSpots > 0 ? (
                   <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
@@ -506,14 +509,14 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
                 </>
               )}
 
-              {/* Action 3: If substitute, allow exit */}
+              {/* Action 3: If substitute, allow exit via DeclineModal (so next Springer can be notified) */}
               {myCurrentSlot && isMySlotSubstitute && (
                 <button
-                  onClick={() => cancelSubstitute(selectedWeek.id, myCurrentSlot, currentUser.id, 'Ersatzspieler kann doch nicht')}
+                  onClick={() => onOpenDecline(currentUser.id)}
                   className="py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 flex items-center space-x-1.5 m3-ripple"
                 >
                   <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Einsatz absagen / Aussteigen</span>
+                  <span>Termin absagen (Nächster rückt nach)</span>
                 </button>
               )}
 

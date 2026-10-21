@@ -10,7 +10,7 @@ const STORAGE_KEYS = {
   SWAPS: 'tennis_swaps_v1',
   CURRENT_USER_ID: 'tennis_current_user_id_v1',
   THEME: 'tennis_theme_v1',
-  SPRINGER_COUNT: 'tennis_springer_count_v1',
+  SPRINGER_COUNT: 'tennis_springer_count_v2',
   EMAIL_CONFIG: 'tennis_email_config_v1',
   SCHEDULE_LOCKED: 'tennis_schedule_locked_v1',
 };
@@ -302,16 +302,16 @@ export class StorageService {
     }
   }
 
-  // --- Springer Count Configuration (1 bis X) ---
+  // --- Springer Count Configuration (Nachrücker-Liste: Standard 3 Springer) ---
   static getSpringerCount(): number {
     const raw = localStorage.getItem(STORAGE_KEYS.SPRINGER_COUNT);
-    if (!raw) return 2; // Standard: 2 Springer
+    if (!raw) return 3; // Standard: 3 Springer (Nachrücker 1, 2, 3)
     const num = parseInt(raw, 10);
-    return isNaN(num) || num < 1 || num > 3 ? 2 : num;
+    return isNaN(num) || num < 0 || num > 10 ? 3 : num;
   }
 
   static saveSpringerCount(count: number) {
-    const safeCount = Math.max(1, Math.min(count, 3));
+    const safeCount = Math.max(0, Math.min(count, 10));
     localStorage.setItem(STORAGE_KEYS.SPRINGER_COUNT, safeCount.toString());
   }
 

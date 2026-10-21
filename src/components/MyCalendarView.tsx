@@ -33,6 +33,41 @@ export const MyCalendarView: React.FC = () => {
     return list.sort((a, b) => a.timestamp - b.timestamp);
   }, [weeks, currentUser.id]);
 
+  // Extract all standby (Nachrücker 1-3) dates for current user where not already actively playing
+  const myStandbyWeeks = useMemo(() => {
+    const list: Array<{ week: TrainingWeek; roleLabel: string; status: string; timestamp: number }> = [];
+    weeks.forEach(w => {
+      if (w.isCancelled) return;
+      const isPlaying = Object.keys(w.slots).some(slotTime =>
+        (w.slots[slotTime] || []).some(a => a.playerId === currentUser.id && a.status !== 'declined')
+      );
+      if (isPlaying) return;
+
+      let roleLabel = '';
+      let status = 'idle';
+      if (w.springer1?.playerId === currentUser.id) {
+        roleLabel = '1. Springer';
+        status = w.springer1.status;
+      } else if (w.springer2?.playerId === currentUser.id) {
+        roleLabel = '2. Springer';
+        status = w.springer2.status;
+      } else if (w.frei?.playerId === currentUser.id) {
+        roleLabel = '3. Springer';
+        status = w.frei.status;
+      }
+
+      if (roleLabel) {
+        list.push({
+          week: w,
+          roleLabel,
+          status,
+          timestamp: parseDateToTime(w.date || w.dateString || w.id),
+        });
+      }
+    });
+    return list.sort((a, b) => a.timestamp - b.timestamp);
+  }, [weeks, currentUser.id]);
+
   // Find next upcoming match
   const nextMatch = useMemo(() => {
     const now = new Date();
@@ -210,6 +245,57 @@ export const MyCalendarView: React.FC = () => {
           </ul>
         )}
       </div>
+
+      {/* Standby / Nachrücker List */}
+      {myStandbyWeeks.length > 0 && (
+        <div className="bg-white dark:bg-[var(--md-sys-color-surface)] rounded-3xl p-5 sm:p-6 shadow-sm border border-neutral-200/80 dark:border-neutral-800">
+          <h3 className="font-bold text-neutral-900 dark:text-neutral-100 mb-1.5 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-amber-500" />
+              <span>Deine Nachrücker-Termine ({myStandbyWeeks.length})</span>
+            </span>
+            <span className="text-xs font-semibold text-neutral-400">
+              1. – 3. Springer
+            </span>
+          </h3>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+            An diesen Terminen stehst du auf der Nachrücker-Liste. Tippe auf einen Termin, falls du einspringen oder vorab absagen möchtest.
+          </p>
+
+          <ul className="space-y-2.5">
+            {myStandbyWeeks.map((item, idx) => (
+              <li
+                key={idx}
+                onClick={() => handleJumpToWeek(item.week.id)}
+                className="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/50 hover:border-amber-400 cursor-pointer transition-all m3-ripple group"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`w-2 h-2 rounded-full ${item.status === 'declined' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                  <div>
+                    <span className={`font-bold text-sm block ${item.status === 'declined' ? 'text-neutral-400 line-through' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                      {formatWeekDate(item.week)}
+                    </span>
+                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                      {item.status === 'declined' ? 'Abgesagt (Keine Zeit)' : 'Bereit zum Nachrücken'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className={`px-3 py-1 rounded-xl text-xs font-bold border shadow-2xs ${
+                    item.status === 'declined'
+                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'
+                      : 'bg-white dark:bg-neutral-800 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-700'
+                  }`}>
+                    {item.roleLabel}
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-amber-600 transition-colors" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
     </div>
   );

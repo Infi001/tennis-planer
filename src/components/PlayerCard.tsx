@@ -57,14 +57,17 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   if (cascade && week) {
     const sp1Player = players.find(p => p.id === week.springer1.playerId);
     const sp2Player = players.find(p => p.id === week.springer2.playerId);
+    const sp3Player = players.find(p => p.id === week.frei?.playerId);
 
     const isCurrentUserSp1Turn = week.springer1.playerId === currentUser.id && cascade.activeOfferedPrios.includes(1);
     const isCurrentUserSp2Turn = week.springer2.playerId === currentUser.id && cascade.activeOfferedPrios.includes(2);
+    const isCurrentUserSp3Turn = week.frei?.playerId === currentUser.id && cascade.activeOfferedPrios.includes(3);
     
-    isMeOfferedStandby = isCurrentUserSp1Turn || isCurrentUserSp2Turn;
+    isMeOfferedStandby = isCurrentUserSp1Turn || isCurrentUserSp2Turn || isCurrentUserSp3Turn;
 
     if (cascade.activeOfferedPrios.includes(1) && sp1Player) prioName = sp1Player.name;
     else if (cascade.activeOfferedPrios.includes(2) && sp2Player) prioName = sp2Player.name;
+    else if (cascade.activeOfferedPrios.includes(3) && sp3Player) prioName = sp3Player.name;
   }
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -213,16 +216,32 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           </div>
         )}
 
-        {/* Action Row for Substitute who wants to cancel (isSubstitute && isMe) */}
+        {/* Action Row for Substitute who wants to cancel (isSubstitute && (isMe || isAdmin)) */}
         {isSubstitute && !isGuest && player && (isMe || isAdmin) && (
           <div className="mt-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-700/60">
             <button 
-              onClick={() => cancelSubstitute(weekId, slotTime, player.id, 'Springer kann doch nicht')} 
-              title="Einsatz absagen" 
+              onClick={() => onOpenDecline(player.id)} 
+              title="Springer-Einsatz absagen (Nächster Springer rückt nach)" 
               className="w-full py-1.5 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors border border-rose-200 dark:border-rose-900"
             >
               <X className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Einsatz absagen (Aussteigen)</span>
+              <span>Termin absagen (Nächster rückt nach)</span>
+            </button>
+          </div>
+        )}
+
+        {/* Action Row for Original Player whose spot was taken by a Substitute, allowing them to reclaim their spot */}
+        {isSubstitute && assignment.originalPlayerId === currentUser.id && !isMe && (
+          <div className="mt-2.5 pt-2 border-t border-neutral-200/70 dark:border-neutral-700/60 flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">
+              Dein ursprünglicher Platz
+            </span>
+            <button
+              onClick={() => reclaimSlot(weekId, slotTime, currentUser.id)}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-xs transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Doch dabei!</span>
             </button>
           </div>
         )}

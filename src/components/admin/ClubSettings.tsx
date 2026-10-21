@@ -425,7 +425,7 @@ export const ClubSettings: React.FC = () => {
                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                 }`}
               >
-                {num === 0 ? '0 (Keine Springer)' : num === 2 ? '2 Springer (Standard)' : `${num} Springer`}
+                {num === 0 ? '0 (Keine Springer)' : num === 3 ? '3 Springer (Standard)' : `${num} Springer`}
               </button>
             ))}
           </div>

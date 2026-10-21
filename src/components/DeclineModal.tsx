@@ -37,13 +37,21 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
   const sp2Player = players.find(p => p.id === selectedWeek.springer2.playerId);
   const freiPlayer = players.find(p => p.id === selectedWeek.frei?.playerId);
 
-  const nextSpringer = (selectedWeek.springer1.playerId && selectedWeek.springer1.status !== 'declined' && selectedWeek.springer1.playerId !== playerId)
-    ? sp1Player
-    : (springerCount >= 2 && selectedWeek.springer2.playerId && selectedWeek.springer2.status !== 'declined' && selectedWeek.springer2.playerId !== playerId)
-      ? sp2Player
-      : (springerCount >= 3 && selectedWeek.frei?.playerId && selectedWeek.frei?.status !== 'declined' && selectedWeek.frei?.playerId !== playerId)
-        ? freiPlayer
+  const isAvailableStandby = (spId?: string, status?: string) => {
+    if (!spId || spId === playerId || status === 'declined') return false;
+    return !getPlayerCurrentSlotInWeek(selectedWeek.id, spId);
+  };
+
+  const nextSpringerInfo = isAvailableStandby(selectedWeek.springer1.playerId, selectedWeek.springer1.status) && sp1Player
+    ? { player: sp1Player, roleLabel: '1. Springer' }
+    : (springerCount >= 2 && isAvailableStandby(selectedWeek.springer2.playerId, selectedWeek.springer2.status) && sp2Player)
+      ? { player: sp2Player, roleLabel: '2. Springer' }
+      : (springerCount >= 3 && isAvailableStandby(selectedWeek.frei?.playerId, selectedWeek.frei?.status) && freiPlayer)
+        ? { player: freiPlayer, roleLabel: '3. Springer' }
         : null;
+
+  const nextSpringer = nextSpringerInfo?.player || null;
+  const nextSpringerRoleLabel = nextSpringerInfo?.roleLabel || 'Springer';
 
   const handleConfirmDecline = async () => {
     const finalReason = customNote ? `${reason} (${customNote})` : reason;
@@ -148,20 +156,20 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
         <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-1.5">
           <div className="flex items-center space-x-1.5 font-bold text-amber-800 dark:text-amber-300">
             <ShieldCheck className="w-4 h-4" />
-            <span>Nachrücker-Regelung:</span>
+            <span>Nachrücker-Liste:</span>
           </div>
           <p className="text-amber-800 dark:text-amber-200 leading-relaxed text-xs">
             {isSpringerRole ? (
               nextSpringer ? (
-                <>Du stehst für diesen Spieltag nicht als Springer zur Verfügung. Bei freien Plätzen rückt vorrangig <strong>{nextSpringer.name}</strong> nach.</>
+                <>Du stehst für diesen Spieltag nicht als Springer zur Verfügung. Bei freien Plätzen rückt automatisch <strong>{nextSpringer.name} ({nextSpringerRoleLabel})</strong> nach.</>
               ) : (
                 <>Du stehst für diesen Spieltag nicht als Springer zur Verfügung. Bei freien Plätzen wird direkt die gesamte Gruppe informiert.</>
               )
             ) : (
               nextSpringer ? (
-                <>Der freie Platz geht vorrangig an <strong>{nextSpringer.name}</strong> (Springer).</>
+                <>Für deinen Platz rückt automatisch <strong>{nextSpringer.name} ({nextSpringerRoleLabel})</strong> nach.</>
               ) : (
-                <>Der freie Platz wird für nachrückende Gruppenmitglieder freigegeben.</>
+                <>Alle eingeteilten Springer sind bereits verplant oder verhindert. Der Platz wird als frei markiert.</>
               )
             )}
           </p>
@@ -180,7 +188,7 @@ export const DeclineModal: React.FC<DeclineModalProps> = ({ playerId, onClose })
               <span className="flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 <span>
-                  Springer <strong>{nextSpringer.name}</strong> per E-Mail benachrichtigen
+                  {nextSpringerRoleLabel} <strong>{nextSpringer.name}</strong> per E-Mail benachrichtigen
                   {nextSpringer.email && (
                     <span className="text-neutral-400 font-normal"> ({nextSpringer.email})</span>
                   )}
