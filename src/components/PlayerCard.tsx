@@ -128,37 +128,28 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               )}
             </div>
 
-            {/* Status Line */}
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-              <span className="text-[11px] text-neutral-400 font-semibold">P{index + 1}</span>
-
-              {isDeclined && (
-                <>
-                  <span className="text-neutral-300 dark:text-neutral-600">•</span>
+            {/* Status Line (only rendered when there is a special status) */}
+            {(isDeclined || (isSubstitute && originalPlayer) || isSwapped) && (
+              <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                {isDeclined && (
                   <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" /> {assignment.declineReason || 'Abgesagt'}
                   </span>
-                </>
-              )}
+                )}
 
-              {isSubstitute && originalPlayer && (
-                <>
-                  <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                {isSubstitute && originalPlayer && (
                   <span className="text-blue-600 dark:text-blue-400 font-semibold truncate">
                     Springer für {originalPlayer.name}
                   </span>
-                </>
-              )}
+                )}
 
-              {isSwapped && (
-                <>
-                  <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                {isSwapped && (
                   <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
                     <ArrowLeftRight className="w-3.5 h-3.5" /> Getauscht
                   </span>
-                </>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

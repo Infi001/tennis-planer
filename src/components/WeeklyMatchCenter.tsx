@@ -672,8 +672,9 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {players
+            {[...players]
               .filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id))
+              .sort((a, b) => a.name.localeCompare(b.name, 'de'))
               .map(p => (
                 <button
                   key={p.id}
@@ -710,7 +711,13 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
       } gap-5`}>
         {slotKeys.map((slotKey, slotIdx) => {
           const rawAssignments = selectedWeek.slots[slotKey];
-          const assignments = rawAssignments.filter((a, idx, arr) => a.isGuest || arr.findIndex(other => other.playerId === a.playerId) === idx);
+          const assignments = rawAssignments
+            .filter((a, idx, arr) => a.isGuest || arr.findIndex(other => other.playerId === a.playerId) === idx)
+            .sort((a, b) => {
+              const nameA = a.isGuest ? (a.guestName || 'Gastspieler') : (players.find(p => p.id === a.playerId)?.name || '');
+              const nameB = b.isGuest ? (b.guestName || 'Gastspieler') : (players.find(p => p.id === b.playerId)?.name || '');
+              return nameA.localeCompare(nameB, 'de');
+            });
           const activeAssignments = assignments.filter(a => a.status !== 'declined');
           const openSpotsInThisSlot = Math.max(0, 4 - activeAssignments.length);
           const hasOpenSlot = openSpotsInThisSlot > 0 || assignments.some(a => a.status === 'declined');
@@ -1002,8 +1009,9 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1">
-            {players
+            {[...players]
               .filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id))
+              .sort((a, b) => a.name.localeCompare(b.name, 'de'))
               .map(p => (
                 <button
                   key={p.id}
@@ -1072,8 +1080,9 @@ export const WeeklyMatchCenter: React.FC<WeeklyMatchCenterProps> = ({
               </p>
               
               <div className="flex flex-wrap gap-2">
-                {players
+                {[...players]
                   .filter(p => !isPlayerScheduledInWeek(selectedWeek.id, p.id))
+                  .sort((a, b) => a.name.localeCompare(b.name, 'de'))
                   .map(p => (
                     <div
                       key={p.id}

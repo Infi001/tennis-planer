@@ -14,11 +14,13 @@ export const FullScheduleTable: React.FC<FullScheduleTableProps> = ({ onSelectWe
   const [selectedPlayerFilter, setSelectedPlayerFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const filteredPlayers = players.filter(p => {
-    if (selectedPlayerFilter !== 'all' && p.id !== selectedPlayerFilter) return false;
-    if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  const filteredPlayers = [...players]
+    .filter(p => {
+      if (selectedPlayerFilter !== 'all' && p.id !== selectedPlayerFilter) return false;
+      if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      return true;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
 
   // Helper to determine role for a player in a week
   const getPlayerCellInfo = (week: typeof weeks[0], player: Player) => {

@@ -95,7 +95,7 @@ export const LoginScreen: React.FC = () => {
 
           {/* Player Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[50vh] overflow-y-auto p-1">
-            {players.map((player) => (
+            {[...players].sort((a, b) => a.name.localeCompare(b.name, 'de')).map((player) => (
               <button
                 key={player.id}
                 onClick={() => handleSelectPlayer(player)}

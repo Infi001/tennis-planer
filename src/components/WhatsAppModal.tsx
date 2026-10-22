@@ -21,7 +21,11 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ onClose }) => {
 
   const slotKeys = getWeekSlotKeys(selectedWeek);
   const slotsText = slotKeys.map((slotKey, idx) => {
-    const assignments = selectedWeek.slots[slotKey] || [];
+    const assignments = [...(selectedWeek.slots[slotKey] || [])].sort((a, b) => {
+      const nameA = getPlayerName(a.playerId, a.isGuest, a.guestName);
+      const nameB = getPlayerName(b.playerId, b.isGuest, b.guestName);
+      return nameA.localeCompare(nameB, 'de');
+    });
     const activeList = assignments.map(a => {
       const name = getPlayerName(a.playerId, a.isGuest, a.guestName);
       if (a.status === 'confirmed') return `${name} 👍`;

@@ -139,11 +139,13 @@ export const PlayerManagement: React.FC = () => {
     }
   };
 
-  const filteredPlayers = players.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredPlayers = [...players]
+    .filter(p => 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
 
   const adminCount = players.filter(p => p.isAdmin).length;
 
@@ -250,7 +252,9 @@ export const PlayerManagement: React.FC = () => {
                   </div>
 
                   <div className="flex items-center space-x-2 text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5 truncate">
-                    <span>ID: #{idx + 1} ({player.shortName})</span>
+                    {player.email && (
+                      <span className="truncate">{player.email}</span>
+                    )}
                     {player.phone && (
                       <span className="flex items-center gap-0.5">
                         <Phone className="w-2.5 h-2.5" />
